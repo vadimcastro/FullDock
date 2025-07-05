@@ -1,4 +1,4 @@
-.PHONY: dev prod down clean migrate logs format help
+.PHONY: dev prod down clean migrate logs format help auth-setup setup-local-auth health health-docker health-containers health-api
 # Development commands
 dev:
 	@echo "Starting development environment..."
@@ -166,6 +166,7 @@ setup-prod-env:
 setup-local-auth:
 	@echo "Setting up local development authentication..."
 	./scripts/setup-local-auth.sh
+auth-setup: setup-local-auth
 # Database commands
 migrate:
 	@echo "Running migrations..."
@@ -180,14 +181,26 @@ migrate-create:
 # Cleanup commands
 down:
 	@echo "Stopping containers..."
-	docker compose -f docker/docker-compose.prod.yml down
+	@if docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml ps -q 2>/dev/null | grep -q .; then \
+		echo "Stopping development containers..."; \
+		cd docker && docker compose -f docker-compose.yml -f docker-compose.dev.yml down; \
+	elif docker compose -f docker/docker-compose.prod.yml ps -q 2>/dev/null | grep -q .; then \
+		echo "Stopping production containers..."; \
+		docker compose -f docker/docker-compose.prod.yml down; \
+	else \
+		echo "No containers running"; \
+	fi
 clean:
 	@echo "Cleaning up development environment..."
 	docker system prune -f
 	rm -rf frontend/.next frontend/node_modules
 clean-all: clean
 	@echo "Removing volumes and rebuilding..."
-	docker compose -f docker/docker-compose.prod.yml down -v
+	@if docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml ps -q 2>/dev/null | grep -q .; then \
+		cd docker && docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v; \
+	else \
+		docker compose -f docker/docker-compose.prod.yml down -v; \
+	fi
 # Utility commands
 logs:
 	@echo "Showing logs..."
@@ -246,3 +259,23 @@ help:
 	@echo "⚙️ Setup:"
 	@echo "  make setup-prod-env         - Set up production environment"
 	@echo "  make setup-local-auth       - Configure local authentication"
+	@echo ""
+	@echo "🏥 Health Checks:"
+	@echo "  make health                 - Comprehensive system health check"
+	@echo "  make health-docker          - Docker installation & daemon check"
+	@echo "  make health-containers      - Running containers status"
+	@echo "  make health-api             - API endpoints availability"
+
+# Health check commands
+health:
+	@echo "🏥 Running comprehensive health check..."
+	@./scripts/docker-health.sh && health
+health-docker:
+	@echo "🐳 Checking Docker health..."
+	@./scripts/docker-health.sh && health_docker
+health-containers:
+	@echo "📦 Checking container health..."
+	@./scripts/docker-health.sh && health_containers
+health-api:
+	@echo "🌐 Checking API health..."
+	@./scripts/docker-health.sh && health_api

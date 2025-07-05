@@ -40,7 +40,7 @@ fi
 # Test login
 response=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username=vadim@vadimcastro.pro&password=meow")
+    -d "username={{ADMIN_EMAIL}}&password={{DEV_PASSWORD}}")
 
 if echo "$response" | grep -q "access_token"; then
     echo "📋 Testing endpoints"
@@ -58,7 +58,7 @@ if echo "$response" | grep -q "access_token"; then
     fi
     
     echo "✅ Success"
-    echo "📋 Login: vadim@vadimcastro.pro / meow"
+    echo "📋 Login: {{ADMIN_EMAIL}} / {{DEV_PASSWORD}}"
     echo "🌐 http://localhost:3000 | 🔧 http://localhost:8000/docs"
 else
     echo "❌ Authentication failed: $response"
