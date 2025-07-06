@@ -333,6 +333,68 @@ This project was created from the vadim-project-template, which is based on the 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 🎯 vadimOS Development Values
 
 **Core Principles:**
@@ -352,7 +414,7 @@ This project was created from the vadim-project-template, which is based on the 
 ## 🔧 Core vadimOS Commands
 **Project Navigation:** `vpt` → auto-navigate here  
 **Development:** `gs`, `gcp "msg"`, `glog`, `dev`, `deploy`  
-**Project Creation:** `newtest` → standardized test projects, `newrun` → interactive creation  
+**Project Creation:** `newtest-lightning` → 32s standardized test projects, `newrun` → 38s interactive creation  
 **Utilities:** `clean-dirs`, `kd`, `shortcuts`  
 **Template Workflow:** Universal commands work in all generated projects
 
