@@ -3,6 +3,15 @@
 dev:
 	@echo "Starting development environment..."
 	cd docker && docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+dev-fast:
+	@echo "⚡ Starting FAST development environment..."
+	cd docker && docker compose -f docker-compose.dev.fast.yml up --build
+dev-ultra:
+	@echo "🚀 Starting ULTRA development environment (requires base images)..."
+	cd docker && docker compose -f docker-compose.dev.ultra.yml up
+build-base:
+	@echo "🏗️ Building base images for ultra-fast development..."
+	./scripts/build-base-images.sh
 dev-debug:
 	@echo "Starting development environment with debug logs..."
 	cd docker && docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build 2>&1 | tee debug.log
@@ -166,7 +175,11 @@ setup-prod-env:
 setup-local-auth:
 	@echo "Setting up local development authentication..."
 	./scripts/setup-local-auth.sh
+setup-local-auth-fast:
+	@echo "Setting up local development authentication (fast mode)..."
+	./scripts/setup-local-auth-fast.sh
 auth-setup: setup-local-auth
+auth-setup-fast: setup-local-auth-fast
 # Database commands
 migrate:
 	@echo "Running migrations..."

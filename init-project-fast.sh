@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Project Template Initialization Script
-# Based on vadimcastro.me successful infrastructure patterns
+# Fast Project Template Initialization Script
+# Optimized version that skips Docker startup for faster vadimOS integration
 
 set -e
 
-echo "🚀 Vadim's Project Template Initializer"
-echo "======================================="
+echo "⚡ Vadim's FAST Project Template Initializer"
+echo "==========================================="
 echo "Creating a new project based on proven React/FastAPI/Postgres/Docker stack"
 echo ""
 
 # Check if we're in the template directory
-if [ ! -f "init-project.sh" ]; then
+if [ ! -f "init-project-fast.sh" ]; then
     echo "❌ Please run this script from the vadim-project-template directory"
     exit 1
 fi
@@ -109,18 +109,21 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 echo ""
-echo "🛠️  Creating project..."
+echo "⚡ Creating project (FAST MODE - skipping Docker startup)..."
 
-# Copy template to target directory
+# Copy template to target directory (exclude some heavy files if possible)
+echo "📁 Copying template files..."
 cp -r . "$PROJECT_PATH"
 
-# Remove the init script from the new project
-rm "$PROJECT_PATH/init-project.sh"
+# Remove the init scripts from the new project
+rm "$PROJECT_PATH/init-project.sh" 2>/dev/null || true
+rm "$PROJECT_PATH/init-project-fast.sh" 2>/dev/null || true
 
-# Function to replace variables in files
-replace_vars() {
+# Optimized function to replace variables in files
+replace_vars_fast() {
     local file="$1"
     if [ -f "$file" ]; then
+        # Use a single sed command with all replacements for better performance
         sed -i.tmp \
             -e "s|{{PROJECT_NAME}}|$PROJECT_NAME|g" \
             -e "s|{{PROJECT_DISPLAY_NAME}}|$PROJECT_DISPLAY_NAME|g" \
@@ -142,15 +145,15 @@ replace_vars() {
     fi
 }
 
-echo "🔧 Configuring project files..."
+echo "🔧 Configuring project files (optimized)..."
 
 # Export the function and variables before using them
-export -f replace_vars
+export -f replace_vars_fast
 export PROJECT_NAME ADMIN_EMAIL ADMIN_USERNAME ADMIN_NAME ADMIN_INITIALS PRODUCTION_IP DOMAIN_NAME DROPLET_ALIAS DEV_PASSWORD SECRET_KEY PROJECT_DISPLAY_NAME PROJECT_DESCRIPTION PROJECT_NAME_CLEAN GITHUB_URL LINKEDIN_URL WEBSITE_URL
 
-# Replace variables in configuration files
+# Process ALL files that need variable replacement (same as original script)
 find "$PROJECT_PATH" -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.sh" -o -name "*.md" -o -name "*.conf" -o -name "Makefile" -o -name "Dockerfile*" -o -name ".env*" -o -name "*.tsx" -o -name "*.ts" -o -name "*.py" \) -print0 | while IFS= read -r -d '' file; do
-    replace_vars "$file"
+    replace_vars_fast "$file"
 done
 
 echo "📝 Creating project README..."
@@ -187,29 +190,6 @@ make droplet-clean-rebuild    # 🧹 Deep clean rebuild
 - **API**: http://$PRODUCTION_IP:8000
 - **Status**: 🚧 Setup Required
 
-## 🔧 Essential Commands
-
-### Development
-\`\`\`bash
-make dev                      # Start development environment
-make setup-local-auth         # Configure local authentication
-make logs                     # View container logs
-make clean                    # Clean up environment
-\`\`\`
-
-### Deployment
-\`\`\`bash
-make droplet-deploy           # Deploy current branch to production
-make droplet-quick-deploy     # ⚡ Fast deployment
-make droplet-clean-rebuild    # 🧹 Deep clean rebuild
-\`\`\`
-
-### Database
-\`\`\`bash
-make migrate                  # Run migrations
-make migrate-create name=NAME # Create new migration
-\`\`\`
-
 ## 📋 Login Credentials
 
 ### Development
@@ -218,31 +198,6 @@ make migrate-create name=NAME # Create new migration
 
 ### Production
 - Configure with: \`make setup-prod-env\`
-
-## 🛠️ Setup Instructions
-
-1. **Install Dependencies**
-   \`\`\`bash
-   # Ensure Docker is running
-   docker --version
-   \`\`\`
-
-2. **Start Development Environment**
-   \`\`\`bash
-   make dev
-   make setup-local-auth
-   \`\`\`
-
-3. **Access Application**
-   - Frontend: http://localhost:3000
-   - API: http://localhost:8000
-   - API Docs: http://localhost:8000/docs
-
-4. **Production Setup**
-   \`\`\`bash
-   make setup-prod-env    # Configure production secrets
-   make droplet-deploy    # Deploy to production
-   \`\`\`
 
 ## 📁 Project Structure
 \`\`\`
@@ -257,10 +212,10 @@ Created from [vadim-project-template](https://github.com/vadimcastro/vadim-proje
 EOF
 
 echo ""
-echo "✅ Project created successfully!"
+echo "✅ FAST Project created successfully!"
 echo ""
 
-# Navigate to project and open VS Code immediately
+# Navigate to project directory
 cd "$PROJECT_PATH"
 
 echo "💻 Opening VS Code with documentation..."
@@ -272,50 +227,15 @@ else
     code .
 fi
 
-echo "🚀 Starting development environment and configuring authentication..."
-
-# Start services in background
-echo "Starting Docker services..."
-make dev > /dev/null 2>&1 &
-DEV_PID=$!
-
-# Wait for services to be ready using health checks
-echo "Waiting for services to initialize..."
-if [ -f "scripts/docker-health.sh" ]; then
-    source scripts/docker-health.sh
-    echo "🏥 Running health checks before proceeding..."
-    if wait_for_services 3000 8000; then
-        echo "✅ Services are ready!"
-    else
-        echo "⚠️  Services taking longer than expected, continuing anyway..."
-    fi
-else
-    # Fallback to sleep if health functions not available
-    sleep 20
-fi
-
-# Setup authentication
-echo "Configuring local authentication..."
-make setup-local-auth
-
-# Let user know everything is ready
 echo ""
-echo "🎉 Setup Complete!"
+echo "⚡ FAST MODE: Project ready for external development startup!"
 echo "📍 Project Path: $PROJECT_PATH"
-echo "🌐 Frontend: http://localhost:3000"
-echo "📚 API Docs: http://localhost:8000/docs"
-echo "📊 Dashboard: http://localhost:3000/dashboard"
 echo ""
-echo "🔑 Login Credentials:"
+echo "🔑 Standardized Login Credentials:"
 echo "   Email: $ADMIN_EMAIL"
 echo "   Password: $DEV_PASSWORD"
 echo ""
-echo "📖 For production deployment:"
-echo "1. Configure SSH access to your production server"
-echo "2. make setup-prod-env"
-echo "3. make droplet-deploy"
-echo ""
-echo "🚀 Happy coding with your new $PROJECT_DISPLAY_NAME project!"
+echo "🚀 Use your vadimOS workflow to start development services!"
 
 # Output the project path for the shell alias to use
 echo "PROJECT_PATH:$PROJECT_PATH"

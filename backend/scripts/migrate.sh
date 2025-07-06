@@ -85,4 +85,8 @@ if [ -d "alembic" ] && [ -f "alembic/env.py" ]; then
     alembic stamp head 2>/dev/null || echo "Alembic stamp failed, but tables should be created"
 fi
 
+# Initialize database with admin user
+echo "Initializing database..."
+python3 /app/scripts/init_db.py
+
 echo "Migration complete!"
