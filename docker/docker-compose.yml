@@ -2,6 +2,12 @@
 # Use with: docker compose -f ../../vadimOS/docker/docker-compose.base.yml -f docker-compose.yml
 
 services:
+  # Override database name for {{PROJECT_NAME}}
   db:
+    environment:
+      - POSTGRES_DB={{PROJECT_NAME}}
+      
+  # Override API database connection
+  api:
     environment:
       - POSTGRES_DB={{PROJECT_NAME}}

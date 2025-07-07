@@ -8,7 +8,7 @@ import psycopg2
 import os
 import sys
 
-db_name = os.getenv('POSTGRES_DB', 'vadimcastro')
+db_name = os.getenv('POSTGRES_DB', 'template')
 db_user = os.getenv('POSTGRES_USER', 'postgres')
 db_password = os.getenv('POSTGRES_PASSWORD', 'password')
 db_host = os.getenv('POSTGRES_HOST', 'db')
