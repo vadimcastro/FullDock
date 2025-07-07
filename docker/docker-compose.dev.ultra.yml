@@ -2,7 +2,7 @@
 # Ultra-fast development compose using pre-built images
 services:
   frontend:
-    image: vadim-frontend-base:latest
+    image: template-frontend-base:latest
     ports:
       - "3000:3000"
     volumes:
@@ -26,11 +26,7 @@ services:
       start_period: 3s
       
   api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      args:
-        - APP_PATH=backend/app
+    image: template-backend-base:latest
     command: >
       sh -c '
         echo "⚡ Ultra startup - migrations..." &&
