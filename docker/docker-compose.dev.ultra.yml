@@ -13,7 +13,9 @@ services:
   api:
     image: {{PROJECT_NAME}}-backend-base:latest
     env_file:
-      - ../.env.development
+      - /Users/vadimcastro/Desktop/PROJECTS/{{PROJECT_NAME}}/.env.development
+    volumes:
+      - ../backend/.env:/app/.env:ro
     environment:
       - POSTGRES_DB={{PROJECT_NAME}}
 
