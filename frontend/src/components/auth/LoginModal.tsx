@@ -114,8 +114,8 @@ export default function LoginModal({ isOpen, onClose, onLogin, isLoading = false
 
         <div className="px-6 pb-6 text-xs text-gray-500">
           <p>Development credentials:</p>
-          <p>Email: {{ADMIN_EMAIL}}</p>
-          <p>Password: {{DEV_PASSWORD}}</p>
+          <p>Email: {process.env.NEXT_PUBLIC_ADMIN_EMAIL || '{{ADMIN_EMAIL}}'}</p>
+          <p>Password: {process.env.NEXT_PUBLIC_DEV_PASSWORD || '{{DEV_PASSWORD}}'}</p>
         </div>
       </div>
     </div>

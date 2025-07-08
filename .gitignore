@@ -61,4 +61,6 @@ coverage/
 
 # Alembic
 backend/alembic/versions/*.py
-!backend/alembic/versions/.gitkeep
+!backend/alembic/versions/.gitkeepdocker/docker-compose.dev.template.yml
+docker/docker-compose.dev.template.yml
+docker/docker-compose.dev.template.yml

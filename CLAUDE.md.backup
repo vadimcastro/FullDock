@@ -21,6 +21,7 @@ make droplet-clean-rebuild    # 🧹 Deep clean rebuild (full cache clear)
 - **Backend**: FastAPI with Python, SQLAlchemy, Alembic
 - **Database**: PostgreSQL with Redis caching
 - **Infrastructure**: Docker Compose, Production Server
+- **Base Images**: template-frontend-base, template-backend-base (shared across all generated projects)
 
 ## 🌐 Production Environment
 - **Frontend**: http://{{PRODUCTION_IP}}:3000
@@ -54,6 +55,7 @@ logs                      # View container logs (alias for make droplet-logs)
 ### Development
 ```bash
 make dev                  # Start development environment
+make dev-ultra            # ⚡ Ultra-fast development with shared template base images
 make setup-local-auth     # Configure local authentication
 make logs                 # View container logs
 make clean                # Clean up environment
@@ -170,6 +172,92 @@ This project was created from the vadim-project-template, which is based on the 
 - ✅ Production-grade security and configuration
 - ✅ Mobile-first responsive design patterns
 - ✅ Comprehensive development workflow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

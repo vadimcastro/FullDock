@@ -24,10 +24,14 @@ dev-fast:
 # TEMPLATE-SPECIFIC AUTH SETUP
 # =============================================================================
 
+setup-local-auth:
+	@echo "Setting up local development authentication..."
+	./scripts/setup-local-auth.sh
+
 setup-local-auth-fast:
 	@echo "Setting up local development authentication (fast mode)..."
 	./scripts/setup-local-auth-fast.sh
 
-auth-setup: setup-local-auth
+auth-setup: setup-local-auth-fast
 
 auth-setup-fast: setup-local-auth-fast

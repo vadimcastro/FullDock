@@ -21,12 +21,51 @@ make droplet-clean-rebuild    # 🧹 Deep clean rebuild (full cache clear)
 - **Backend**: FastAPI with Python, SQLAlchemy, Alembic
 - **Database**: PostgreSQL with Redis caching
 - **Infrastructure**: Docker Compose, Production Server
+- **Base Images**: template-frontend-base, template-backend-base (shared across all generated projects)
 
 ## 🌐 Production Environment
 - **Frontend**: http://{{PRODUCTION_IP}}:3000
 - **API**: http://{{PRODUCTION_IP}}:8000
 - **Status**: 🚧 Setup Required
 - **Branch**: master
+
+## 🔧 Template Development with vptb
+
+### Template Development Workflow
+```bash
+vptb                      # Start template development mode
+# Prompts for:
+# - Project name (e.g., feat/new-navbar)  
+# - Display name (e.g., New Navigation Bar)
+# - Description (e.g., Redesign navigation component)
+
+# This will:
+# 1. Create git branch for feature development
+# 2. Generate docker-compose.dev.template.yml with dummy credentials
+# 3. Open VS Code + start development environment
+# 4. Enable login with mom@mom.com / meow for testing
+```
+
+### Template Development Commands
+```bash
+# After vptb setup:
+cd docker
+docker compose -f ../../vadimOS/docker/docker-compose.base.yml \
+               -f docker-compose.yml \
+               -f docker-compose.dev.ultra.yml \
+               -f docker-compose.dev.template.yml up
+
+# Login credentials for template development:
+# Email: mom@mom.com
+# Password: meow
+```
+
+### Template Development Guidelines
+- **Keep placeholders intact**: Maintain {{PLACEHOLDER}} syntax in code
+- **Test with dummy data**: Use mom@mom.com/meow for authentication testing
+- **Git workflow**: Work in feature branches, commit improvements
+- **Merge back**: Copy successful changes back to template
+- **Documentation**: Update CLAUDE.md with new features
 
 ## ⚡ Terminal Workflow
 
@@ -54,6 +93,7 @@ logs                      # View container logs (alias for make droplet-logs)
 ### Development
 ```bash
 make dev                  # Start development environment
+make dev-ultra            # ⚡ Ultra-fast development with shared template base images
 make setup-local-auth     # Configure local authentication
 make logs                 # View container logs
 make clean                # Clean up environment
@@ -170,6 +210,92 @@ This project was created from the vadim-project-template, which is based on the 
 - ✅ Production-grade security and configuration
 - ✅ Mobile-first responsive design patterns
 - ✅ Comprehensive development workflow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
