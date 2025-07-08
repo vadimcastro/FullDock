@@ -4,20 +4,30 @@
 services:
   # Override for pre-built images
   frontend:
-    image: {{PROJECT_NAME}}-frontend-base:latest
+    image: template-frontend-base:latest
+    volumes:
+      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/frontend:/app
+      - template_frontend_node_modules:/app/node_modules
+      - /app/.next
     environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NEXT_PUBLIC_ADMIN_NAME={{ADMIN_NAME}}
-      - NEXT_PUBLIC_ADMIN_ROLE={{ADMIN_ROLE}}
+      - NEXT_PUBLIC_ADMIN_ROLE=Administrator
       - NEXT_PUBLIC_ADMIN_INITIALS={{ADMIN_INITIALS}}
+      - NEXT_PUBLIC_ADMIN_EMAIL={{ADMIN_EMAIL}}
+      - NEXT_PUBLIC_DEV_PASSWORD={{DEV_PASSWORD}}
       
   api:
-    image: {{PROJECT_NAME}}-backend-base:latest
-    env_file:
-      - /Users/vadimcastro/Desktop/PROJECTS/{{PROJECT_NAME}}/.env.development
+    image: template-backend-base:latest
     volumes:
-      - ../backend/.env:/app/.env:ro
+      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/backend:/app
+    env_file:
+      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/.env.development
     environment:
-      - POSTGRES_DB={{PROJECT_NAME}}
+      - POSTGRES_DB=template
+      - PYTHONPATH=/app
+    working_dir: /app
 
 volumes:
-  {{PROJECT_NAME}}_frontend_node_modules:
+  template_frontend_node_modules:
