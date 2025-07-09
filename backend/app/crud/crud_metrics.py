@@ -9,7 +9,6 @@ import subprocess
 import os
 from app.models.user import User
 from app.models.user_session import UserSession
-from app.models.project import Project
 
 def get_visitor_metrics(db: Session) -> Dict:
     """Get visitor metrics with month-over-month comparison"""
@@ -125,12 +124,7 @@ def get_recent_activity(db: Session, limit: int = 5) -> List[Dict]:
         UserSession.created_at.desc()
     ).limit(limit).all()
     
-    # Get recent projects
-    recent_projects = db.query(Project).order_by(
-        Project.created_at.desc()
-    ).limit(limit).all()
-    
-    # Combine and format activities
+    # Format activities
     activities = []
     
     for session in recent_sessions:
@@ -142,51 +136,11 @@ def get_recent_activity(db: Session, limit: int = 5) -> List[Dict]:
             "description": f"User logged in"
         })
     
-    for project in recent_projects:
-        activities.append({
-            "type": "project",
-            "title": project.title,
-            "timestamp": project.created_at,
-            "description": f"New project created: {project.title}"
-        })
-    
-    # Sort combined activities by timestamp
+    # Sort activities by timestamp
     activities.sort(key=lambda x: x["timestamp"], reverse=True)
     return activities[:limit]
 
 
-def get_project_metrics(db: Session) -> Dict:
-    """Get project metrics with month-over-month comparison"""
-    current_month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
-    
-    # Get total projects
-    total_projects = db.query(Project).count()
-    
-    # Get new projects this month
-    new_projects_this_month = db.query(Project).filter(
-        Project.created_at >= current_month_start
-    ).count()
-    
-    # Get projects created last month for comparison
-    last_month_projects = db.query(Project).filter(
-        Project.created_at >= last_month_start,
-        Project.created_at < current_month_start
-    ).count()
-
-    # Calculate percentage change
-    percentage_change = (
-        ((new_projects_this_month - last_month_projects) / last_month_projects * 100)
-        if last_month_projects > 0 else 
-        100 if new_projects_this_month > 0 else 0
-    )
-    
-    return {
-        "total": total_projects,
-        "newThisMonth": new_projects_this_month,
-        "percentageChange": round(percentage_change, 1),
-        "lastMonthTotal": last_month_projects
-    }
 
 def get_system_metrics() -> Dict:
     """Get system metrics"""

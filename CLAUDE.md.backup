@@ -191,6 +191,38 @@ ssh {{DROPLET_ALIAS}} 'cd {{PROJECT_NAME}} && docker compose -f docker/docker-co
 make droplet-force-rebuild  # Force clean rebuild
 ```
 
+## 🔧 Recent Improvements
+
+### ✅ Environment Variable Authentication Fix
+- **Issue**: Login attempts showing `{{ADMIN_EMAIL}}` and `{{DEV_PASSWORD}}` placeholders
+- **Solution**: Updated docker-compose files to use `vadimOS_DEFAULT_` environment variables
+- **Impact**: Seamless authentication with `mom@mom.com` / `meow` during development
+
+### ✅ VS Code Opening Optimization  
+- **Issue**: VS Code opening twice in newtest/newpro workflows
+- **Solution**: Removed duplicate `code .` calls, proper timing after AppleScript
+- **Impact**: Single VS Code instance with correct documentation file
+
+### ✅ Terminal Tab Focus Fix
+- **Issue**: New terminal tabs not opening correctly due to VS Code focus competition
+- **Solution**: Delayed VS Code opening until after AppleScript terminal creation
+- **Impact**: Reliable terminal tab creation in newtest/newpro/vptb
+
+### ✅ Template Base Image Improvements
+- **Issue**: Frontend containers exiting immediately  
+- **Solution**: Added proper `CMD ["npm", "run", "dev"]` to frontend base image
+- **Impact**: Consistent container startup across all generated projects
+
+### ✅ Clean Template Database Schema
+- **Issue**: Template included project-specific tables (`projects`)
+- **Solution**: Removed template-specific models, migrations, and endpoints
+- **Impact**: Lean template with only essential tables: `users`, `user_sessions`, `alembic_version`
+
+### ✅ Enhanced Volume Cleanup
+- **Issue**: Test project volumes persisting after directory cleanup
+- **Solution**: Updated `clean-dirs` to remove volumes except vadimcastro/dlm/template
+- **Impact**: Complete cleanup prevents database schema conflicts
+
 ## 📋 Login Credentials
 
 ### Development
@@ -210,6 +242,17 @@ This project was created from the vadim-project-template, which is based on the 
 - ✅ Production-grade security and configuration
 - ✅ Mobile-first responsive design patterns
 - ✅ Comprehensive development workflow
+
+
+
+
+
+
+
+
+
+
+
 
 
 

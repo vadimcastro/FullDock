@@ -19,6 +19,8 @@ services:
       - NEXT_PUBLIC_ADMIN_INITIALS={{ADMIN_INITIALS}}
       - NEXT_PUBLIC_ADMIN_EMAIL=${vadimOS_DEFAULT_ADMIN_EMAIL}
       - NEXT_PUBLIC_DEV_PASSWORD=${vadimOS_DEFAULT_DEV_PASSWORD}
+      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=Template Project
+      - NEXT_PUBLIC_PROJECT_DESCRIPTION=vadim-project-template development environment
       
   api:
     image: template-backend-base:latest

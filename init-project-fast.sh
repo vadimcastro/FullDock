@@ -139,14 +139,7 @@ EOF
     # Navigate to project directory
     cd "$PROJECT_PATH"
     
-    echo "💻 Opening VS Code with documentation..."
-    if [[ -f "CLAUDE.md" ]]; then
-        code . "CLAUDE.md"
-    elif [[ -f "README.md" ]]; then
-        code . "README.md"
-    else
-        code .
-    fi
+    echo "💻 Project ready for VS Code opening..."
     
     echo ""
     echo "⚡ FAST MODE: Project ready for external development startup!"

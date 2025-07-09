@@ -63,16 +63,6 @@ async def get_recent_activity(
         raise HTTPException(status_code=401, detail="Not authenticated")
     return crud_metrics.get_recent_activity(db, limit)
 
-@router.get("/projects")
-@cache(expire=300)  # Cache for 5 minutes
-async def get_project_metrics(
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-) -> Dict:
-    user = get_user_from_token(token, db)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return crud_metrics.get_project_metrics(db)
 
 @router.get("/system")
 @cache(expire=60)  # Cache for 1 minute
