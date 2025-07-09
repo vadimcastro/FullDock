@@ -9,14 +9,16 @@ services:
       - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/frontend:/app
       - template_frontend_node_modules:/app/node_modules
       - /app/.next
+    env_file:
+      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/.env.development
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NEXT_PUBLIC_ADMIN_NAME={{ADMIN_NAME}}
       - NEXT_PUBLIC_ADMIN_ROLE=Administrator
       - NEXT_PUBLIC_ADMIN_INITIALS={{ADMIN_INITIALS}}
-      - NEXT_PUBLIC_ADMIN_EMAIL={{ADMIN_EMAIL}}
-      - NEXT_PUBLIC_DEV_PASSWORD={{DEV_PASSWORD}}
+      - NEXT_PUBLIC_ADMIN_EMAIL=${vadimOS_DEFAULT_ADMIN_EMAIL}
+      - NEXT_PUBLIC_DEV_PASSWORD=${vadimOS_DEFAULT_DEV_PASSWORD}
       
   api:
     image: template-backend-base:latest

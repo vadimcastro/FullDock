@@ -3,13 +3,17 @@
 
 services:
   frontend:
+    env_file:
+      - ../.env.development
     environment:
       - NEXT_PUBLIC_ADMIN_NAME={{ADMIN_NAME}}
       - NEXT_PUBLIC_ADMIN_ROLE={{ADMIN_ROLE}}
       - NEXT_PUBLIC_ADMIN_INITIALS={{ADMIN_INITIALS}}
+      - NEXT_PUBLIC_ADMIN_EMAIL=${vadimOS_DEFAULT_ADMIN_EMAIL}
+      - NEXT_PUBLIC_DEV_PASSWORD=${vadimOS_DEFAULT_DEV_PASSWORD}
       
   api:
     env_file:
-      - /Users/vadimcastro/Desktop/PROJECTS/{{PROJECT_NAME}}/.env.development
+      - ../.env.development
     volumes:
       - ../backend/.env:/app/.env:ro

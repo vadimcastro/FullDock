@@ -42,7 +42,7 @@ echo "📋 Testing authentication..."
 # Test login with standard vadimOS credentials
 response=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username={{ADMIN_EMAIL}}&password={{DEV_PASSWORD}}")
+    -d "username=mom@mom.com&password=meow")
 
 if echo "$response" | grep -q "access_token"; then
     echo "📋 Testing endpoints..."
@@ -63,11 +63,11 @@ if echo "$response" | grep -q "access_token"; then
     
     if [ $endpoint_count -ge 1 ]; then
         echo "✅ Fast auth setup complete ($endpoint_count/3 endpoints tested successfully)"
-        echo "📋 Login: {{ADMIN_EMAIL}} / {{DEV_PASSWORD}}"
+        echo "📋 Login: mom@mom.com / meow"
         echo "🌐 http://localhost:3000 | 🔧 http://localhost:8000/docs"
     else
         echo "⚠️  Authentication works but endpoints may still be initializing"
-        echo "📋 Login: {{ADMIN_EMAIL}} / {{DEV_PASSWORD}}"
+        echo "📋 Login: mom@mom.com / meow"
         echo "🌐 http://localhost:3000 | 🔧 http://localhost:8000/docs"
     fi
 else

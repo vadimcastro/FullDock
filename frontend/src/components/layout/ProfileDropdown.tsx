@@ -24,6 +24,14 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ isOpen, onClose, prof
 
   useEffect(() => {
     setMounted(true);
+    
+    // Template development mode: Auto-fill with dummy credentials
+    if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && !email) {
+      setEmail(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
+    }
+    if (process.env.NEXT_PUBLIC_DEV_PASSWORD && !password) {
+      setPassword(process.env.NEXT_PUBLIC_DEV_PASSWORD);
+    }
   }, []);
 
   useEffect(() => {

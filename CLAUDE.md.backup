@@ -29,6 +29,44 @@ make droplet-clean-rebuild    # 🧹 Deep clean rebuild (full cache clear)
 - **Status**: 🚧 Setup Required
 - **Branch**: master
 
+## 🔧 Template Development with vptb
+
+### Template Development Workflow
+```bash
+vptb                      # Start template development mode
+# Prompts for:
+# - Project name (e.g., feat/new-navbar)  
+# - Display name (e.g., New Navigation Bar)
+# - Description (e.g., Redesign navigation component)
+
+# This will:
+# 1. Create git branch for feature development
+# 2. Generate docker-compose.dev.template.yml with dummy credentials
+# 3. Open VS Code + start development environment
+# 4. Enable login with mom@mom.com / meow for testing
+```
+
+### Template Development Commands
+```bash
+# After vptb setup:
+cd docker
+docker compose -f ../../vadimOS/docker/docker-compose.base.yml \
+               -f docker-compose.yml \
+               -f docker-compose.dev.ultra.yml \
+               -f docker-compose.dev.template.yml up
+
+# Login credentials for template development:
+# Email: mom@mom.com
+# Password: meow
+```
+
+### Template Development Guidelines
+- **Keep placeholders intact**: Maintain {{PLACEHOLDER}} syntax in code
+- **Test with dummy data**: Use mom@mom.com/meow for authentication testing
+- **Git workflow**: Work in feature branches, commit improvements
+- **Merge back**: Copy successful changes back to template
+- **Documentation**: Update CLAUDE.md with new features
+
 ## ⚡ Terminal Workflow
 
 ### Quick Navigation & Git
@@ -172,6 +210,22 @@ This project was created from the vadim-project-template, which is based on the 
 - ✅ Production-grade security and configuration
 - ✅ Mobile-first responsive design patterns
 - ✅ Comprehensive development workflow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 
 interface LoginModalProps {
@@ -15,6 +15,8 @@ export default function LoginModal({ isOpen, onClose, onLogin, isLoading = false
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // No auto-fill - users should enter their own credentials
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,11 +114,6 @@ export default function LoginModal({ isOpen, onClose, onLogin, isLoading = false
           </div>
         </form>
 
-        <div className="px-6 pb-6 text-xs text-gray-500">
-          <p>Development credentials:</p>
-          <p>Email: {process.env.NEXT_PUBLIC_ADMIN_EMAIL || '{{ADMIN_EMAIL}}'}</p>
-          <p>Password: {process.env.NEXT_PUBLIC_DEV_PASSWORD || '{{DEV_PASSWORD}}'}</p>
-        </div>
       </div>
     </div>
   );
