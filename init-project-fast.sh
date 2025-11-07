@@ -28,6 +28,7 @@ read -p "Project display name [$PROJECT_NAME]: " PROJECT_DISPLAY_NAME
 PROJECT_DISPLAY_NAME=${PROJECT_DISPLAY_NAME:-$PROJECT_NAME}
 
 read -p "Project description: " PROJECT_DESCRIPTION
+read -p "Project type [standard, rag]: " PROJECT_TYPE
 
 echo ""
 echo "⚡ Default Configuration Preview:"
@@ -120,6 +121,7 @@ else
 # $PROJECT_DISPLAY_NAME
 
 $PROJECT_DESCRIPTION
+$PROJECT_TYPE
 
 ## Quick Start
 
@@ -202,6 +204,7 @@ echo "========================="
 echo "Project Name: $PROJECT_NAME"
 echo "Display Name: $PROJECT_DISPLAY_NAME"  
 echo "Description: $PROJECT_DESCRIPTION"
+echo "Type: $PROJECT_TYPE"
 echo "Admin Email: $ADMIN_EMAIL"
 echo "Admin Username: $ADMIN_USERNAME"
 echo "Admin Name: $ADMIN_NAME"
@@ -236,6 +239,7 @@ replace_vars_fast() {
             -e "s|{{PROJECT_NAME}}|$PROJECT_NAME|g" \
             -e "s|{{PROJECT_DISPLAY_NAME}}|$PROJECT_DISPLAY_NAME|g" \
             -e "s|{{PROJECT_DESCRIPTION}}|$PROJECT_DESCRIPTION|g" \
+            -e "s|{{PROJECT_TYPE}}|$PROJECT_TYPE|g" \
             -e "s|{{ADMIN_EMAIL}}|$ADMIN_EMAIL|g" \
             -e "s|{{ADMIN_USERNAME}}|$ADMIN_USERNAME|g" \
             -e "s|{{ADMIN_NAME}}|$ADMIN_NAME|g" \
