@@ -8,7 +8,7 @@ import psycopg2
 import os
 import sys
 
-db_name = os.getenv('POSTGRES_DB', 'vadimcastro')
+db_name = os.getenv('POSTGRES_DB', 'template')
 db_user = os.getenv('POSTGRES_USER', 'postgres')
 db_password = os.getenv('POSTGRES_PASSWORD', 'password')
 db_host = os.getenv('POSTGRES_HOST', 'db')
@@ -52,7 +52,6 @@ sys.path.append('/app')
 
 # Import models to register them with Base
 from app.models.user import User
-from app.models.project import Project  
 from app.models.user_session import UserSession
 from app.db.base_class import Base
 from app.db.session import engine
@@ -84,5 +83,9 @@ if [ -d "alembic" ] && [ -f "alembic/env.py" ]; then
     echo "Marking current state in alembic..."
     alembic stamp head 2>/dev/null || echo "Alembic stamp failed, but tables should be created"
 fi
+
+# Initialize database with admin user
+echo "Initializing database..."
+python3 /app/scripts/init_db.py
 
 echo "Migration complete!"

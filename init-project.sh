@@ -259,19 +259,40 @@ EOF
 echo ""
 echo "✅ Project created successfully!"
 echo ""
-echo "🚀 Starting development environment and configuring authentication..."
 
-# Navigate to project and start services
+# Navigate to project and open VS Code immediately
 cd "$PROJECT_PATH"
+
+echo "💻 Opening VS Code with documentation..."
+if [[ -f "CLAUDE.md" ]]; then
+    code . "CLAUDE.md"
+elif [[ -f "README.md" ]]; then
+    code . "README.md"
+else
+    code .
+fi
+
+echo "🚀 Starting development environment and configuring authentication..."
 
 # Start services in background
 echo "Starting Docker services..."
 make dev > /dev/null 2>&1 &
 DEV_PID=$!
 
-# Wait a moment for services to initialize
+# Wait for services to be ready using health checks
 echo "Waiting for services to initialize..."
-sleep 10
+if [ -f "scripts/docker-health.sh" ]; then
+    source scripts/docker-health.sh
+    echo "🏥 Running health checks before proceeding..."
+    if wait_for_services 3000 8000; then
+        echo "✅ Services are ready!"
+    else
+        echo "⚠️  Services taking longer than expected, continuing anyway..."
+    fi
+else
+    # Fallback to sleep if health functions not available
+    sleep 20
+fi
 
 # Setup authentication
 echo "Configuring local authentication..."

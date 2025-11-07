@@ -5,11 +5,11 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-2xl mx-auto text-center">
         <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-          {{PROJECT_DISPLAY_NAME}}
+          {process.env.NEXT_PUBLIC_PROJECT_NAME || 'Template Project'}
         </h1>
         
         <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-lg mx-auto">
-          {{PROJECT_DESCRIPTION}}
+          {process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || 'vadimOS Project Template - Ready for Development'}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

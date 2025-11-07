@@ -6,7 +6,6 @@ from app.db.base_class import Base
 
 # Import all models to ensure they are registered with Base
 from app.models.user import User  
-from app.models.project import Project
 from app.models.user_session import UserSession
 
 # Create SQLAlchemy engine

@@ -1,59 +1,13 @@
-# docker/docker-compose.yml
-services:
-  api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      args:
-        - APP_PATH=backend/app
-    volumes:
-      - ../backend/app:/app/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-      - redis
-      
-  frontend:
-    build:
-      context: ..
-      dockerfile: docker/frontend/Dockerfile.dev
-    volumes:
-      - ../frontend:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB={{PROJECT_NAME}}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      
-  redis:
-    image: redis:6
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
+# {{PROJECT_NAME}} specific overrides
+# Use with: docker compose -f ../../vadimOS/docker/docker-compose.base.yml -f docker-compose.yml
 
-volumes:
-  postgres_data:
-  redis_data:
+services:
+  # Override database name for {{PROJECT_NAME}}
+  db:
+    environment:
+      - POSTGRES_DB={{PROJECT_NAME}}
+      
+  # Override API database connection
+  api:
+    environment:
+      - POSTGRES_DB={{PROJECT_NAME}}

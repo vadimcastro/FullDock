@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="text-sm text-gray-600">
-            © 2024 {{PROJECT_DISPLAY_NAME}}. Built with{' '}
+            © 2024 {process.env.NEXT_PUBLIC_PROJECT_NAME || 'Template Project'}. Built with{' '}
             <a 
               href="https://github.com/vadimcastro/vadim-project-template" 
               className="text-blue-600 hover:underline"

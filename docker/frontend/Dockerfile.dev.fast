@@ -1,0 +1,12 @@
+# docker/frontend/Dockerfile.dev.fast
+# Optimized development frontend with persistent node_modules volume
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Install dependencies and start dev server
+CMD ["sh", "-c", "npm ci --silent && npm run dev"]
