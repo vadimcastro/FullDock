@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# docker-health.sh - Universal Docker Health Check Functions for vadimOS
-# Location: /Users/vadimcastro/Desktop/PROJECTS/vadimOS/docker-health.sh
-# Purpose: Provide universal Docker health checking across all vadimOS projects
+# docker-health.sh - Docker Health Check Functions
+# Purpose: Provide reusable Docker health checks across projects
 
 # Color codes for consistent output
 RED='\033[0;31m'
@@ -94,7 +93,7 @@ check_service_ready() {
 
 # Comprehensive Docker health check
 health_docker() {
-    echo -e "${BLUE}🏥 vadimOS Docker Health Check${NC}"
+    echo -e "${BLUE}🏥 Docker Health Check${NC}"
     echo "================================"
     
     local all_checks_passed=true
@@ -193,7 +192,7 @@ health_api() {
 
 # Comprehensive health check
 health_check() {
-    echo -e "${BLUE}🏥 vadimOS Complete Health Check${NC}"
+    echo -e "${BLUE}🏥 Complete Health Check${NC}"
     echo "===================================="
     
     local overall_health=true

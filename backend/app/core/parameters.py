@@ -7,6 +7,7 @@ class ParameterStore:
     def __init__(self):
         # Auto-detect AWS region or default to us-east-2
         self.region = os.getenv('AWS_DEFAULT_REGION', 'us-east-2')
+        self.prefix = os.getenv('PARAMETER_STORE_PREFIX', '/app').rstrip('/')
         self.ssm = None
         
     def _init_boto3(self):
@@ -23,12 +24,12 @@ class ParameterStore:
                 try:
                     # Try to get stored AWS credentials
                     access_key = temp_ssm.get_parameter(
-                        Name='/vadimcastro/aws/access-key-id',
+                        Name=f'{self.prefix}/aws/access-key-id',
                         WithDecryption=True
                     )['Parameter']['Value']
                     
                     secret_key = temp_ssm.get_parameter(
-                        Name='/vadimcastro/aws/secret-access-key',
+                        Name=f'{self.prefix}/aws/secret-access-key',
                         WithDecryption=True
                     )['Parameter']['Value']
                     
@@ -71,8 +72,8 @@ class ParameterStore:
     
     def get_database_url(self) -> str:
         """Construct database URL from parameters"""
-        host = self.get_parameter('/vadimcastro/database/host', decrypt=False)
-        password = self.get_parameter('/vadimcastro/database/password')
+        host = self.get_parameter(f'{self.prefix}/database/host', decrypt=False)
+        password = self.get_parameter(f'{self.prefix}/database/password')
         
         if not host or not password:
             # Fallback to environment variables
@@ -82,7 +83,7 @@ class ParameterStore:
     
     def get_redis_url(self) -> str:
         """Construct Redis URL from parameters"""
-        host = self.get_parameter('/vadimcastro/redis/host', decrypt=False)
+        host = self.get_parameter(f'{self.prefix}/redis/host', decrypt=False)
         
         if not host:
             # Fallback to environment variables
@@ -92,11 +93,11 @@ class ParameterStore:
     
     def get_secret_key(self) -> str:
         """Get secret key from parameters"""
-        secret = self.get_parameter('/vadimcastro/app/secret-key')
+        secret = self.get_parameter(f'{self.prefix}/app/secret-key')
         
         if not secret:
             # Fallback to environment variables
-            return os.getenv('SECRET_KEY', 'fallback-secret-key')
+            return os.getenv('SECRET_KEY', '')
             
         return secret
 

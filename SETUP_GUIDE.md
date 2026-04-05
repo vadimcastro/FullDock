@@ -21,12 +21,14 @@ docker ps                # Should connect to Docker daemon
 # Navigate to template (or use alias)
 projects                  # If you have the alias
 # OR
-cd ~/Desktop/PROJECTS/vadim-project-template
+cd ~/Desktop/PROJECTS/project-template
 
 # Create new project interactively
 newpro                    # Auto-navigates to new project
 # OR
-./init-project.sh         # Manual execution
+make newpro               # From template root
+# OR
+./init-project-fast.sh    # Manual execution
 ```
 
 ### 2. Project Configuration
@@ -59,13 +61,22 @@ make dev
 # Look for "✅ All services started successfully"
 ```
 
+Use `make dev-build` when you need to rebuild images after Dockerfile/dependency changes.
+
+### Shared Base Image Reuse
+`make dev` uses shared base images keyed by `PROJECT_SLUG`:
+- `${PROJECT_SLUG}-frontend-base:latest`
+- `${PROJECT_SLUG}-backend-base:latest`
+
+Default is `PROJECT_SLUG=vpt-core`. First run on a new machine builds these once; later projects with the same slug reuse them automatically.
+
 ### 4. Setup Authentication
 ```bash
 # In a new terminal tab (keep `make dev` running)
 cd ~/Desktop/PROJECTS/my-awesome-app    # Or use project alias
 
 # Configure local authentication
-make setup-local-auth
+make auth
 
 # You should see: ✅ Local authentication working!
 ```
@@ -76,8 +87,8 @@ make setup-local-auth
 **API Docs:** http://localhost:8000/docs
 
 **Login Credentials:**
-- Email: (what you configured)
-- Password: (what you configured, default: `meow`)
+- Email: `ADMIN_EMAIL` from `.env.development`
+- Password: `ADMIN_PASSWORD` from `.env.development`
 
 ## Detailed Setup Options
 
@@ -95,6 +106,30 @@ make setup-prod-env
 
 # This creates secure passwords and production config
 ```
+Use `.env.production.local.example` as a reference for required keys.
+Production startup enforces:
+- `SECRET_KEY` minimum 32 chars
+- `ADMIN_PASSWORD` minimum 12 chars
+- `POSTGRES_PASSWORD` minimum 12 chars
+- `CORS_ORIGINS` must be explicit (no localhost/wildcard)
+
+### Frontend Template Variables and Assets
+
+These placeholders are used in frontend components and are replaced by `make newpro` / `init-project-fast.sh`:
+
+- `{{PROJECT_DISPLAY_NAME}}`
+- `{{ADMIN_EMAIL}}`
+- `{{ADMIN_NAME}}`
+- `{{ADMIN_INITIALS}}`
+- `{{GITHUB_URL}}`
+- `{{LINKEDIN_URL}}`
+- `{{WEBSITE_URL}}`
+
+Optional UI asset:
+- Add `frontend/public/images/profile.jpg` if you want a personal avatar in UI components.
+
+Toast UI dependency note:
+- If you keep the toast components (`toast.tsx`, `toaster.tsx`, `use-toast.ts`), ensure `@radix-ui/react-toast` and `class-variance-authority` are present in `frontend/package.json`.
 
 ### Database Management
 
@@ -144,7 +179,7 @@ make clean && make dev
 - Backend: Hot reload enabled (API updates automatically)
 - Database: Migrations required for schema changes
 
-## Production Deployment
+## Deployment
 
 ### 1. Server Setup
 **Prerequisites:**
@@ -160,7 +195,7 @@ Host myserver
     IdentityFile ~/.ssh/id_rsa
 ```
 
-### 2. Deploy to Production
+### 2. Deploy
 ```bash
 # Test SSH connection
 ssh myserver
@@ -168,26 +203,17 @@ ssh myserver
 # Generate production environment
 make setup-prod-env
 
-# Deploy current branch
-make droplet-deploy
-
-# Quick deploy (uses cache)
-make droplet-quick-deploy
+# Recommended: TLS + reverse proxy ingress
+docker compose -f docker/docker-compose.https.yml up -d --build
 ```
 
-### 3. Production Management
+### 3. Management
 ```bash
 # Check status
-make droplet-status
+docker compose -f docker/docker-compose.https.yml ps
 
 # View logs
-make droplet-logs
-
-# Force rebuild
-make droplet-force-rebuild
-
-# Clean rebuild (removes all cache)
-make droplet-clean-rebuild
+docker compose -f docker/docker-compose.https.yml logs -f
 ```
 
 ## Metrics Dashboard
@@ -225,6 +251,22 @@ make clean
 docker system prune -f
 ```
 
+**Docker Disk Usage Growing Too Much:**
+```bash
+# Validate local docker/dev setup
+make doctor
+
+# Inspect disk usage (images/volumes/build cache)
+make disk-usage
+
+# Remove old legacy image tags
+make cleanup-legacy-images
+
+# Safe cleanup of dangling resources
+make prune-safe
+```
+If you run aggressive prune commands, expect the next `make dev` to rebuild images from scratch.
+
 **Port Already in Use:**
 ```bash
 # Find process using port 3000
@@ -235,6 +277,12 @@ kill -9 [PID]
 
 # Or use different ports in docker-compose.yml
 ```
+
+**API works on :8000/docs, frontend missing on :3000:**
+```bash
+docker compose -f docker/docker-compose.dev.fast.yml logs -f frontend
+```
+Frontend must run with host binding `0.0.0.0` inside Docker.
 
 **Database Connection Issues:**
 ```bash
@@ -251,7 +299,7 @@ docker compose logs db
 **Authentication Not Working:**
 ```bash
 # Recreate admin user
-make setup-local-auth
+make auth
 
 # Check API logs
 docker compose logs api
@@ -279,7 +327,7 @@ docker compose logs api   # View specific service logs
 make down                 # Stop all services
 make clean-all            # Remove volumes and data
 make dev                  # Start fresh
-make setup-local-auth     # Reconfigure auth
+make auth                 # Reconfigure auth
 ```
 
 ## Next Steps
@@ -298,14 +346,14 @@ make setup-local-auth     # Reconfigure auth
 
 ### Deploy Features
 1. **Development**: Changes appear instantly with hot reload
-2. **Production**: Use `make droplet-deploy` to push changes
+2. **Production**: Use your preferred CI/CD or server automation
 3. **Monitoring**: Check metrics dashboard for performance
 
 ## Success Checklist
 
 - [ ] Project created with `newpro`
 - [ ] Development environment running (`make dev`)
-- [ ] Authentication configured (`make setup-local-auth`)
+- [ ] Authentication configured (`make auth`)
 - [ ] Frontend accessible at http://localhost:3000
 - [ ] API accessible at http://localhost:8000
 - [ ] Login working with configured credentials
@@ -334,4 +382,4 @@ make setup-local-auth     # Reconfigure auth
 3. **Logging**: Centralized logs via Docker
 4. **Alerts**: Can integrate with monitoring services
 
-Your new project includes everything from your successful vadimcastro.me infrastructure!
+Your new project includes a complete Docker + API + frontend + auth baseline.

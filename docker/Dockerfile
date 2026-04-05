@@ -20,15 +20,9 @@ ENV GIT_COMMIT_HASH=${GIT_COMMIT_HASH}
 ENV GIT_COMMIT_MESSAGE=${GIT_COMMIT_MESSAGE}
 ENV GIT_COMMIT_DATE=${GIT_COMMIT_DATE}
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements first for better caching
 COPY backend/requirements-minimal.txt /app/
-RUN python3 -m pip install -r requirements-minimal.txt
+RUN python3 -m pip install --no-cache-dir -r requirements-minimal.txt
 
 # Copy the rest of the application
 COPY backend/ /app/

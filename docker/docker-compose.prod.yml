@@ -9,7 +9,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://{{PRODUCTION_IP}}:8000
+      - NEXT_PUBLIC_API_URL=https://api.{{DOMAIN_NAME}}
     # Explicitly no volumes - use built files only
 
   api:
@@ -48,8 +48,6 @@ services:
     image: postgres:15
     env_file:
       - ../.env.production.local
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -61,8 +59,6 @@ services:
   redis:
     image: redis:6
     command: redis-server --appendonly yes
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:

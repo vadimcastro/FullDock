@@ -97,14 +97,14 @@ export default function ResumePage() {
                   <Phone className="w-6 h-6 text-gray-700 hover:text-gray-900" />
                 </a>
                 <a
-                  href="mailto:vadimcastro1@gmail.com?subject=Hey%20Vadim!"
+                  href="mailto:hello@example.com?subject=Hello"
                   className="flex items-center justify-center p-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
                   title="Send Email"
                 >
                   <Mail className="w-6 h-6 text-gray-700 hover:text-gray-900" />
                 </a>
                 <a
-                  href="https://www.linkedin.com/in/vadimcastro"
+                  href="https://www.linkedin.com/"
                   className="flex items-center justify-center p-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -113,7 +113,7 @@ export default function ResumePage() {
                   <Linkedin className="w-6 h-6 text-gray-700 hover:text-gray-900" />
                 </a>
                 <a
-                  href="https://github.com/vadimcastro"
+                  href="https://github.com/"
                   className="flex items-center justify-center p-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
                   target="_blank"
                   rel="noopener noreferrer"

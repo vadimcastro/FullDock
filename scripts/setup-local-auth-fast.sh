@@ -2,12 +2,31 @@
 
 # setup-local-auth-fast.sh
 # Optimized local development authentication setup
-# Assumes Docker services are already starting (for vadimOS integration)
+# Assumes Docker services are already starting
 
 set -e
 
 echo "⚡ setup-local-auth-fast"
 echo "📋 Checking services (optimized)"
+
+ENV_FILE=".env.development"
+if [ ! -f "$ENV_FILE" ]; then
+    echo "❌ Missing $ENV_FILE"
+    exit 1
+fi
+
+read_env_var() {
+    local key="$1"
+    grep -E "^${key}=" "$ENV_FILE" | tail -n 1 | cut -d'=' -f2-
+}
+
+ADMIN_EMAIL="$(read_env_var ADMIN_EMAIL)"
+ADMIN_PASSWORD="$(read_env_var ADMIN_PASSWORD)"
+
+if [ -z "$ADMIN_EMAIL" ] || [ -z "$ADMIN_PASSWORD" ]; then
+    echo "❌ ADMIN_EMAIL or ADMIN_PASSWORD missing in $ENV_FILE"
+    exit 1
+fi
 
 # Check if Docker is running
 if ! docker info >/dev/null 2>&1; then
@@ -33,16 +52,16 @@ done
 if [ $attempt -eq $max_attempts ]; then
     echo "❌ API failed to start within 30s (assuming services still starting)"
     echo "💡 This is normal if Docker services are still initializing"
-    echo "🔄 You can run 'make setup-local-auth' manually once services are ready"
+    echo "🔄 You can run 'make auth' manually once services are ready"
     exit 0  # Don't fail hard, just warn
 fi
 
 echo "📋 Testing authentication..."
 
-# Test login with standard vadimOS credentials
+# Test login with project development credentials from .env.development
 response=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username=mom@mom.com&password=meow")
+    -d "username=${ADMIN_EMAIL}&password=${ADMIN_PASSWORD}")
 
 if echo "$response" | grep -q "access_token"; then
     echo "📋 Testing endpoints..."
@@ -63,11 +82,11 @@ if echo "$response" | grep -q "access_token"; then
     
     if [ $endpoint_count -ge 1 ]; then
         echo "✅ Fast auth setup complete ($endpoint_count/3 endpoints tested successfully)"
-        echo "📋 Login: mom@mom.com / meow"
+        echo "📋 Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"
         echo "🌐 http://localhost:3000 | 🔧 http://localhost:8000/docs"
     else
         echo "⚠️  Authentication works but endpoints may still be initializing"
-        echo "📋 Login: mom@mom.com / meow"
+        echo "📋 Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"
         echo "🌐 http://localhost:3000 | 🔧 http://localhost:8000/docs"
     fi
 else

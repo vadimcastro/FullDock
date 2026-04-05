@@ -1,11 +1,11 @@
-# Vadim's Project Template
+# Project Template
 
-A battle-tested project template based on the successful vadimcastro.me infrastructure. This template provides a complete React/FastAPI/Postgres/Docker stack with proven deployment automation.
+A reusable project template for React/FastAPI/Postgres/Redis with Docker-first local development and shared base-image acceleration.
 
 ## 🎯 Features
 
 - **Proven Tech Stack**: React + Next.js 14, FastAPI, PostgreSQL, Redis, Docker
-- **Production Ready**: Based on live vadimcastro.me infrastructure 
+- **Production Ready**: Includes deployment-focused Docker layouts
 - **Complete Automation**: Comprehensive Makefile with deployment commands
 - **Docker Everything**: Multi-environment Docker setup (dev/prod/HTTPS)
 - **Security Built-in**: Environment-specific configurations, secret management
@@ -20,10 +20,16 @@ A battle-tested project template based on the successful vadimcastro.me infrastr
 - Git configured
 - SSH access to production server (for deployment)
 
+### Environment Setup
+```bash
+cp .env.example .env.development
+```
+Edit `.env.development` as needed for your project.
+
 ### Create New Project
 ```bash
-cd ~/Desktop/PROJECTS/vadim-project-template
-./init-project.sh
+cd ~/Desktop/PROJECTS/project-template
+make newpro
 ```
 
 The script will guide you through:
@@ -36,10 +42,25 @@ The script will guide you through:
 ```bash
 cd ../your-new-project
 make dev              # Start all services
-make setup-local-auth # Configure authentication
+make auth             # Configure authentication
 ```
 
 Visit http://localhost:3000 to see your project!
+
+## Shared Base Images (Cross-Project Reuse)
+
+`make dev` checks for shared base images before startup:
+- `${PROJECT_SLUG}-frontend-base:latest`
+- `${PROJECT_SLUG}-backend-base:latest`
+
+Defaults:
+- `PROJECT_SLUG=vpt-core` in `.env.development`
+- New projects created with `make newpro` inherit this default
+
+Behavior:
+- First run on a machine: base images are built automatically
+- Later runs in any project using the same `PROJECT_SLUG`: images are reused
+- To force a dedicated image namespace per project: set a unique `PROJECT_SLUG`
 
 ## 🏗️ Template Architecture
 
@@ -123,12 +144,23 @@ your-project/
 
 ### Core Workflow
 ```bash
-make dev                      # Start development environment
+make dev                      # Start dev using existing images (fast)
+make dev-build               # Rebuild app images, then start dev
+make dev-ultra               # Use prebuilt shared base images
 make dev-debug               # Start with debug logging
-make setup-local-auth        # Configure local authentication
+make auth                    # Configure local authentication
 make logs                    # View container logs
 make down                    # Stop containers
 make clean                   # Clean up environment
+make doctor                  # Preflight checks (docker/env/ports)
+make disk-usage              # Docker image/volume/cache usage snapshot
+make prune-safe              # Safe Docker cleanup
+make cleanup-legacy-images   # Remove legacy image tags
+```
+
+### Project Creation
+```bash
+make newpro                  # Interactive fast project creation
 ```
 
 ### Database Management
@@ -142,54 +174,58 @@ make migrate-create name=X   # Create new migration
 make format                  # Format code (Prettier + Black)
 ```
 
-## 🚀 Production Deployment
+## 🚀 Deployment
 
 ### Initial Setup
 ```bash
 make setup-prod-env          # Configure production secrets
 ```
 
-### Deployment Options
-```bash
-make droplet-deploy          # Standard deployment
-make droplet-quick-deploy    # ⚡ Fast (uses cache)
-make droplet-quick-rebuild   # 🚀 Partial cache clear
-make droplet-clean-rebuild   # 🧹 Full clean rebuild
-make droplet-force-rebuild   # 💪 Force rebuild
-```
+Use your own deployment workflow (CI/CD, VPS scripts, managed platform, etc.). The template includes production compose files and env scaffolding, but no provider-specific deploy commands by default.
 
-### Monitoring & Maintenance
+Recommended runtime for internet-facing production:
 ```bash
-make droplet-status          # Check production status
-make droplet-logs            # View API logs
-make droplet-debug           # Debug production issues
-make droplet-deep-clean      # Comprehensive maintenance
-make droplet-disk-usage      # Check disk usage
+docker compose -f docker/docker-compose.https.yml up -d --build
 ```
-
-### Branch Management
-```bash
-make droplet-deploy branch=feature-name    # Deploy specific branch
-make clean-branches                        # Clean local branches
-make droplet-clean-branches               # Clean production branches
-```
+This keeps API/DB/Redis private behind Nginx TLS ingress.
 
 ## 🔐 Security & Configuration
+
+### Safety Features Summary
+- Production startup hard-fails on weak/missing secrets and unsafe CORS.
+- Login abuse protection includes Redis-backed throttling and temporary lockouts.
+- Token flow supports refresh rotation and session revocation (`logout`, `logout-all`).
+- Production defaults keep database/cache private and route traffic through TLS ingress.
 
 ### Environment Files
 - **Development**: `.env.development` (included in template)
 - **Production**: `.env.production.local` (generated by setup script)
+- **Production Example**: `.env.production.local.example` (safe template, no real secrets)
 
 ### Secret Management
 - All production secrets auto-generated during setup
 - Database passwords, JWT keys, admin credentials
 - Secrets stored locally and git-ignored
+- Production startup fails fast if secrets are weak/missing
+
+### Production Minimums Enforced
+- `SECRET_KEY`: at least 32 characters and not a default value
+- `ADMIN_PASSWORD`: at least 12 characters
+- `POSTGRES_PASSWORD`: at least 12 characters
+- `CORS_ORIGINS`: must be explicitly set and cannot include localhost or `*`
 
 ### Authentication
 - JWT-based authentication system
 - Admin user auto-created during setup
 - Development: Simple credentials
 - Production: Strong generated passwords
+- Login abuse protections: Redis-backed failure counters + temporary lockouts
+- Token lifecycle: access + refresh rotation, `logout`, and `logout-all`
+
+### Auth Ops Playbook
+- Watch API logs for `auth_event` entries where `event=login_blocked` or repeated `event=login_failed`.
+- If suspicious activity continues, rotate `ADMIN_PASSWORD` and restart the stack.
+- Trigger a user-wide session reset by calling `POST /api/v1/auth/logout-all` while authenticated.
 
 ## 🌐 Infrastructure Modes
 
@@ -210,10 +246,9 @@ make droplet-clean-branches               # Clean production branches
 - SSL certificate integration
 - Domain-based routing
 - Production security headers
+- Backend and Nginx both add baseline security headers in production
 
-## 📊 What Makes This Template Successful
-
-Based on the proven vadimcastro.me infrastructure:
+## 📊 Why This Template Works
 
 - **Battle-Tested**: Live production use with real traffic
 - **Mobile-First**: Responsive design that actually works
@@ -235,6 +270,16 @@ Based on the proven vadimcastro.me infrastructure:
 - Layer caching for fast rebuilds
 - Health checks for all services
 - Volume management for data persistence
+- `PROJECT_SLUG` controls reusable ultra base image names across projects
+- `make build-base` creates `${PROJECT_SLUG}-frontend-base` and `${PROJECT_SLUG}-backend-base`
+- Projects sharing the same `PROJECT_SLUG` can reuse those images with `make dev-ultra`
+
+### Docker Disk Hygiene
+- `make doctor` validates Docker daemon, environment files, and required ports.
+- `make disk-usage` shows current image, volume, and build-cache usage.
+- `make cleanup-legacy-images` removes old legacy image tags no longer used by VPT.
+- `make prune-safe` performs conservative cleanup of stopped containers and dangling artifacts.
+- Use aggressive Docker prune commands only when needed; they reclaim more space but force full rebuilds on next `make dev`.
 
 ### Development Experience
 - Hot reload for instant feedback
@@ -262,9 +307,16 @@ make dev               # Start fresh
 
 **Authentication problems:**
 ```bash
-make setup-local-auth  # Reconfigure auth
+make auth              # Reconfigure auth
 make logs              # Check API logs
 ```
+
+**API works on :8000 but frontend not on :3000:**
+```bash
+docker compose -f docker/docker-compose.dev.fast.yml logs -f frontend
+```
+Frontend in Docker must bind `0.0.0.0`. This template uses:
+`next dev -H 0.0.0.0 -p 3000`
 
 **Production deployment issues:**
 ```bash
@@ -275,7 +327,7 @@ make droplet-clean-rebuild  # Clean rebuild
 
 ## 🤝 Contributing
 
-This template is based on patterns from vadimcastro.me. To improve:
+To improve this template:
 
 1. Test changes against a real project
 2. Update documentation
@@ -285,7 +337,3 @@ This template is based on patterns from vadimcastro.me. To improve:
 ## 📄 License
 
 MIT License - feel free to use for personal and commercial projects.
-
----
-
-**Created by Vadim Castro** - Based on successful vadimcastro.me infrastructure patterns.

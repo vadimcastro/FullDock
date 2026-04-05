@@ -1,13 +1,12 @@
-# {{PROJECT_NAME}} specific overrides
-# Use with: docker compose -f ../../vadimOS/docker/docker-compose.base.yml -f docker-compose.yml
+# template project-specific overrides
 
 services:
-  # Override database name for {{PROJECT_NAME}}
+  # Override database name for template project
   db:
     environment:
-      - POSTGRES_DB={{PROJECT_NAME}}
+      - POSTGRES_DB=${POSTGRES_DB:-template}
       
   # Override API database connection
   api:
     environment:
-      - POSTGRES_DB={{PROJECT_NAME}}
+      - POSTGRES_DB=${POSTGRES_DB:-template}

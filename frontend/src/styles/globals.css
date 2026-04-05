@@ -38,5 +38,32 @@ body {
     color: #111827 !important;
     -webkit-text-fill-color: #111827 !important;
     -webkit-box-shadow: 0 0 0 1000px #f3f4f6 inset !important;
+    caret-color: #111827 !important;
+    color-scheme: light;
+  }
+
+  .auth-visible-input {
+    background-color: #f9fafb !important;
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
+    caret-color: #111827 !important;
+    color-scheme: light;
+    opacity: 1 !important;
+  }
+
+  .auth-visible-input::placeholder {
+    color: #6b7280 !important;
+    -webkit-text-fill-color: #6b7280 !important;
+    opacity: 1 !important;
+  }
+
+  .auth-visible-input:-webkit-autofill,
+  .auth-visible-input:-webkit-autofill:hover,
+  .auth-visible-input:-webkit-autofill:focus,
+  .auth-visible-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #111827 !important;
+    -webkit-box-shadow: 0 0 0 1000px #f9fafb inset !important;
+    box-shadow: 0 0 0 1000px #f9fafb inset !important;
+    transition: background-color 9999s ease-in-out 0s;
   }
 }

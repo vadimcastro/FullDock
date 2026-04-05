@@ -21,7 +21,7 @@ COPY frontend/tsconfig.json ./
 # Set environment variables for build
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG NEXT_PUBLIC_API_URL=http://{{PRODUCTION_IP}}:8000
+ARG NEXT_PUBLIC_API_URL=https://api.{{DOMAIN_NAME}}
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Build for production

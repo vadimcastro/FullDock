@@ -18,6 +18,8 @@ services:
     build:
       context: ..
       dockerfile: docker/frontend/Dockerfile
+    env_file:
+      - ../.env.production.local
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=https://api.{{DOMAIN_NAME}}
@@ -40,13 +42,10 @@ services:
         uvicorn app.main:app --host 0.0.0.0 --port 8000
       '
     # No port exposure - accessed through nginx
+    env_file:
+      - ../.env.production.local
     environment:
       - PYTHONPATH=/app:/app/app
-      - ENVIRONMENT=production
-      - DEBUG=0
-      - DATABASE_URL=postgresql://postgres:password@db:5432/{{PROJECT_NAME}}
-      - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY={{SECRET_KEY}}
     depends_on:
       db:
         condition: service_healthy
@@ -56,10 +55,8 @@ services:
 
   db:
     image: postgres:15
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB={{PROJECT_NAME}}
+    env_file:
+      - ../.env.production.local
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

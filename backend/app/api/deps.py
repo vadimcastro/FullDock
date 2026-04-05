@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
+from app.core.auth_protection import auth_protection
 from app.core.config import settings
 from app.db.utils import get_db
 from app.crud import crud_user
@@ -28,13 +29,17 @@ async def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        email: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        issued_at: int = int(payload.get("iat") or 0)
+        if not email or token_type != "access":
+            raise credentials_exception
+        if auth_protection.is_token_revoked(email, issued_at):
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    user = crud_user.get(db, id=int(user_id))
+    user = crud_user.get_by_email(db, email=email)
     if user is None:
         raise credentials_exception
     return user

@@ -24,9 +24,9 @@ echo "🔑 Generating secure secrets..."
 
 # Generate secrets
 DB_PASSWORD=$(openssl rand -base64 32)
-SECRET_KEY=$(openssl rand -base64 32) 
-JWT_SECRET_KEY=$(openssl rand -base64 32)
-SUGGESTED_ADMIN_PASSWORD=$(openssl rand -base64 16)
+SECRET_KEY=$(openssl rand -base64 48)
+JWT_SECRET_KEY=$(openssl rand -base64 48)
+SUGGESTED_ADMIN_PASSWORD=$(openssl rand -base64 24)
 
 echo "✅ Secrets generated successfully!"
 echo
@@ -53,6 +53,10 @@ if [ "$PASSWORD_OPTION" = "2" ]; then
         echo "❌ Passwords don't match!"
         exit 1
     fi
+    if [ ${#ADMIN_PASSWORD} -lt 12 ]; then
+        echo "❌ Admin password must be at least 12 characters."
+        exit 1
+    fi
 else
     ADMIN_PASSWORD=$SUGGESTED_ADMIN_PASSWORD
 fi
@@ -62,6 +66,18 @@ ADMIN_USERNAME=${ADMIN_USERNAME:-{{ADMIN_USERNAME}}}
 
 read -p "Admin Display Name [{{ADMIN_NAME}}]: " ADMIN_NAME
 ADMIN_NAME=${ADMIN_NAME:-"{{ADMIN_NAME}}"}
+
+echo
+read -p "Allowed CORS origins (comma-separated, e.g. https://app.example.com) []: " CORS_ORIGINS
+if [ -z "$CORS_ORIGINS" ]; then
+    echo "❌ CORS_ORIGINS is required for production setup."
+    exit 1
+fi
+
+if [[ "$CORS_ORIGINS" == *"localhost"* ]] || [[ "$CORS_ORIGINS" == *"127.0.0.1"* ]] || [[ "$CORS_ORIGINS" == *"0.0.0.0"* ]] || [[ "$CORS_ORIGINS" == *"*"* ]]; then
+    echo "❌ CORS_ORIGINS cannot contain localhost or wildcard values in production."
+    exit 1
+fi
 
 echo
 echo "📝 Creating .env.production.local..."
@@ -83,6 +99,11 @@ REDIS_URL=redis://redis:6379/1
 # Security - Generated unique secrets
 SECRET_KEY=$SECRET_KEY
 JWT_SECRET_KEY=$JWT_SECRET_KEY
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=14
+AUTH_MAX_FAILED_ATTEMPTS=5
+AUTH_FAILED_WINDOW_SECONDS=300
+AUTH_LOCKOUT_SECONDS=900
 
 # Admin User
 ADMIN_EMAIL=$ADMIN_EMAIL
@@ -93,6 +114,7 @@ ADMIN_NAME=$ADMIN_NAME
 # Environment
 ENVIRONMENT=production
 DEBUG=false
+CORS_ORIGINS=$CORS_ORIGINS
 EOF
 
 echo "✅ .env.production.local created successfully!"
@@ -174,16 +196,16 @@ echo
 echo "🗄️ Running database migrations..."
 
 # Check if containers are running and run migrations
-if docker ps | grep -q "docker-api-1"; then
-    echo "API container found, running migrations..."
-    docker exec docker-api-1 bash -c "cd /app && alembic upgrade head" || echo "Migrations failed, run manually after deployment"
+if docker compose ps api >/dev/null 2>&1; then
+    echo "API service found, running migrations..."
+    docker compose exec -T api bash -c "cd /app && alembic upgrade head" || echo "Migrations failed, run manually after deployment"
     echo "Initializing database with admin user..."
-    docker exec docker-api-1 python3 /app/scripts/init_db.py || echo "Database init failed, run manually after deployment"
+    docker compose exec -T api python3 /app/scripts/init_db.py || echo "Database init failed, run manually after deployment"
     echo "✅ Database setup complete!"
 else
     echo "⚠️  API container not running. After deployment, run:"
-    echo "   docker exec docker-api-1 bash -c 'cd /app && alembic upgrade head'"
-    echo "   docker exec docker-api-1 python3 /app/scripts/init_db.py"
+    echo "   docker compose exec -T api bash -c 'cd /app && alembic upgrade head'"
+    echo "   docker compose exec -T api python3 /app/scripts/init_db.py"
 fi
 echo
 

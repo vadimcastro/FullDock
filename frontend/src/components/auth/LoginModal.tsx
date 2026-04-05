@@ -46,7 +46,13 @@ export default function LoginModal({ isOpen, onClose, onLogin, isLoading = false
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4"
+          autoComplete="on"
+          data-1p-ignore="true"
+          data-lpignore="true"
+        >
           {error && (
             <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
               {error}
@@ -59,13 +65,18 @@ export default function LoginModal({ isOpen, onClose, onLogin, isLoading = false
             </label>
             <input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="login-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="login-input w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-900 placeholder:text-gray-500 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your email"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               required
               disabled={isLoading}
+              style={{ color: '#111827', WebkitTextFillColor: '#111827', caretColor: '#111827' }}
             />
           </div>
 
@@ -76,13 +87,18 @@ export default function LoginModal({ isOpen, onClose, onLogin, isLoading = false
             <div className="relative">
               <input
                 id="password"
+                name="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="login-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="login-input w-full px-3 py-2 pr-10 border border-gray-300 rounded-md bg-gray-100 text-gray-900 placeholder:text-gray-500 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your password"
+                autoComplete="current-password"
+                autoCapitalize="none"
+                spellCheck={false}
                 required
                 disabled={isLoading}
+                style={{ color: '#111827', WebkitTextFillColor: '#111827', caretColor: '#111827' }}
               />
               <button
                 type="button"
