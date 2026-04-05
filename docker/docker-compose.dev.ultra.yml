@@ -1,37 +1,63 @@
-# {{PROJECT_NAME}} ultra development overrides
-# Use with: docker compose -f ../../vadimOS/docker/docker-compose.base.yml -f docker-compose.yml -f ../../vadimOS/docker/docker-compose.dev.ultra.yml -f docker-compose.dev.ultra.yml
+# template ultra development overrides (prebuilt base images)
 
 services:
-  # Override for pre-built images
   frontend:
-    image: template-frontend-base:latest
+    image: ${PROJECT_SLUG:-vpt-core}-frontend-base:latest
+    ports:
+      - "3000:3000"
     volumes:
-      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/frontend:/app
+      - ../frontend:/app
       - template_frontend_node_modules:/app/node_modules
       - /app/.next
     env_file:
-      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/.env.development
+      - ../.env.development
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_ADMIN_NAME={{ADMIN_NAME}}
+      - NEXT_PUBLIC_ADMIN_NAME=${ADMIN_NAME:-Admin}
       - NEXT_PUBLIC_ADMIN_ROLE=Administrator
-      - NEXT_PUBLIC_ADMIN_INITIALS={{ADMIN_INITIALS}}
-      - NEXT_PUBLIC_ADMIN_EMAIL=${vadimOS_DEFAULT_ADMIN_EMAIL}
-      - NEXT_PUBLIC_DEV_PASSWORD=${vadimOS_DEFAULT_DEV_PASSWORD}
+      - NEXT_PUBLIC_ADMIN_INITIALS=${ADMIN_INITIALS:-A}
+      - NEXT_PUBLIC_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - NEXT_PUBLIC_DEV_PASSWORD=${ADMIN_PASSWORD:-changeme}
       - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=Template Project
-      - NEXT_PUBLIC_PROJECT_DESCRIPTION=vadim-project-template development environment
-      
+      - NEXT_PUBLIC_PROJECT_DESCRIPTION=Project template development environment
+    command: sh -c "npm run dev"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   api:
-    image: template-backend-base:latest
+    image: ${PROJECT_SLUG:-vpt-core}-backend-base:latest
+    command: >
+      sh -c '
+        echo "⚡ Ultra startup - running migrations..." &&
+        /app/scripts/migrate.sh &&
+        echo "⚡ Starting server with hot reload..." &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      '
+    ports:
+      - "8000:8000"
     volumes:
-      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/backend:/app
+      - ../backend:/app
+      - ../backend/.env:/app/.env:ro
     env_file:
-      - /Users/vadimcastro/Desktop/PROJECTS/vadim-project-template/.env.development
+      - ../.env.development
     environment:
-      - POSTGRES_DB=template
       - PYTHONPATH=/app
-    working_dir: /app
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${POSTGRES_DB:-template}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   template_frontend_node_modules:

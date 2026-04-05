@@ -1,22 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../lib/auth/AuthContext';
 import DashboardComponent from '../../components/dashboard/DashboardComponent';
 import LoginModal from '../../components/auth/LoginModal';
 
 export default function DashboardPage() {
-  const { user, login, isLoading } = useAuth();
+  const { user, login } = useAuth();
+  const searchParams = useSearchParams();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoginSubmitting, setIsLoginSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!user && searchParams.get('login') === '1') {
+      setShowLoginModal(true);
+    }
+  }, [user, searchParams]);
 
   const handleLogin = async (email: string, password: string) => {
     try {
+      setIsLoginSubmitting(true);
       setLoginError(null);
       await login(email, password);
       setShowLoginModal(false);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : 'Login failed');
+    } finally {
+      setIsLoginSubmitting(false);
     }
   };
 
@@ -40,7 +52,7 @@ export default function DashboardPage() {
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
           onLogin={handleLogin}
-          isLoading={isLoading}
+          isLoading={isLoginSubmitting}
           error={loginError}
         />
       </div>

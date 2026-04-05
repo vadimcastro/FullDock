@@ -1,18 +1,17 @@
-# {{PROJECT_NAME}} development overrides
-# Use with: docker compose -f ../../vadimOS/docker/docker-compose.base.yml -f docker-compose.yml -f ../../vadimOS/docker/docker-compose.dev.yml -f docker-compose.dev.yml
+# template development overrides
 
 services:
   frontend:
     env_file:
       - ../.env.development
     environment:
-      - NEXT_PUBLIC_ADMIN_NAME={{ADMIN_NAME}}
-      - NEXT_PUBLIC_ADMIN_ROLE={{ADMIN_ROLE}}
-      - NEXT_PUBLIC_ADMIN_INITIALS={{ADMIN_INITIALS}}
-      - NEXT_PUBLIC_ADMIN_EMAIL=${vadimOS_DEFAULT_ADMIN_EMAIL}
-      - NEXT_PUBLIC_DEV_PASSWORD=${vadimOS_DEFAULT_DEV_PASSWORD}
+      - NEXT_PUBLIC_ADMIN_NAME=${ADMIN_NAME:-Admin}
+      - NEXT_PUBLIC_ADMIN_ROLE=${ADMIN_ROLE:-Administrator}
+      - NEXT_PUBLIC_ADMIN_INITIALS=${ADMIN_INITIALS:-A}
+      - NEXT_PUBLIC_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - NEXT_PUBLIC_DEV_PASSWORD=${ADMIN_PASSWORD:-changeme}
       - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=Template Project
-      - NEXT_PUBLIC_PROJECT_DESCRIPTION=vadim-project-template development environment
+      - NEXT_PUBLIC_PROJECT_DESCRIPTION=Project template development environment
       
   api:
     env_file:

@@ -1,10 +1,17 @@
 # docker/frontend/Dockerfile.dev
 FROM node:18-alpine
-WORKDIR /app
+WORKDIR /opt/deps
 
 # Set environment variables
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install dependencies at build time
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+RUN cp -a node_modules /opt/node_modules
+
+WORKDIR /app
+
 # Start the development server
-CMD ["sh", "-c", "npm ci && npm run dev"]
+CMD ["sh", "-c", "if [ ! -x /app/node_modules/.bin/next ]; then mkdir -p /app/node_modules && cp -a /opt/node_modules/. /app/node_modules/; fi && npm run dev"]

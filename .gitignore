@@ -23,6 +23,7 @@ backend/dist/
 # OS
 .DS_Store
 Thumbs.db
+.directory
 
 # Logs
 *.log
@@ -61,24 +62,5 @@ coverage/
 
 # Alembic
 backend/alembic/versions/*.py
-!backend/alembic/versions/.gitkeepdocker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
-docker/docker-compose.dev.template.yml
+!backend/alembic/versions/.gitkeep
 docker/docker-compose.dev.template.yml

@@ -6,12 +6,12 @@ export default function Footer() {
           <div className="text-sm text-gray-600">
             © 2024 {process.env.NEXT_PUBLIC_PROJECT_NAME || 'Template Project'}. Built with{' '}
             <a 
-              href="https://github.com/vadimcastro/vadim-project-template" 
+              href={process.env.NEXT_PUBLIC_TEMPLATE_REPO_URL || "https://github.com/your-org/project-template"}
               className="text-blue-600 hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >
-              vadim-project-template
+              {process.env.NEXT_PUBLIC_TEMPLATE_REPO_NAME || "project-template"}
             </a>
           </div>
           

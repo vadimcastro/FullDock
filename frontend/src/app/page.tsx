@@ -9,7 +9,7 @@ export default function HomePage() {
         </h1>
         
         <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-lg mx-auto">
-          {process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || 'vadimOS Project Template - Ready for Development'}
+          {process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || 'Project Template - Ready for Development'}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -50,12 +50,12 @@ export default function HomePage() {
         <div className="mt-8 text-sm text-gray-500">
           Built with{' '}
           <a 
-            href="https://github.com/vadimcastro/vadim-project-template" 
+            href={process.env.NEXT_PUBLIC_TEMPLATE_REPO_URL || "https://github.com/your-org/project-template"}
             className="text-blue-600 hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            vadim-project-template
+            {process.env.NEXT_PUBLIC_TEMPLATE_REPO_NAME || "project-template"}
           </a>
         </div>
       </div>

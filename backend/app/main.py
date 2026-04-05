@@ -33,7 +33,7 @@ logger.info(f"Environment: {ENVIRONMENT}")
 async def lifespan(app: FastAPI):
     # Setup
     logger.info("App startup - initializing cache...")
-    FastAPICache.init(InMemoryBackend(), prefix="vadimcastro-cache")
+    FastAPICache.init(InMemoryBackend(), prefix=settings.CACHE_PREFIX)
     logger.info("Cache initialized successfully")
     
     yield
@@ -43,31 +43,31 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Backend API for personal website and cloud storage",
+    description="Backend API",
     version="1.0.0",
     debug=settings.DEBUG,
     lifespan=lifespan
 )
 
-# Add CORS directly to debug
-from fastapi.middleware.cors import CORSMiddleware
-print("Adding CORS middleware directly...")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://206.81.2.168:3000",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://vadimcastro.pro",
-        "https://www.vadimcastro.pro"
-    ],
+    allow_origins=settings.CORS_ORIGINS_RESOLVED,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,
+    allow_methods=settings.CORS_METHODS,
+    allow_headers=settings.CORS_HEADERS,
+    expose_headers=settings.CORS_HEADERS,
+    max_age=settings.CORS_MAX_AGE,
 )
-print("CORS middleware added directly")
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if settings.is_production:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 # Add error handling middleware to ensure CORS headers on errors
 @app.middleware("http")
@@ -82,17 +82,14 @@ async def add_cors_headers_on_error(request: Request, call_next):
             status_code=500,
             content={"detail": str(e)},
             headers={
-                "Access-Control-Allow-Origin": "http://206.81.2.168:3000",
+                "Access-Control-Allow-Origin": settings.CORS_ORIGINS_RESOLVED[0],
                 "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Methods": ", ".join(settings.CORS_METHODS),
+                "Access-Control-Allow-Headers": ", ".join(settings.CORS_HEADERS),
             }
         )
 
-# Check middleware stack
-print(f"Total middleware count: {len(app.user_middleware)}")
-for i, middleware in enumerate(app.user_middleware):
-    print(f"Middleware {i}: {middleware}")
+logger.info(f"Total middleware count: {len(app.user_middleware)}")
 
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")
@@ -100,6 +97,7 @@ app.include_router(api_router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def startup_event():
+    settings.validate_production_settings()
     logger.info(f"Starting up application in {ENVIRONMENT} environment...")
     logger.info("Startup event completed - database initialization skipped for deployment")
 
