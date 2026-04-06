@@ -6,7 +6,14 @@ ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm install --no-audit --no-fund --legacy-peer-deps
+# Final hardening for unstable networks: 
+# - maxsockets 1 prevents the connection from being reset by the registry
+# - high retries and long timeouts for flaky connections
+RUN npm config set fetch-retry-mintimeout 30000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retries 20 && \
+    npm config set maxsockets 1 && \
+    npm install --no-audit --no-fund --legacy-peer-deps
 
 # Dev layer: bring in the pre-installed node_modules
 FROM node:22-alpine AS dev
