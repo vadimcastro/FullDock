@@ -114,7 +114,7 @@ function AuthModal({
         <div className="space-y-3 py-4">
           <Button
             variant="outline"
-            className="w-full gap-2 font-medium border-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="w-full gap-2 font-medium border-2 text-foreground hover:text-foreground dark:text-foreground dark:hover:text-foreground hover:bg-muted dark:hover:bg-muted transition-colors"
             onClick={() => {
               window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/oauth/google`
             }}
@@ -142,7 +142,7 @@ function AuthModal({
 
           <Button
             variant="outline"
-            className="w-full gap-2 font-medium border-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="w-full gap-2 font-medium border-2 text-foreground hover:text-foreground dark:text-foreground dark:hover:text-foreground hover:bg-muted dark:hover:bg-muted transition-colors"
             onClick={() => {
               window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/oauth/github`
             }}
@@ -228,10 +228,10 @@ function AuthModal({
 }
 
 export function CloudSyncButton() {
-  const { syncState, triggerSync, signOut } = useSettings()
+  const { syncState, cloudSync, triggerSync, signOut } = useSettings()
   const [authOpen, setAuthOpen] = useState(false)
 
-  if (!syncState.isAuthenticated) {
+  if (!cloudSync.isConnected) {
     return (
       <>
         <Button
@@ -268,7 +268,7 @@ export function CloudSyncButton() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {syncState.userEmail}
+                {cloudSync.user?.email || syncState.userEmail}
               </p>
               <p className="text-xs text-muted-foreground">
                 Last synced: {formatLastSynced(syncState.lastSynced)}

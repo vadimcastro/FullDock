@@ -9,12 +9,15 @@ import { SwipeContainer } from '@/components/swipe-container'
 import { PreferencesView } from '@/components/preferences-view'
 import { CloudSyncButton } from '@/components/cloud-sync'
 import { Layers } from 'lucide-react'
+import { useSettings } from '@/hooks/use-settings'
+import { playUiTabSwitchSound } from '@/lib/sound-effects'
 
 // Total tabs: 4 AI models + 1 Preferences
 const TOTAL_TABS = AI_MODELS.length + 1
 
 export function OnDeckApp() {
   const [currentModelIndex, setCurrentModelIndex] = useState(0)
+  const { settings } = useSettings()
   const {
     prompts,
     isLoaded,
@@ -26,17 +29,32 @@ export function OnDeckApp() {
     getPromptById,
   } = usePrompts()
 
+  const handleTabSelect = useCallback(
+    (index: number) => {
+      if (settings.soundEnabled && index !== currentModelIndex) {
+        playUiTabSwitchSound()
+      }
+      setCurrentModelIndex(index)
+    },
+    [currentModelIndex, settings.soundEnabled]
+  )
+
   const handleSwipe = useCallback(
     (direction: 'left' | 'right') => {
       setCurrentModelIndex((prev) => {
+        let next = prev
         if (direction === 'left') {
-          return Math.min(prev + 1, TOTAL_TABS - 1)
+          next = Math.min(prev + 1, TOTAL_TABS - 1)
         } else {
-          return Math.max(prev - 1, 0)
+          next = Math.max(prev - 1, 0)
         }
+        if (settings.soundEnabled && next !== prev) {
+          playUiTabSwitchSound()
+        }
+        return next
       })
     },
-    []
+    [settings.soundEnabled]
   )
 
   if (!isLoaded) {
@@ -74,7 +92,7 @@ export function OnDeckApp() {
       <div className="shrink-0">
         <ModelTabs
           currentIndex={currentModelIndex}
-          onSelect={setCurrentModelIndex}
+          onSelect={handleTabSelect}
           prompts={prompts}
           totalTabs={TOTAL_TABS}
         />
@@ -109,7 +127,9 @@ export function OnDeckApp() {
         {Array.from({ length: TOTAL_TABS }).map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentModelIndex(index)}
+            onClick={() => {
+              handleTabSelect(index)
+            }}
             className={`w-2 h-2 rounded-full transition-all ${
               index === currentModelIndex
                 ? 'bg-primary w-4'

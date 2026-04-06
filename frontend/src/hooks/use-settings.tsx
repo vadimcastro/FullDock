@@ -67,13 +67,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(local)
         setSettings(parsed)
-        applyAccentColor(parsed.accentColor)
-        setTheme(parsed.theme)
       } catch (e) {
         console.error('Failed to parse local settings:', e)
       }
     }
-  }, [setTheme])
+  }, [])
+
+  // Apply theme/accent from the current settings state.
+  useEffect(() => {
+    setTheme(settings.theme)
+    applyAccentColor(settings.accentColor)
+  }, [settings.theme, settings.accentColor, setTheme])
 
   const fetchSettings = useCallback(async () => {
     if (!isAuthenticated) return
@@ -82,15 +86,29 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (data) {
         const mapped = mapFromBackend(data)
         setSettings(mapped)
-        applyAccentColor(mapped.accentColor)
-        setTheme(mapped.theme)
         setSyncState((prev: CloudSyncState) => ({ ...prev, lastSynced: Date.now(), status: 'synced' }))
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error)
       setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error' }))
     }
-  }, [api, isAuthenticated, setTheme])
+  }, [api, isAuthenticated])
+
+  // Keep cloud sync auth state derived from the single source of truth (AuthContext).
+  useEffect(() => {
+    setSyncState((prev: CloudSyncState) => {
+      if (!isAuthenticated) {
+        return DEFAULT_SYNC_STATE
+      }
+
+      return {
+        ...prev,
+        isAuthenticated: true,
+        userEmail: user?.email ?? null,
+        status: prev.status === 'offline' ? 'synced' : prev.status,
+      }
+    })
+  }, [isAuthenticated, user?.email])
 
   // 2. Sync Local to Cloud on Login
   useEffect(() => {
@@ -119,12 +137,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = useCallback(
     async (updates: Partial<UserSettings>) => {
-      setSettings((prev: UserSettings) => {
-        const next = { ...prev, ...updates }
-        if (updates.theme) setTheme(updates.theme)
-        if (updates.accentColor) applyAccentColor(updates.accentColor)
-        return next
-      })
+      setSettings((prev: UserSettings) => ({ ...prev, ...updates }))
 
       if (isAuthenticated) {
         try {
@@ -136,7 +149,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [setTheme, api, isAuthenticated]
+    [api, isAuthenticated]
   )
 
   const triggerSync = useCallback(async () => {

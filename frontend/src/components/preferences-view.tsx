@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -10,9 +11,51 @@ import { Settings, Sun, Moon, Monitor, Check, Cloud, CloudOff, Palette, Bell, Sh
 import { useSettings } from '@/hooks/use-settings'
 import { ACCENT_COLORS, type AccentColor } from '@/lib/settings-types'
 import { cn } from '@/lib/utils'
+import { playUiClickSound } from '@/lib/sound-effects'
 
 export function PreferencesView() {
   const { settings, updateSettings, cloudSync } = useSettings()
+  const [notificationsMessage, setNotificationsMessage] = useState<string | null>(null)
+
+  const maybePlaySound = () => {
+    if (!settings.soundEnabled) return
+    playUiClickSound()
+  }
+
+  const handleNotificationsChange = async (checked: boolean) => {
+    setNotificationsMessage(null)
+    maybePlaySound()
+    if (!checked) {
+      await updateSettings({ notifications: false })
+      return
+    }
+
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotificationsMessage('Notifications are not supported in this browser.')
+      await updateSettings({ notifications: false })
+      return
+    }
+
+    let permission = Notification.permission
+    if (permission === 'default') {
+      permission = await Notification.requestPermission()
+    }
+
+    if (permission !== 'granted') {
+      setNotificationsMessage('Notification permission was not granted.')
+      await updateSettings({ notifications: false })
+      return
+    }
+
+    await updateSettings({ notifications: true })
+  }
+
+  const handleSoundChange = async (checked: boolean) => {
+    if (checked) {
+      playUiClickSound()
+    }
+    await updateSettings({ soundEnabled: checked })
+  }
 
   const themeOptions = [
     { value: 'light', label: 'Light', icon: Sun },
@@ -54,9 +97,10 @@ export function PreferencesView() {
                 <Label className="text-sm font-medium">Theme</Label>
                 <RadioGroup
                   value={settings.theme}
-                  onValueChange={(value) =>
-                    updateSettings({ theme: value as 'light' | 'dark' | 'system' })
-                  }
+                  onValueChange={async (value) => {
+                    maybePlaySound()
+                    await updateSettings({ theme: value as 'light' | 'dark' | 'system' })
+                  }}
                   className="grid grid-cols-3 gap-2"
                 >
                   {themeOptions.map((option) => {
@@ -97,9 +141,11 @@ export function PreferencesView() {
                     return (
                       <button
                         key={color.id}
-                        onClick={() =>
-                          updateSettings({ accentColor: color.id as AccentColor })
-                        }
+                        type="button"
+                        onClick={async () => {
+                          maybePlaySound()
+                          await updateSettings({ accentColor: color.id as AccentColor })
+                        }}
                         className={cn(
                           'relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all',
                           isSelected ? 'bg-secondary' : 'hover:bg-secondary/50'
@@ -200,9 +246,12 @@ export function PreferencesView() {
                 <Switch 
                   id="push-notifications" 
                   checked={settings.notifications ?? false}
-                  onCheckedChange={(checked) => updateSettings({ notifications: checked })}
+                  onCheckedChange={handleNotificationsChange}
                 />
               </div>
+              {notificationsMessage ? (
+                <p className="text-xs text-muted-foreground">{notificationsMessage}</p>
+              ) : null}
               <Separator />
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -216,7 +265,7 @@ export function PreferencesView() {
                 <Switch 
                   id="sound" 
                   checked={settings.soundEnabled ?? false}
-                  onCheckedChange={(checked) => updateSettings({ soundEnabled: checked })}
+                  onCheckedChange={handleSoundChange}
                 />
               </div>
             </CardContent>
@@ -244,7 +293,10 @@ export function PreferencesView() {
                 <Switch 
                   id="auto-save" 
                   checked={settings.autoSave ?? true}
-                  onCheckedChange={(checked) => updateSettings({ autoSave: checked })}
+                  onCheckedChange={async (checked) => {
+                    maybePlaySound()
+                    await updateSettings({ autoSave: checked })
+                  }}
                 />
               </div>
               <Separator />

@@ -21,6 +21,15 @@ import {
 import type { Prompt, PromptStatus, AIModel } from '@/lib/types'
 import { AI_MODELS } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { useSettings } from '@/hooks/use-settings'
+import {
+  playUiClickSound,
+  playUiCompleteSound,
+  playUiCopySound,
+  playUiDeleteSound,
+  playUiNeedsEditSound,
+  playUiRetrySound,
+} from '@/lib/sound-effects'
 
 interface PromptCardProps {
   prompt: Prompt
@@ -46,6 +55,7 @@ export function PromptCard({
   linkedPrompt,
   allPrompts,
 }: PromptCardProps) {
+  const { settings } = useSettings()
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(prompt.content)
   const [editNotes, setEditNotes] = useState(prompt.notes)
@@ -53,6 +63,11 @@ export function PromptCard({
   const [showLinkPicker, setShowLinkPicker] = useState(false)
   const [copiedLeft, setCopiedLeft] = useState(false)
   const [copiedRight, setCopiedRight] = useState(false)
+
+  const playIfEnabled = (play: () => void) => {
+    if (!settings.soundEnabled) return
+    play()
+  }
 
   const handleCopy = useCallback(async (side: 'left' | 'right') => {
     if (!prompt.content) return
@@ -65,6 +80,7 @@ export function PromptCard({
         setCopiedRight(true)
         setTimeout(() => setCopiedRight(false), 2000)
       }
+      playIfEnabled(playUiCopySound)
     } catch (err) {
       // Fallback for older browsers
       const textarea = document.createElement('textarea')
@@ -82,8 +98,9 @@ export function PromptCard({
         setCopiedRight(true)
         setTimeout(() => setCopiedRight(false), 2000)
       }
+      playIfEnabled(playUiCopySound)
     }
-  }, [prompt.content])
+  }, [prompt.content, settings.soundEnabled])
 
   const handleSave = () => {
     onUpdatePrompt(prompt.id, { content: editContent, notes: editNotes })
@@ -307,7 +324,10 @@ export function PromptCard({
                         size="sm"
                         variant="default"
                         className="gap-1.5 bg-success hover:bg-success/90 text-background font-medium"
-                        onClick={() => onUpdateStatus(prompt.id, 'complete')}
+                        onClick={() => {
+                          playIfEnabled(playUiCompleteSound)
+                          onUpdateStatus(prompt.id, 'complete')
+                        }}
                       >
                         <Check className="h-3.5 w-3.5" />
                         Complete
@@ -316,7 +336,10 @@ export function PromptCard({
                         size="sm"
                         variant="outline"
                         className="gap-1.5 border-warning/50 text-warning hover:bg-warning/10"
-                        onClick={() => onUpdateStatus(prompt.id, 'needs-edit')}
+                        onClick={() => {
+                          playIfEnabled(playUiNeedsEditSound)
+                          onUpdateStatus(prompt.id, 'needs-edit')
+                        }}
                       >
                         <AlertTriangle className="h-3.5 w-3.5" />
                         Needs Edit
@@ -329,7 +352,10 @@ export function PromptCard({
                       size="sm"
                       variant="default"
                       className="gap-1.5"
-                      onClick={() => onUpdateStatus(prompt.id, 'on-deck')}
+                      onClick={() => {
+                        playIfEnabled(playUiRetrySound)
+                        onUpdateStatus(prompt.id, 'on-deck')
+                      }}
                     >
                       <Check className="h-3.5 w-3.5" />
                       Ready to Retry
@@ -341,7 +367,10 @@ export function PromptCard({
                       size="sm"
                       variant="outline"
                       className="gap-1.5"
-                      onClick={() => onUpdateStatus(prompt.id, 'on-deck')}
+                      onClick={() => {
+                        playIfEnabled(playUiClickSound)
+                        onUpdateStatus(prompt.id, 'on-deck')
+                      }}
                     >
                       Move to On Deck
                     </Button>
@@ -373,7 +402,10 @@ export function PromptCard({
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => onDelete(prompt.id)}
+                    onClick={() => {
+                      playIfEnabled(playUiDeleteSound)
+                      onDelete(prompt.id)
+                    }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

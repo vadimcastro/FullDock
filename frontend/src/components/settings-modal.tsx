@@ -93,6 +93,7 @@ export function SettingsModal() {
                 return (
                   <button
                     key={color.id}
+                    type="button"
                     onClick={() =>
                       updateSettings({ accentColor: color.id as AccentColor })
                     }
