@@ -11,6 +11,19 @@ class CRUDUserSetting(CRUDBase[UserSetting, UserSettingCreate, UserSettingUpdate
     def create_with_user(
         self, db: Session, *, obj_in: UserSettingCreate, user_id: int
     ) -> UserSetting:
+        # Check if settings already exist for this user (Upsert)
+        existing_setting = self.get_by_user(db, user_id=user_id)
+        
+        if existing_setting:
+            # Update existing
+            for field, value in obj_in.model_dump().items():
+                setattr(existing_setting, field, value)
+            db.add(existing_setting)
+            db.commit()
+            db.refresh(existing_setting)
+            return existing_setting
+            
+        # Create new
         db_obj = self.model(
             **obj_in.model_dump(),
             user_id=user_id

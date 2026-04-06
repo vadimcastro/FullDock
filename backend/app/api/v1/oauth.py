@@ -56,7 +56,7 @@ def _get_provider_credentials(provider: str) -> tuple[str, str]:
     return client_id, client_secret
 
 
-@router.get("/oauth/{provider}")
+@router.get("/{provider}")
 async def oauth_redirect(provider: str):
     if provider not in PROVIDER_CONFIG:
         raise HTTPException(status_code=404, detail="Unknown provider")
@@ -78,7 +78,7 @@ async def oauth_redirect(provider: str):
     return RedirectResponse(url=str(auth_url))
 
 
-@router.get("/oauth/{provider}/callback")
+@router.get("/{provider}/callback")
 async def oauth_callback(
     provider: str,
     request: Request,
@@ -185,24 +185,6 @@ async def oauth_callback(
             user_agent=request.headers.get("user-agent", ""),
         )
 
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <title>Signing in</title>
-          </head>
-          <body>
-            <script>
-              function setCookie(name, value, maxAge) {{
-                document.cookie = `${{name}}=${{encodeURIComponent(value)}}; path=/; max-age=${{maxAge}};`;
-              }}
-              setCookie('accessToken', '{access_jwt}', {settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60});
-              setCookie('refreshToken', '{refresh_jwt}', {settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60});
-              window.location.href = "{settings.OAUTH_POST_LOGIN_URL}";
-            </script>
-            <noscript>Your browser must support JavaScript to complete sign-in.</noscript>
-          </body>
-        </html>
-        """
-        return HTMLResponse(content=html)
+        # Redirect to frontend with tokens in URL to handle cross-port cookie setting
+        redirect_url = f"{settings.OAUTH_POST_LOGIN_URL}?access_token={access_jwt}&refresh_token={refresh_jwt}"
+        return RedirectResponse(url=redirect_url)

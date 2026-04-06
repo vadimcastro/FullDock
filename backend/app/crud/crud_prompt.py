@@ -16,6 +16,22 @@ class CRUDPrompt(CRUDBase[Prompt, PromptCreate, PromptUpdate]):
     def create_with_user(
         self, db: Session, *, obj_in: PromptCreate, user_id: int
     ) -> Prompt:
+        # Check if prompt with same ID already exists for this user (Upsert)
+        existing_prompt = db.query(self.model).filter(
+            self.model.id == obj_in.id,
+            self.model.user_id == user_id
+        ).first()
+        
+        if existing_prompt:
+            # Update existing
+            for field, value in obj_in.model_dump().items():
+                setattr(existing_prompt, field, value)
+            db.add(existing_prompt)
+            db.commit()
+            db.refresh(existing_prompt)
+            return existing_prompt
+            
+        # Create new
         db_obj = self.model(
             **obj_in.model_dump(),
             user_id=user_id

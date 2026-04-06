@@ -30,7 +30,8 @@ export interface SettingsContextValue {
   cloudSync: CloudSyncInfo
   updateSettings: (updates: Partial<UserSettings>) => void
   triggerSync: () => Promise<void>
-  signIn: () => void
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
   signOut: () => void
 }
 

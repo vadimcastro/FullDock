@@ -1,17 +1,18 @@
 // src/lib/api/protected.ts
 'use client';
 
+import { useMemo } from 'react';
 import { useAuth } from '../auth/AuthContext';
 
 export const useProtectedApi = () => {
-  const { accessToken, refreshAccessToken } = useAuth();
+  const { access_token, refreshAccessToken } = useAuth();
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   const fetchProtected = async <T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> => {
-    let currentToken = accessToken;
+    let currentToken = access_token;
 
     if (!currentToken) {
       currentToken = await refreshAccessToken();
@@ -53,7 +54,7 @@ export const useProtectedApi = () => {
     return response.json();
   };
 
-  return {
+  const api = useMemo(() => ({
     fetchProtected,
     get: <T>(endpoint: string) => fetchProtected<T>(endpoint, { method: 'GET' }),
     post: <T>(endpoint: string, data: any) => 
@@ -66,7 +67,14 @@ export const useProtectedApi = () => {
         method: 'PUT', 
         body: JSON.stringify(data) 
       }),
+    patch: <T>(endpoint: string, data: any) => 
+      fetchProtected<T>(endpoint, { 
+        method: 'PATCH', 
+        body: JSON.stringify(data) 
+      }),
     delete: <T>(endpoint: string) => 
       fetchProtected<T>(endpoint, { method: 'DELETE' }),
-  };
+  }), [access_token, refreshAccessToken, baseUrl]);
+
+  return api;
 };

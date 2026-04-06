@@ -1,6 +1,14 @@
 'use client'
 
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from 'react'
+import { 
+  createContext, 
+  useContext, 
+  useState, 
+  useEffect, 
+  useCallback, 
+  useRef,
+  type ReactNode 
+} from 'react'
 import { useTheme } from 'next-themes'
 import type {
   UserSettings,
@@ -26,62 +34,105 @@ function applyAccentColor(accentColor: string): void {
   root.style.setProperty('--sidebar-ring', `oklch(0.7 0.15 ${accent.hue})`)
 }
 
+const mapToBackend = (s: Partial<UserSettings>) => {
+  const mapped: any = {}
+  if (s.theme !== undefined) mapped.theme = s.theme
+  if (s.accentColor !== undefined) mapped.accent_color = s.accentColor
+  if (s.notifications !== undefined) mapped.notifications = s.notifications
+  if (s.soundEnabled !== undefined) mapped.sound_enabled = s.soundEnabled
+  if (s.autoSave !== undefined) mapped.auto_save = s.autoSave
+  return mapped
+}
+
+const mapFromBackend = (data: any): UserSettings => ({
+  theme: data.theme || 'dark',
+  accentColor: data.accent_color || 'teal',
+  notifications: data.notifications ?? false,
+  soundEnabled: data.sound_enabled ?? false,
+  autoSave: data.auto_save ?? true,
+})
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const { setTheme } = useTheme()
-  const { user, isAuthenticated } = useAuth()
-  const api = useProtectedApi()
-  
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS)
   const [syncState, setSyncState] = useState<CloudSyncState>(DEFAULT_SYNC_STATE)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const { setTheme } = useTheme()
+  const { isAuthenticated, login, register, logout, user } = useAuth()
+  const api = useProtectedApi()
+  const syncInProgress = useRef(false)
+
+  // 1. Initial Load from LocalStorage
+  useEffect(() => {
+    const local = localStorage.getItem('ondeck-settings')
+    if (local) {
+      try {
+        const parsed = JSON.parse(local)
+        setSettings(parsed)
+        applyAccentColor(parsed.accentColor)
+        setTheme(parsed.theme)
+      } catch (e) {
+        console.error('Failed to parse local settings:', e)
+      }
+    }
+  }, [setTheme])
 
   const fetchSettings = useCallback(async () => {
-    if (!isAuthenticated) {
-      setIsLoaded(true)
-      return
-    }
+    if (!isAuthenticated) return
     try {
-      const data = await api.get<UserSettings>('/api/v1/settings/')
-      setSettings(data)
-      applyAccentColor(data.accentColor)
-      setTheme(data.theme)
-      setSyncState({
-        status: 'synced',
-        lastSynced: Date.now(),
-        isAuthenticated: true,
-        userEmail: user?.email || null,
-      })
-      setIsLoaded(true)
+      const data = await api.get<any>('/api/v1/settings/')
+      if (data) {
+        const mapped = mapFromBackend(data)
+        setSettings(mapped)
+        applyAccentColor(mapped.accentColor)
+        setTheme(mapped.theme)
+        setSyncState((prev: CloudSyncState) => ({ ...prev, lastSynced: Date.now(), status: 'synced' }))
+      }
     } catch (error) {
       console.error('Failed to fetch settings:', error)
-      setIsLoaded(true)
+      setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error' }))
     }
-  }, [api, isAuthenticated, user, setTheme])
+  }, [api, isAuthenticated, setTheme])
 
+  // 2. Sync Local to Cloud on Login
   useEffect(() => {
-    fetchSettings()
-  }, [fetchSettings])
+    const syncLocalToCloud = async () => {
+      if (isAuthenticated && !syncInProgress.current) {
+        syncInProgress.current = true
+        try {
+          await api.post('/api/v1/settings/', mapToBackend(settings))
+        } catch (e) {
+          console.error('Failed to sync local settings:', e)
+        } finally {
+          syncInProgress.current = false
+          fetchSettings()
+        }
+      }
+    }
+    syncLocalToCloud()
+  }, [isAuthenticated, api, fetchSettings])
+
+  // 3. Persist to LocalStorage whenever settings change (if not syncing)
+  useEffect(() => {
+    if (!syncInProgress.current) {
+      localStorage.setItem('ondeck-settings', JSON.stringify(settings))
+    }
+  }, [settings])
 
   const updateSettings = useCallback(
     async (updates: Partial<UserSettings>) => {
-      setSettings((prev) => {
+      setSettings((prev: UserSettings) => {
         const next = { ...prev, ...updates }
-        if (updates.theme) {
-          setTheme(updates.theme)
-        }
-        if (updates.accentColor) {
-          applyAccentColor(updates.accentColor)
-        }
+        if (updates.theme) setTheme(updates.theme)
+        if (updates.accentColor) applyAccentColor(updates.accentColor)
         return next
       })
 
       if (isAuthenticated) {
         try {
-          await api.post('/api/v1/settings/', updates)
-          setSyncState(prev => ({ ...prev, lastSynced: Date.now(), status: 'synced' }))
+          await api.post('/api/v1/settings/', mapToBackend(updates))
+          setSyncState((prev: CloudSyncState) => ({ ...prev, lastSynced: Date.now(), status: 'synced' }))
         } catch (error) {
           console.error('Failed to sync settings:', error)
-          setSyncState(prev => ({ ...prev, status: 'error' }))
+          setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error' }))
         }
       }
     },
@@ -90,19 +141,29 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const triggerSync = useCallback(async () => {
     if (!isAuthenticated) return
-    setSyncState((prev) => ({ ...prev, status: 'syncing' }))
+    setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'syncing' }))
     await fetchSettings()
   }, [isAuthenticated, fetchSettings])
 
-  const signIn = useCallback(() => {
-    // Rely on FullDock's auth flow
-    window.location.href = '/login'
-  }, [])
+  const signIn = useCallback(async (email: string, password: string) => {
+    await login(email, password)
+  }, [login])
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    await register(email, password)
+    try {
+      await api.post('/api/v1/settings/', mapToBackend(settings))
+    } catch (e) {
+      console.error('Failed to sync initial settings on signup:', e)
+    }
+  }, [register, api, settings])
 
   const signOut = useCallback(() => {
-    // Rely on FullDock's auth flow
-    window.location.href = '/logout'
-  }, [])
+    logout()
+    setSettings(DEFAULT_SETTINGS)
+    localStorage.removeItem('ondeck-settings')
+    setSyncState(DEFAULT_SYNC_STATE)
+  }, [logout])
 
   const cloudSync = {
     isConnected: isAuthenticated,
@@ -120,6 +181,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         updateSettings,
         triggerSync,
         signIn,
+        signUp,
         signOut,
       }}
     >

@@ -2,7 +2,7 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.core.hashing import verify_password
+from app.core.hashing import verify_password, get_password_hash
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,21 @@ class CRUDUser:
             
         logger.info(f"Authentication successful for user: {email}")
         return user
+
+    def create(self, db: Session, *, obj_in: dict) -> User:
+        db_obj = User(
+            email=obj_in["email"].strip().lower(),
+            hashed_password=get_password_hash(obj_in["password"]),
+            username=obj_in.get("username", obj_in["email"].split("@")[0]),
+            name=obj_in.get("name", ""),
+            role=obj_in.get("role", "user"),
+            is_active=True,
+            is_superuser=False,
+        )
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
     def is_active(self, user: User) -> bool:
         return user.is_active

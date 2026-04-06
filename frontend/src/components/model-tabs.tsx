@@ -87,7 +87,7 @@ export function ModelTabs({ currentIndex, onSelect, prompts, totalTabs }: ModelT
         className={cn(
           'flex-1 flex flex-col items-center py-2 px-1 transition-all relative min-w-[60px]',
           'border-b-2 -mb-[2px]',
-          currentIndex === prefsIndex ? 'border-primary' : 'border-transparent',
+          currentIndex === prefsIndex ? 'border-foreground' : 'border-transparent',
           currentIndex === prefsIndex ? 'opacity-100' : 'opacity-60 hover:opacity-80'
         )}
       >

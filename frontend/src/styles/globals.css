@@ -39,10 +39,10 @@
   --sidebar-ring: oklch(0.6 0.15 200);
   
   /* Model-specific accent colors */
-  --claude-accent: oklch(0.6 0.18 30);
+  --claude-accent: oklch(0.6 0.18 45);
   --gpt-accent: oklch(0.6 0.15 160);
   --grok-accent: oklch(0.65 0.12 280);
-  --gemini-accent: oklch(0.6 0.2 220);
+  --gemini-accent: oklch(0.6 0.2 250);
   --success: oklch(0.55 0.2 145);
   --warning: oklch(0.65 0.18 85);
 }
@@ -82,10 +82,10 @@
   --sidebar-ring: oklch(0.7 0.15 200);
   
   /* Model-specific accent colors for dark mode */
-  --claude-accent: oklch(0.7 0.18 30);
+  --claude-accent: oklch(0.7 0.18 45);
   --gpt-accent: oklch(0.7 0.15 160);
   --grok-accent: oklch(0.75 0.12 280);
-  --gemini-accent: oklch(0.7 0.2 220);
+  --gemini-accent: oklch(0.7 0.2 250);
   --success: oklch(0.65 0.2 145);
   --warning: oklch(0.75 0.18 85);
 }

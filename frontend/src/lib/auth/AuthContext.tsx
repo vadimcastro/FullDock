@@ -1,7 +1,7 @@
 // src/lib/auth/AuthContext.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 
@@ -17,11 +17,12 @@ export interface User {
 
 export interface AuthContextType {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  access_token: string | null;
+  refresh_token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshAccessToken: () => Promise<string | null>;
 }
@@ -30,29 +31,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [access_token, setAccessToken] = useState<string | null>(null);
+  const [refresh_token, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  const isAuthenticated = !!accessToken && !!user;
+  const isAuthenticated = !!access_token && !!user;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   const useSecureCookies =
     typeof window !== 'undefined' && window.location.protocol === 'https:';
 
-  const fetchUser = async (token: string) => {
+  const fetchUser = useCallback(async (token: string) => {
     try {
-      console.log('Fetching user with token:', token.substring(0, 10) + '...');
+      console.log('Fetching user with token...', token.substring(0, 10));
       
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
+      const response = await fetch(`${baseUrl}/api/v1/auth/me`, {
         method: 'GET',
-        headers,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         credentials: 'include',
         mode: 'cors',
       });
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
         if (response.status === 401) {
-          Cookies.remove('accessToken');
+          Cookies.remove('access_token');
           setAccessToken(null);
         }
         throw new Error(`Failed to fetch user: ${errorText}`);
@@ -75,16 +75,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error in fetchUser:', error);
       return false;
     }
-  };
+  }, [useSecureCookies]);
 
-  const refreshAccessToken = async (): Promise<string | null> => {
+  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
     try {
-      const storedRefreshToken = Cookies.get('refreshToken') || refreshToken;
+      const storedRefreshToken = Cookies.get('refresh_token') || refresh_token;
       if (!storedRefreshToken) {
         return null;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`, {
+      const response = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,8 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        Cookies.remove('accessToken');
-        Cookies.remove('refreshToken');
+        Cookies.remove('access_token');
+        Cookies.remove('refresh_token');
         setAccessToken(null);
         setRefreshToken(null);
         return null;
@@ -107,13 +107,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const nextAccessToken = data.access_token as string;
       const nextRefreshToken = data.refresh_token as string;
 
-      Cookies.set('accessToken', nextAccessToken, {
+      Cookies.set('access_token', nextAccessToken, {
         expires: 1,
         path: '/',
         secure: useSecureCookies,
         sameSite: useSecureCookies ? 'strict' : 'lax'
       });
-      Cookies.set('refreshToken', nextRefreshToken, {
+      Cookies.set('refresh_token', nextRefreshToken, {
         expires: 14,
         path: '/',
         secure: useSecureCookies,
@@ -126,13 +126,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Refresh token error:', error);
       return null;
     }
-  };
+  }, [refresh_token, useSecureCookies]);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       console.log('Attempting login to:', process.env.NEXT_PUBLIC_API_URL);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+      const response = await fetch(`${baseUrl}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -160,14 +160,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newAccessToken = data.access_token;
       const newRefreshToken = data.refresh_token;
       
-      // Set cookie and state
-      Cookies.set('accessToken', newAccessToken, { 
+      Cookies.set('access_token', newAccessToken, { 
         expires: 1,
         path: '/',
         secure: useSecureCookies,
         sameSite: useSecureCookies ? 'strict' : 'lax'
       });
-      Cookies.set('refreshToken', newRefreshToken, {
+      Cookies.set('refresh_token', newRefreshToken, {
         expires: 14,
         path: '/',
         secure: useSecureCookies,
@@ -176,13 +175,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessToken(newAccessToken);
       setRefreshToken(newRefreshToken);
 
-      // Fetch user data
       const userFetched = await fetchUser(newAccessToken);
       if (!userFetched) {
         throw new Error('Failed to fetch user data after login');
       }
-
-      router.push('/dashboard');
+      
+      router.push('/');
     } catch (error) {
       console.error('Login error:', error);
       if (error instanceof Error) {
@@ -191,12 +189,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('An unexpected error occurred during login');
       }
     }
-  };
+  }, [fetchUser, router, useSecureCookies]);
 
-  const logout = () => {
-    const storedRefreshToken = Cookies.get('refreshToken') || refreshToken;
+  const register = useCallback(async (email: string, password: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+        mode: 'cors',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(errorData || 'Registration failed');
+      }
+      
+      const data = await response.json();
+      const newAccessToken = data.access_token;
+      const newRefreshToken = data.refresh_token;
+      
+      Cookies.set('access_token', newAccessToken, { 
+        expires: 1,
+        path: '/',
+        secure: useSecureCookies,
+        sameSite: useSecureCookies ? 'strict' : 'lax'
+      });
+      Cookies.set('refresh_token', newRefreshToken, {
+        expires: 14,
+        path: '/',
+        secure: useSecureCookies,
+        sameSite: useSecureCookies ? 'strict' : 'lax'
+      });
+      setAccessToken(newAccessToken);
+      setRefreshToken(newRefreshToken);
+      
+      const userFetched = await fetchUser(newAccessToken);
+      if (!userFetched) {
+        throw new Error('Failed to fetch user data after registration');
+      }
+      
+      router.push('/');
+    } catch (error) {
+      console.error('Registration error:', error);
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('An unexpected error occurred during registration');
+      }
+    }
+  }, [fetchUser, router, useSecureCookies]);
+
+  const logout = useCallback(() => {
+    const storedRefreshToken = Cookies.get('refresh_token') || refresh_token;
     if (storedRefreshToken) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
+      fetch(`${baseUrl}/api/v1/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,21 +258,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         mode: 'cors',
       }).catch((error) => console.error('Logout API error:', error));
     }
-    Cookies.remove('accessToken');
-    Cookies.remove('refreshToken');
+    Cookies.remove('access_token');
+    Cookies.remove('refresh_token');
     setUser(null);
     setAccessToken(null);
     setRefreshToken(null);
     router.push('/');
-  };
+  }, [refresh_token, router]);
 
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const storedToken = Cookies.get('accessToken');
-        const storedRefreshToken = Cookies.get('refreshToken');
-        console.log('Auth init - stored token:', !!storedToken);
-        console.log('Current pathname:', pathname);
+        // Handle OAuth tokens from URL
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const urlAccessToken = params.get('access_token');
+          const urlRefreshToken = params.get('refresh_token');
+
+          if (urlAccessToken && urlRefreshToken) {
+            console.log('OAuth tokens detected in URL, persisting...');
+            
+            Cookies.set('access_token', urlAccessToken, { 
+              expires: 1,
+              path: '/',
+              secure: useSecureCookies,
+              sameSite: useSecureCookies ? 'strict' : 'lax'
+            });
+            Cookies.set('refresh_token', urlRefreshToken, {
+              expires: 14,
+              path: '/',
+              secure: useSecureCookies,
+              sameSite: useSecureCookies ? 'strict' : 'lax'
+            });
+
+            // Remove tokens from URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('access_token');
+            url.searchParams.delete('refresh_token');
+            window.history.replaceState({}, '', url.toString());
+            
+            // Set state and fetch user
+            setAccessToken(urlAccessToken);
+            setRefreshToken(urlRefreshToken);
+            await fetchUser(urlAccessToken);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        const storedToken = Cookies.get('access_token');
+        const storedRefreshToken = Cookies.get('refresh_token');
         setRefreshToken(storedRefreshToken || null);
         
         if (storedToken) {
@@ -232,40 +318,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const refreshedAccessToken = await refreshAccessToken();
             if (refreshedAccessToken) {
               await fetchUser(refreshedAccessToken);
-            } else {
-              console.log('User fetch failed for dashboard route');
             }
-            // Let dashboard page handle authentication UI
           }
-        } else if (pathname.startsWith('/dashboard')) {
-          console.log('No token found for dashboard route');
-          // Let dashboard page handle authentication UI
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Let dashboard page handle authentication UI
-        // No automatic redirects
       } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, [pathname, router]);
+  }, [pathname, fetchUser, refreshAccessToken, useSecureCookies]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    access_token,
+    refresh_token,
+    isLoading,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    refreshAccessToken,
+  }), [
+    user, 
+    access_token, 
+    refresh_token, 
+    isLoading, 
+    isAuthenticated, 
+    login, 
+    register, 
+    logout, 
+    refreshAccessToken
+  ]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        accessToken,
-        refreshToken,
-        isLoading,
-        isAuthenticated,
-        login,
-        logout,
-        refreshAccessToken,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -158,14 +158,14 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ isOpen, onClose, prof
           {!isSigningIn ? (
             <div className="space-y-2">
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/oauth/oauth/google`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/oauth/google`}
                 className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-800 bg-white hover:border-gray-400 transition-colors duration-200"
               >
                 <img src="/icons/google.svg" alt="Google icon" className="h-4 w-4" />
                 Sign in with Google
               </a>
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/oauth/oauth/github`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/oauth/github`}
                 className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-800 bg-white hover:border-gray-400 transition-colors duration-200"
               >
                 <Github className="h-4 w-4" />

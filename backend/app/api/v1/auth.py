@@ -25,6 +25,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    username: str | None = None
+    name: str | None = None
+
 @router.post("/login")
 async def login(
     request: Request,
@@ -108,6 +114,36 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
+
+@router.post("/register")
+async def register(
+    user_in: UserCreate,
+    db: Session = Depends(get_db)
+):
+    user = crud_user.get_by_email(db, email=user_in.email)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists"
+        )
+    
+    user = crud_user.create(db, obj_in=user_in.model_dump())
+    
+    session_id = str(uuid4())
+    access_token = create_access_token(data={"sub": user.email})
+    refresh_token = create_refresh_token(data={"sub": user.email}, session_id=session_id)
+    
+    auth_protection.store_refresh_session(
+        session_id=session_id,
+        identity=user.email,
+        ttl_seconds=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+    )
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 @router.post("/refresh")
 async def refresh_token(

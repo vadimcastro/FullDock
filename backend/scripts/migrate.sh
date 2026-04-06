@@ -50,11 +50,8 @@ import sys
 import os
 sys.path.append('/app')
 
-# Import models to register them with Base
-from app.models.user import User
-from app.models.user_session import UserSession
-from app.db.base_class import Base
-from app.db.session import engine
+# Import all models via the base module to ensure registration
+from app.db.base import Base, engine
 import logging
 
 logging.basicConfig(level=logging.INFO)

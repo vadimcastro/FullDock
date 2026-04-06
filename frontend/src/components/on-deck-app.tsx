@@ -86,21 +86,22 @@ export function OnDeckApp() {
         onSwipe={handleSwipe}
         className="flex-1 min-h-0"
       >
-        {AI_MODELS.map((model) => (
-          <ModelView
-            key={model.id}
-            model={model}
-            prompts={getPromptsForModel(model.id)}
-            allPrompts={prompts}
-            onAddPrompt={addPrompt}
-            onUpdateStatus={updateStatus}
-            onUpdatePrompt={updatePrompt}
-            onDelete={deletePrompt}
-            getPromptById={getPromptById}
-          />
-        ))}
-        {/* Preferences View as the last swipeable panel */}
-        <PreferencesView />
+        {[
+          ...AI_MODELS.map((model) => (
+            <ModelView
+              key={model.id}
+              model={model}
+              prompts={getPromptsForModel(model.id)}
+              allPrompts={prompts}
+              onAddPrompt={addPrompt}
+              onUpdateStatus={updateStatus}
+              onUpdatePrompt={updatePrompt}
+              onDelete={deletePrompt}
+              getPromptById={getPromptById}
+            />
+          )),
+          <PreferencesView key="preferences" />
+        ]}
       </SwipeContainer>
 
       {/* Swipe Hint / Navigation Dots */}
