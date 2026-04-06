@@ -43,8 +43,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Backend API",
-    version="1.0.0",
+    description="OnDeck backend API",
+    version="2.0.0",
     debug=settings.DEBUG,
     lifespan=lifespan
 )

@@ -1,78 +1,124 @@
 # OnDeck Integration Review
 
 **Last updated:** 2026-04-06  
-**Status:** ✅ Integration complete — Docker optimized
+**Current release baseline:** `v2.0.0` (integrated)  
+**Today target release:** `v2.1.0` (in planning/implementation)
 
 ---
 
-## What This Is
+## Review Scope (Completed)
 
-OnDeck 2.0.0 is the original OnDeck prompt queue product (formerly localStorage + Supabase) ported into a production-grade standalone application on FullDock infrastructure.
+This review reconciles:
 
-- **Original OnDeck** (`/home/westen/Desktop/OnDeck`) — UI-first, localStorage persistence, mocked cloud sync, Supabase helpers
-- **OnDeck 2.0.0** (`/home/westen/Desktop/FullDock`) — same UI, replaced with FastAPI + PostgreSQL + Redis backend, JWT auth, Docker
-
----
-
-## Integration Completed ✅
-
-### Backend
-- `prompts` table with SQLAlchemy model + Alembic migration
-- `user_settings` table for per-user theme/accent persistence
-- `/api/v1/prompts` — full CRUD (list, add, update status, reorder, delete)
-- `/api/v1/settings` — GET/POST user preferences
-- JWT auth with refresh rotation, login throttling, session revocation
-- OAuth endpoints for Google and GitHub
-
-### Frontend
-- Upgraded to **Next.js 16.1.6**, **React 19.2.4**, **Tailwind CSS v4**
-- Full OKLCH design token system (light + dark, model-specific accents)
-- Ported all OnDeck components:
-  - `on-deck-app.tsx`, `model-tabs.tsx`, `model-view.tsx`, `prompt-card.tsx`
-  - `preferences-view.tsx`, `settings-modal.tsx`, `cloud-sync.tsx`
-  - `swipe-container.tsx`, `theme-provider.tsx`
-- Ported all 13 Shadcn UI primitives with Radix UI:
-  - `badge`, `button`, `card`, `dialog`, `input`, `label`, `popover`
-  - `radio-group`, `scroll-area`, `separator`, `switch`, `tabs`, `textarea`
-- `use-prompts.ts` — backend-synced (replaces localStorage)
-- `use-settings.tsx` — backend-synced (replaces localStorage)
-- `use-mobile.ts` — responsive breakpoint hook
-
-### Docker (Optimized 2026-04-06)
-- Removed 5 redundant compose files (`dev.fast.yml`, `dev.ultra.yml`, `https.yml`, etc.)
-- Removed base image infrastructure (`build-base-images.sh`, `Dockerfile.frontend.base`, `docker-compose.dev.ultra.yml`)
-- **Single compose:** `docker/docker-compose.dev.yml`
-- **Two-stage `Dockerfile.dev`:** deps baked into image layer (no node_modules volume)
-- **Three-stage `Dockerfile.prod`:** minimal standalone runner
-- Simplified Makefile: 5 dev targets → `dev` + `dev-build`
-
-### package.json
-All 25 Radix UI primitives + supporting packages now declared:
-`class-variance-authority`, `cmdk`, `sonner`, `vaul`, `zod`, `react-hook-form`,
-`@hookform/resolvers`, `embla-carousel-react`, `react-resizable-panels`,
-`react-day-picker`, `date-fns`, `input-otp`, `recharts`, `tw-animate-css`
+- Docs: `README.md`, `docs/SETUP_GUIDE.md`, `docs/KNOWLEDGE_BASE.md`, this file
+- Recent commits on `preDeck`:
+  - `9a0d952` - auth/settings sync fixes + global UI sound effects
+  - `36b99ce` - infra checkpoint: tabs/settings/oauth/cloud-sync stabilization
+  - `517f142` - Docker network and frontend mount reliability fixes
+  - `995aedd` - full OnDeck 2.0.0 standalone port and Docker simplification
+- Current working tree state (no tracked unstaged/staged code changes at review time)
 
 ---
 
-## Stack Comparison (Before → After)
+## Goal Status
 
-| Surface | OnDeck (original) | OnDeck 2.0.0 |
+| Goal | Status | Notes |
 |---|---|---|
-| Persistence | `localStorage` | PostgreSQL via FastAPI |
-| Auth | Mocked / Supabase | JWT + OAuth (FastAPI) |
-| Sync | Fake `triggerSync` | Real backend API |
-| Next.js | 16 | 16.1.6 |
-| React | 19 | 19.2.4 |
-| Tailwind | v4 | v4 (OKLCH tokens) |
-| Docker | None | Multi-stage, single compose |
-| Deployment | Vercel | Docker / self-hosted |
+| Port original OnDeck UX to OnDeck standalone stack | ✅ Complete | Frontend components/hooks ported and running on Next.js 16 + React 19 |
+| Replace local-only persistence with backend sync | ✅ Complete | Prompt/settings APIs wired via `use-prompts` + `use-settings` |
+| Auth hardening and session control | ✅ Complete | JWT access/refresh, refresh rotation, login throttling, session revocation |
+| OAuth provider login | ✅ Complete (config-gated) | Backend routes and frontend buttons present; requires provider credentials |
+| Docker developer reliability | ✅ Complete (baseline) | Single dev compose, optimized Dockerfiles, ECONNRESET/ENOENT fixes landed |
+| UI interaction feedback | ✅ Complete (new) | Global WebAudio sound cues + preference toggle shipped in `9a0d952` |
+| Release confidence gates (tests/CI/checklists) | ⚠️ Partial | Manual validation exists; automation and release checklist need tightening for `v2.1.0` |
 
 ---
 
-## Remaining Work 🔜
+## Latest Implemented Features (Since Initial 2.0.0 Cut)
 
-1. **Smoke Testing** — verify full prompt CRUD flow after container restart; confirm data persists in Postgres
-2. **Cloud Sync UI** — wire `cloud-sync.tsx` to show real backend sync state instead of mocked indicator
-3. **OAuth Credentials** — populate `GOOGLE_CLIENT_ID`/`GITHUB_CLIENT_ID` in `.env.development` to enable social login
-4. **Hydration Audit** — check for React 19 SSR/hydration mismatches in Radix components
-5. **CI/CD** — add GitHub Actions workflow for automated build + test on push
+### Auth/Settings State Sync Correctness
+- `use-settings` now derives cloud auth state from `AuthContext` as the source of truth.
+- Theme/accent application moved to dedicated effect keyed to `settings` state, reducing stale UI state risk.
+- `updateSettings` now async/await-compatible in context type and UI consumers.
+
+### Cloud Sync UX and Auth Surface
+- Cloud sync connection checks now use `cloudSync.isConnected` instead of only legacy state fields.
+- OAuth action buttons in auth modal were updated for consistent foreground contrast in light/dark themes.
+- Connected-user display now uses `cloudSync.user?.email` fallback-safe rendering.
+
+### UI Sound System
+- Added centralized `frontend/src/lib/sound-effects.ts` WebAudio helpers.
+- Integrated sound cues into:
+  - Tab switching (`on-deck-app.tsx`)
+  - Prompt actions (copy, complete, needs-edit, retry, delete) in `prompt-card.tsx`
+  - Preferences interactions (`preferences-view.tsx`)
+- Added permission-aware notifications toggle handling with user feedback messaging.
+
+### Push Notifications
+- Notifications toggle now has permission-gated behavior in Preferences.
+- Unsupported browsers and denied permissions are surfaced to users with inline status messaging.
+- Setting persists via the standard settings sync flow once granted.
+
+---
+
+## Known Gaps / Risks Entering v2.1.0
+
+1. No automated release pipeline yet (lint/test/build gates on push/PR).
+2. Limited explicit end-to-end regression coverage for auth + cloud sync + prompt lifecycle.
+3. OAuth depends on environment credential correctness and callback URL alignment.
+4. `v2.1.0` scope is not yet locked to a dated acceptance checklist.
+
+---
+
+## Next Steps — v2.1.0 (Execution Plan For Today)
+
+### Must-Ship Scope (Locked for Today)
+
+- Auth flow stability: `register`, `login`, `refresh`, `logout`, `logout-all`, `/auth/me`.
+- Prompt lifecycle stability: create, update, status transitions, delete, reorder, post-restart persistence.
+- Settings/cloud sync stability: theme/accent/notifications/sound/autosave persist and sync correctly.
+- OAuth readiness: Google and GitHub login redirect/callback flow validated in local environment.
+- Release quality gate: CI workflow added and passing before tag.
+
+### Acceptance Criteria
+
+- All smoke tests pass without manual DB repair steps.
+- `/docs` reflects OnDeck branding and correct route surfaces.
+- No non-intentional template/generic references in active app/docs/config.
+- `v2.1.0` release notes section is present before tagging.
+
+1. **Lock release scope and acceptance criteria**
+   - Define must-ship items for `v2.1.0` and freeze non-critical additions.
+   - Produce a checklist covering auth, prompts CRUD, sync, and settings persistence.
+
+2. **Run and document full smoke test pass**
+   - Verify: register/login/logout/logout-all, prompt CRUD/reorder/status transitions, settings sync, cloud sync reconnect.
+   - Validate persistence after container restart (`make down && make dev`).
+   - Record pass/fail notes directly in this doc under a test evidence section.
+
+3. **Finalize OAuth readiness**
+   - Confirm Google/GitHub credentials and callback URLs in `.env.development`.
+   - Verify both providers end in authenticated app state with synced user context.
+
+4. **Add minimum CI quality gate**
+   - Add GitHub Actions workflow for frontend install/lint/build and backend dependency install/basic import or test command.
+   - Require green CI before tagging `v2.1.0`.
+
+5. **Publish release notes and version bumps**
+   - Update docs + `frontend/package.json` version to `2.1.0` when checklist is green.
+   - Add concise changelog section summarizing delta from `2.0.0` to `2.1.0`.
+
+6. **Tag and cut release candidate**
+   - Create `v2.1.0-rc` tag after CI + smoke tests.
+   - Promote to `v2.1.0` only after final verification sign-off.
+
+7. **Stale reference cleanup pass (one more repo-wide review)**
+   - Re-scan for template placeholders, legacy naming, and outdated slug references in docs, frontend labels, API metadata, and scripts.
+   - Confirm `/docs` title and metadata are OnDeck-branded.
+   - Keep domain/deployment placeholders only where intentionally environment-specific.
+
+## Stale Reference Sweep Status (2026-04-06)
+
+- Completed across docs, backend config, frontend fallbacks, env examples, and operational scripts.
+- `/docs` branding now resolves to `OnDeck API`.
+- Remaining placeholders are intentionally environment-specific in production domain/nginx files.

@@ -6,10 +6,22 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 
 ---
 
+## Release Status
+
+- `v2.0.0` is integrated and running on OnDeck infrastructure.
+- Latest implemented changes (April 6, 2026):
+  - Auth/settings state synchronization hardening
+  - Local-to-cloud sync stabilization on login
+  - Global UI interaction sound effects with user toggle
+  - OAuth button polish + cloud-sync auth state fixes
+- Current planning/implementation target: `v2.1.0` (tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`)
+
+---
+
 ## Quick Start
 
 ```bash
-git clone <your-repo> && cd FullDock
+git clone <your-repo> && cd OnDeck
 cp .env.example .env.development
 make doctor       # preflight check
 make dev-build    # first-time build (installs all deps)
@@ -110,8 +122,15 @@ GITHUB_CLIENT_SECRET=...
 ```
 
 Provider endpoints:
-- `http://localhost:8000/api/v1/auth/oauth/google`
-- `http://localhost:8000/api/v1/auth/oauth/github`
+- `http://localhost:8000/api/v1/oauth/google`
+- `http://localhost:8000/api/v1/oauth/github`
+
+## Push Notifications
+
+- Push notifications can be toggled in `Preferences > Notifications`.
+- On enable, the app requests browser `Notification` permission.
+- If permission is denied or unsupported, the toggle is reverted and a status message is shown.
+- Current scope is permission-aware UI/state handling; no service-worker or background push pipeline is configured yet.
 
 ---
 

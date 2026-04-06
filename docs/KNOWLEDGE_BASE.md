@@ -4,6 +4,18 @@
 
 ---
 
+## Current Status Snapshot (2026-04-06)
+
+- `v2.0.0` integration baseline is complete on OnDeck infrastructure.
+- Latest implemented deltas:
+  - Auth/settings state sync correctness updates
+  - Local storage to cloud sync flow stabilization on login
+  - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
+  - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
+- `v2.1.0` work planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
+
+---
+
 ## Architecture
 
 ### Frontend (`frontend/src/`)
@@ -33,11 +45,12 @@
 
 | Path | Purpose |
 |---|---|
-| `api/v1/prompts.py` | Prompt CRUD endpoints |
-| `api/v1/settings.py` | User settings endpoints |
+| `api/v1/endpoints/prompts.py` | Prompt CRUD endpoints |
+| `api/v1/endpoints/settings.py` | User settings endpoints |
 | `api/v1/auth.py` | JWT + OAuth auth flow |
+| `api/v1/oauth.py` | OAuth provider redirects/callbacks |
 | `models/prompt.py` | SQLAlchemy `Prompt` model |
-| `models/user_settings.py` | SQLAlchemy `UserSettings` model |
+| `models/user_setting.py` | SQLAlchemy `UserSetting` model |
 | `schemas/prompt.py` | Pydantic prompt schemas |
 
 ### Docker (`docker/`)
@@ -66,6 +79,12 @@ The entire color system uses OKLCH for perceptually uniform colors. Model-specif
 
 ### Backend-Synced Hooks
 `usePrompts` and `useSettings` talk directly to the FastAPI backend via `useProtectedApi`. Optimistic updates keep the UI responsive; errors trigger a re-fetch.
+
+### Push Notifications
+Notification preference is handled in `frontend/src/components/preferences-view.tsx`:
+- Requests browser permission when the toggle is enabled.
+- Reverts to `off` when permission is denied/unsupported.
+- Persists state through `useSettings` to `/api/v1/settings`.
 
 ---
 
@@ -99,7 +118,7 @@ The entire color system uses OKLCH for perceptually uniform colors. Model-specif
 
 ## OAuth Flow
 
-1. Frontend redirects to `/api/v1/auth/oauth/{provider}`
+1. Frontend redirects to `/api/v1/oauth/{provider}`
 2. Backend exchanges code, upserts user in Postgres
 3. Issues same JWT pair as email/password flow
 4. Session management is identical from there

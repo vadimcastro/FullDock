@@ -1,4 +1,4 @@
-# ~/.bashrc: {{PROJECT_NAME}} Droplet Configuration
+# ~/.bashrc: OnDeck Droplet Configuration
 # Optimized bash configuration for production environment
 
 # If not running interactively, don't do anything
@@ -45,8 +45,8 @@ esac
 export DEPLOY_BRANCH_ENV=main
 
 # Project navigation shortcuts
-function {{PROJECT_NAME_CLEAN}}() {
-    cd /root/{{PROJECT_NAME}}
+function ondeck() {
+    cd /root/OnDeck
 }
 
 # Git shortcuts
@@ -100,7 +100,7 @@ function shortcuts() {
     echo "📋 Available Shortcuts & Aliases:"
     echo ""
     echo "🗂️  Project Navigation:"
-    echo "  {{PROJECT_NAME_CLEAN}} → cd /root/{{PROJECT_NAME}}"
+    echo "  ondeck → cd /root/OnDeck"
     echo ""
     echo "🔧 Git Shortcuts:"
     echo "  gs → git status"

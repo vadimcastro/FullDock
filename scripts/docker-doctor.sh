@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_DEV="${ROOT_DIR}/.env.development"
 
-echo "FullDock Doctor"
+echo "OnDeck Doctor"
 echo "================"
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -31,7 +31,7 @@ fi
 echo "✅ .env.development found"
 
 if ! grep -q '^PROJECT_SLUG=' "${ENV_DEV}"; then
-  echo "[WARN] PROJECT_SLUG not set in .env.development (defaulting to fulldock-core)"
+  echo "[WARN] PROJECT_SLUG not set in .env.development (defaulting to ondeck)"
 else
   echo "✅ PROJECT_SLUG configured"
 fi

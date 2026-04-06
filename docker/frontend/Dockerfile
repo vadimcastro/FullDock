@@ -19,7 +19,7 @@ COPY frontend/tsconfig.json ./
 # Set environment variables for build
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG NEXT_PUBLIC_API_URL=https://api.{{DOMAIN_NAME}}
+ARG NEXT_PUBLIC_API_URL=https://api.ondeck.local
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Build for production

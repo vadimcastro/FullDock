@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_NAME="${PROJECT_NAME:-$(basename "$(pwd)")}"
-PROJECT_SLUG="${PROJECT_SLUG:-fulldock-core}"
+PROJECT_SLUG="${PROJECT_SLUG:-ondeck}"
 
 echo "Docker disk usage summary"
 echo "========================="

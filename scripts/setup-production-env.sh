@@ -33,8 +33,8 @@ echo
 
 # Get user inputs
 echo "👤 Admin User Configuration:"
-read -p "Admin Email [{{ADMIN_EMAIL}}]: " ADMIN_EMAIL
-ADMIN_EMAIL=${ADMIN_EMAIL:-{{ADMIN_EMAIL}}}
+read -p "Admin Email [admin@example.com]: " ADMIN_EMAIL
+ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
 
 echo
 echo "🔒 Admin Password Options:"
@@ -61,11 +61,11 @@ else
     ADMIN_PASSWORD=$SUGGESTED_ADMIN_PASSWORD
 fi
 
-read -p "Admin Username [{{ADMIN_USERNAME}}]: " ADMIN_USERNAME
-ADMIN_USERNAME=${ADMIN_USERNAME:-{{ADMIN_USERNAME}}}
+read -p "Admin Username [admin]: " ADMIN_USERNAME
+ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
 
-read -p "Admin Display Name [{{ADMIN_NAME}}]: " ADMIN_NAME
-ADMIN_NAME=${ADMIN_NAME:-"{{ADMIN_NAME}}"}
+read -p "Admin Display Name [Admin]: " ADMIN_NAME
+ADMIN_NAME=${ADMIN_NAME:-"Admin"}
 
 echo
 read -p "Allowed CORS origins (comma-separated, e.g. https://app.example.com) []: " CORS_ORIGINS
@@ -88,9 +88,9 @@ cat > .env.production.local << EOF
 # Generated on $(date)
 
 # Database - Strong credentials
-POSTGRES_USER={{PROJECT_NAME}}_prod
+POSTGRES_USER=ondeck_prod
 POSTGRES_PASSWORD=$DB_PASSWORD
-POSTGRES_DB={{PROJECT_NAME}}_prod
+POSTGRES_DB=ondeck_prod
 POSTGRES_HOST=db
 
 # Redis
@@ -222,7 +222,7 @@ echo "🚀 Next Steps:"
 echo "1. Save the passwords above in your password manager"
 echo "2. Deploy your application: make deploy"
 echo "3. If migrations didn't run automatically, run them manually after deployment"
-echo "4. Test login at: http://{{PRODUCTION_IP}}:3000"
+echo "4. Test login at: http://<your-production-ip>:3000"
 echo
 
 # Offer to show the file

@@ -1,5 +1,7 @@
 # Setup Guide — OnDeck 2.0.0
 
+`v2.0.0` is the current integrated baseline. `v2.1.0` execution planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
+
 ## Prerequisites
 
 - Docker Engine + Compose plugin
@@ -17,7 +19,7 @@ make --version
 ## First Run
 
 ```bash
-git clone <repo-url> && cd FullDock
+git clone <repo-url> && cd OnDeck
 cp .env.example .env.development
 # Edit .env.development with your secrets
 make doctor        # preflight check
@@ -112,8 +114,19 @@ Auth features:
    ```
 2. Run `make migrate` (creates `oauth_accounts` table)
 3. Provider redirect URIs:
-   - `http://localhost:8000/api/v1/auth/oauth/google`
-   - `http://localhost:8000/api/v1/auth/oauth/github`
+   - `http://localhost:8000/api/v1/oauth/google`
+   - `http://localhost:8000/api/v1/oauth/github`
+
+---
+
+## Push Notifications
+
+- Toggle path: `Preferences > Notifications`.
+- Behavior:
+  - If browser notifications are unsupported, setting reverts to `off`.
+  - If permission is denied, setting reverts to `off`.
+  - If permission is granted, setting persists via `/api/v1/settings`.
+- This release includes permission/state handling only; background push delivery is out of scope for `v2.0.0`.
 
 ---
 
