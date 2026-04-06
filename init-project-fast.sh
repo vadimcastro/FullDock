@@ -21,6 +21,8 @@ DEFAULT_LOCAL_HOST="localhost"
 DEFAULT_SSH_ALIAS="droplet"
 DEFAULT_TARGET_PATH="../"
 DEFAULT_PROJECT_SLUG="vpt-core"
+DEFAULT_OAUTH_ID="changeme"
+DEFAULT_OAUTH_SECRET="changeme"
 
 read_with_default() {
   local prompt="$1"
@@ -67,8 +69,12 @@ if [[ "${quick_defaults:-Y}" =~ ^[Nn]$ ]]; then
   WEBSITE_URL="$(read_with_default "Website URL" "$DEFAULT_WEBSITE")"
   PRODUCTION_IP="$(read_with_default "Production IP" "$DEFAULT_PRODUCTION_IP")"
   DOMAIN_NAME="$(read_with_default "Domain name" "example.local")"
-  DROPLET_ALIAS="$(read_with_default "SSH alias" "$DEFAULT_SSH_ALIAS")"
-  TARGET_DIR="$(read_with_default "Target directory" "$DEFAULT_TARGET_PATH")"
+  DROPLET_ALIAS="$DEFAULT_SSH_ALIAS"
+  TARGET_DIR="$DEFAULT_TARGET_PATH"
+  GOOGLE_ID="$(read_with_default "Google Client ID" "$DEFAULT_OAUTH_ID")"
+  GOOGLE_SECRET="$(read_with_default "Google Client Secret" "$DEFAULT_OAUTH_SECRET")"
+  GITHUB_ID="$(read_with_default "GitHub Client ID" "$DEFAULT_OAUTH_ID")"
+  GITHUB_SECRET="$(read_with_default "GitHub Client Secret" "$DEFAULT_OAUTH_SECRET")"
 else
   ADMIN_EMAIL="$DEFAULT_ADMIN_EMAIL"
   ADMIN_USERNAME="$DEFAULT_ADMIN_USERNAME"
@@ -80,6 +86,10 @@ else
   DOMAIN_NAME="example.local"
   DROPLET_ALIAS="$DEFAULT_SSH_ALIAS"
   TARGET_DIR="$DEFAULT_TARGET_PATH"
+  GOOGLE_ID="$DEFAULT_OAUTH_ID"
+  GOOGLE_SECRET="$DEFAULT_OAUTH_SECRET"
+  GITHUB_ID="$DEFAULT_OAUTH_ID"
+  GITHUB_SECRET="$DEFAULT_OAUTH_SECRET"
 fi
 
 if [[ ! "$ADMIN_EMAIL" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; then
@@ -134,6 +144,10 @@ PROJECT_NAME_CLEAN_ESCAPED="$(escape_sed "$PROJECT_NAME_CLEAN")"
 GITHUB_URL_ESCAPED="$(escape_sed "$GITHUB_URL")"
 WEBSITE_URL_ESCAPED="$(escape_sed "$WEBSITE_URL")"
 LOCAL_HOST_ESCAPED="$(escape_sed "$DEFAULT_LOCAL_HOST")"
+GOOGLE_ID_ESCAPED="$(escape_sed "$GOOGLE_ID")"
+GOOGLE_SECRET_ESCAPED="$(escape_sed "$GOOGLE_SECRET")"
+GITHUB_ID_ESCAPED="$(escape_sed "$GITHUB_ID")"
+GITHUB_SECRET_ESCAPED="$(escape_sed "$GITHUB_SECRET")"
 
 replace_vars() {
   local file="$1"
@@ -157,6 +171,10 @@ replace_vars() {
     -e "s|{{GITHUB_URL}}|$GITHUB_URL_ESCAPED|g" \
     -e "s|{{WEBSITE_URL}}|$WEBSITE_URL_ESCAPED|g" \
     -e "s|{{LOCAL_HOST}}|$LOCAL_HOST_ESCAPED|g" \
+    -e "s|{{GOOGLE_CLIENT_ID}}|$GOOGLE_ID_ESCAPED|g" \
+    -e "s|{{GOOGLE_CLIENT_SECRET}}|$GOOGLE_SECRET_ESCAPED|g" \
+    -e "s|{{GITHUB_CLIENT_ID}}|$GITHUB_ID_ESCAPED|g" \
+    -e "s|{{GITHUB_CLIENT_SECRET}}|$GITHUB_SECRET_ESCAPED|g" \
     "$file"
   rm -f "${file}.bak"
 }

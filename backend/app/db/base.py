@@ -7,6 +7,7 @@ from app.db.base_class import Base
 # Import all models to ensure they are registered with Base
 from app.models.user import User  
 from app.models.user_session import UserSession
+from app.models.oauth_account import OAuthAccount
 
 # Create SQLAlchemy engine
 engine = create_engine(settings.DATABASE_URL)

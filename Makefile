@@ -10,7 +10,7 @@ ULTRA_FRONTEND_IMAGE = $(PROJECT_SLUG)-frontend-base:latest
 ULTRA_API_IMAGE = $(PROJECT_SLUG)-backend-base:latest
 
 .PHONY: dev dev-build dev-fast dev-ultra dev-debug build-base prod down logs clean clean-all \
-	migrate migrate-create auth setup-prod-env newpro help doctor disk-usage prune-safe cleanup-legacy-images
+	migrate migrate-create db auth setup-prod-env newpro help doctor disk-usage prune-safe cleanup-legacy-images
 
 dev:
 	@echo "Starting development environment..."
@@ -99,6 +99,10 @@ migrate-create:
 	@echo "Creating migration: $(name)"
 	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml exec api alembic revision --autogenerate -m "$(name)"
 
+db: migrate
+
+db: migrate
+
 auth:
 	@echo "Setting up local development authentication..."
 	./scripts/setup-local-auth.sh
@@ -126,6 +130,7 @@ help:
 	@echo "  make prune-safe              - Safe Docker cleanup (containers/images/cache)"
 	@echo "  make cleanup-legacy-images   - Remove legacy VPT image tags"
 	@echo "  make migrate                 - Run Alembic migrations"
+	@echo "  make db                      - Alias for migrate (FastAPI/Alembic)"
 	@echo "  make migrate-create name=X   - Create Alembic migration"
 	@echo ""
 	@echo "Project setup:"

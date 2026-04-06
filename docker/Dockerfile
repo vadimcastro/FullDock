@@ -22,7 +22,8 @@ ENV GIT_COMMIT_DATE=${GIT_COMMIT_DATE}
 
 # Copy requirements first for better caching
 COPY backend/requirements-minimal.txt /app/
-RUN python3 -m pip install --no-cache-dir -r requirements-minimal.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m pip install --no-cache-dir --default-timeout=1000 --retries 10 -r requirements-minimal.txt
 
 # Copy the rest of the application
 COPY backend/ /app/

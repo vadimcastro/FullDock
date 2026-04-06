@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     CORS_MAX_AGE: int = 3600
     CACHE_PREFIX: str = os.getenv("CACHE_PREFIX", "{{PROJECT_NAME}}-cache")
 
+    # OAuth provider settings
+    OAUTH_REDIRECT_BASE: str = os.getenv("OAUTH_REDIRECT_BASE", "http://localhost:8000/api/v1/auth/oauth")
+    GOOGLE_CLIENT_ID: str | None = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str | None = os.getenv("GOOGLE_CLIENT_SECRET")
+    GITHUB_CLIENT_ID: str | None = os.getenv("GITHUB_CLIENT_ID")
+    GITHUB_CLIENT_SECRET: str | None = os.getenv("GITHUB_CLIENT_SECRET")
+    OAUTH_POST_LOGIN_URL: str = os.getenv("OAUTH_POST_LOGIN_URL", "http://localhost:3000/dashboard")
+
     WEAK_VALUES: ClassVar[Set[str]] = {
         "",
         "password",
