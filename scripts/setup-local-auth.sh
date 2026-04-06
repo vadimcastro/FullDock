@@ -5,7 +5,9 @@
 
 set -e
 
-echo "🔧 setup-local-auth"
+echo "🔧 setup-local-auth (inc. OAuth status)"
+echo "📋 Ensuring database is up to date"
+make migrate > /dev/null 2>&1 || echo "⚠️ Migration check failed, proceeding anyway"
 echo "📋 Checking services"
 
 ENV_FILE=".env.development"
@@ -26,6 +28,9 @@ if [ -z "$ADMIN_EMAIL" ] || [ -z "$ADMIN_PASSWORD" ]; then
     echo "❌ ADMIN_EMAIL or ADMIN_PASSWORD missing in $ENV_FILE"
     exit 1
 fi
+
+GOOGLE_ID="$(read_env_var GOOGLE_CLIENT_ID)"
+GITHUB_ID="$(read_env_var GITHUB_CLIENT_ID)"
 
 # Check if Docker is running
 if ! docker info >/dev/null 2>&1; then
@@ -81,8 +86,17 @@ if echo "$response" | grep -q "access_token"; then
     else
         echo "⚠️  Authentication works but endpoints may still be initializing"
     fi
+    
+    echo "📋 OAuth Status:"
+    if [ -n "$GOOGLE_ID" ]; then echo "  ✅ Google OAuth: Configured"; else echo "  ⚠️  Google OAuth: Missing GOOGLE_CLIENT_ID"; fi
+    if [ -n "$GITHUB_ID" ]; then echo "  ✅ GitHub OAuth: Configured"; else echo "  ⚠️  GitHub OAuth: Missing GITHUB_CLIENT_ID"; fi
+    
     echo "📋 Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"
     echo "🌐 http://localhost:3000 | 🔧 http://localhost:8000/docs"
+    echo ""
+    echo "💡 Tip: Set your OAuth Redirect URI to:"
+    echo "   http://localhost:8000/api/v1/oauth/oauth/google/callback"
+    echo "   (or /github/callback)"
 else
     echo "❌ Authentication failed: $response"
     exit 1

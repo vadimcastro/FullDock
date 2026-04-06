@@ -119,6 +119,8 @@ Current template auth behavior includes:
 - refresh token rotation
 - session revoke support
 - login throttling
+- **Unified UI**: Consolidates all account and admin actions into a single `ProfileDropdown`.
+- **Role Awareness**: Dynamically adjusts visibility of administrative links (e.g., Dashboard) based on your role.
 
 If you are integrating an older generated project, check that its frontend auth flow matches the current VPT refresh-token behavior.
 
@@ -142,6 +144,20 @@ Production safeguards currently enforced:
 - `POSTGRES_PASSWORD` must be strong
 - `CORS_ORIGINS` must be explicit and production-safe
 
+## OAuth Configuration
+
+1.  **Provision Secrets:** Populate `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, and `GITHUB_CLIENT_SECRET` in `.env.development` or `.env.production.local`.
+2.  **Run Migration:** The backend requires a specific table for OAuth accounts. Run this once your API service is healthy:
+    ```bash
+    make migrate
+    ```
+    *Note: This executes `alembic upgrade head` inside the container.*
+3.  **Frontend Integration:** The backend exposes provider-specific redirect endpoints:
+    - `http://localhost:8000/api/v1/auth/oauth/google`
+    - `http://localhost:8000/api/v1/auth/oauth/github`
+4.  **Behavior:** Upon successful login, the backend writes `accessToken` and `refreshToken` cookies. The frontend `ProfileDropdown` then provides a unified command center for both standard users and administrators.
+5.  **Dashboard Access:** For Administrators (`is_superuser: true`), the Dashboard link is conveniently located inside the user profile dropdown to maintain a clean navigation bar.
+
 ## Maintenance Commands
 
 Check local Docker usage:
@@ -164,39 +180,24 @@ make cleanup-legacy-images
 
 ## Troubleshooting
 
-If `make dev` fails early:
-
-```bash
-make doctor
-make logs
-```
-
-If ports are already in use:
-
-```bash
-lsof -i :3000
-lsof -i :8000
-lsof -i :5432
-lsof -i :6379
-```
-
-If you need a clean local reset:
-
-```bash
-make down
-make clean-all
-make dev
-make auth
-```
-
-If frontend changes are not reflected after dependency or Dockerfile updates:
-
-```bash
-make dev-build
-```
+- **HTTPX Version Errors:** If `make dev-build` fails with "cannot find distribution for httpx", check `backend/requirements-minimal.txt`. It must be pinned to `httpx==0.28.1`. Versions like `0.29.x` or `0.30.0` do not have stable releases on PyPI as of early 2026.
+- **Port Conflicts:** If `make dev` fails early, ports might be in use:
+  ```bash
+  lsof -i :3000
+  lsof -i :8000
+  lsof -i :5432
+  lsof -i :6379
+  ```
+- **Clean Reset:** If you need a total local reset:
+  ```bash
+  make down
+  make clean-all
+  make dev
+  make auth
+  ```
 
 ## Additional Reading
 
 - [README](./README.md)
-- [VPT Open Source Readiness Plan](./docs/VPT_OPEN_SOURCE_READINESS_PLAN.md)
+- [VPT Open Source Readiness Plan](./docs/OPEN_SOURCE_READINESS.md)
 - [OnDeck Integration Review](./docs/ONDECK_INTEGRATION_REVIEW.md)

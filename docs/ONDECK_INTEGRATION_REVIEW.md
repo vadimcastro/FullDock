@@ -70,7 +70,7 @@ Scope: compare your brother’s `OnDeck` repo (`/home/westen/Desktop/OnDeck`) wi
    - Redesign `components/cloud-sync.tsx` to show real sync state from the backend (use VPT admin logs like `auth_event` for user actions).
    - Decide whether to keep Supabase middleware (maybe to manage Next middleware for session refresh) or remove it in favor of FastAPI session tokens.
 5. **Docs & onboarding**
-   - Update `docs/VPT_OPEN_SOURCE_READINESS_PLAN.md` to mention OnDeck feature integration and the requirement to keep OnDeck's multi-model queue baked into the template example.
+   - Update `docs/OPEN_SOURCE_READINESS.md` to mention OnDeck feature integration and the requirement to keep OnDeck's multi-model queue baked into the template example.
    - Document new API contracts and expected responses so future `make newpro` projects can adopt the same UI.
 
 ## OAuth & Social Login Workplan
