@@ -1,134 +1,122 @@
-# {{PROJECT_NAME}} Makefile
-# Standalone project commands
+# OnDeck 2.0.0 — Makefile
 
-PROJECT_NAME = OnDeck
-PROJECT_SLUG = ondeck
-COMPOSE = COMPOSE_PROJECT_NAME=ondeck docker compose
-FRONTEND_IMAGE = $(PROJECT_NAME)-frontend:latest
-API_IMAGE = $(PROJECT_NAME)-api:latest
-ULTRA_FRONTEND_IMAGE = $(PROJECT_SLUG)-frontend-base:latest
-ULTRA_API_IMAGE = $(PROJECT_SLUG)-backend-base:latest
+PROJECT_NAME  = OnDeck
+PROJECT_SLUG  = ondeck
+COMPOSE       = COMPOSE_PROJECT_NAME=$(PROJECT_SLUG) docker compose
+DEV_COMPOSE   = $(COMPOSE) -f docker/docker-compose.dev.yml
+PROD_COMPOSE  = $(COMPOSE) -f docker/docker-compose.prod.yml
 
-.PHONY: dev dev-build dev-fast dev-ultra dev-debug build-base prod down logs clean clean-all \
-	migrate migrate-create db auth setup-prod-env help doctor disk-usage prune-safe cleanup-legacy-images
+.PHONY: dev dev-build down logs clean clean-all \
+        migrate migrate-create shell-api shell-db \
+        help doctor
+
+# ──────────────────────────────────────────────
+# Development
+# ──────────────────────────────────────────────
 
 dev:
-	@echo "Starting development environment..."
-	@if docker image inspect $(ULTRA_FRONTEND_IMAGE) >/dev/null 2>&1 && docker image inspect $(ULTRA_API_IMAGE) >/dev/null 2>&1; then \
-		echo "Using shared base images: $(PROJECT_SLUG)-*"; \
-	else \
-		echo "Base images missing. Building once for PROJECT_SLUG=$(PROJECT_SLUG)..."; \
-		PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/build-base-images.sh; \
-	fi
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml -f docker-compose.dev.ultra.yml up
-
-dev-fast:
-	@echo "Starting fast development environment..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml up
+	@echo "▶ Starting OnDeck 2.0.0 dev environment..."
+	$(DEV_COMPOSE) up
 
 dev-build:
-	@echo "Rebuilding and starting development environment..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml up --build
-
-dev-ultra:
-	@echo "Starting ultra development environment..."
-	@if docker image inspect $(ULTRA_FRONTEND_IMAGE) >/dev/null 2>&1 && docker image inspect $(ULTRA_API_IMAGE) >/dev/null 2>&1; then \
-		echo "Using shared ultra base images: $(PROJECT_SLUG)-*"; \
-	else \
-		echo "Ultra base images missing. Building base images for PROJECT_SLUG=$(PROJECT_SLUG)..."; \
-		PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/build-base-images.sh; \
-	fi
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml -f docker-compose.dev.ultra.yml up
-
-dev-debug:
-	@echo "Starting development environment with debug logs..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml up 2>&1 | tee debug.log
-
-build-base:
-	@echo "Building base images..."
-	PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/build-base-images.sh
-
-prod:
-	@echo "Starting production environment..."
-	docker compose -f docker/docker-compose.prod.yml up --build -d
+	@echo "▶ Rebuilding images and starting OnDeck 2.0.0..."
+	$(DEV_COMPOSE) up --build
 
 down:
-	@echo "Stopping containers..."
-	-cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml down --remove-orphans
-	-cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml -f docker-compose.dev.ultra.yml down --remove-orphans
-	-COMPOSE_PROJECT_NAME=$(PROJECT_NAME) docker compose -f docker/docker-compose.prod.yml down
-
-logs:
-	@echo "Showing logs..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml logs -f
-
-clean:
-	@echo "Cleaning Docker resources..."
-	docker system prune -f
+	@echo "▶ Stopping all containers..."
+	-$(DEV_COMPOSE) down --remove-orphans
+	-$(PROD_COMPOSE) down --remove-orphans
 
 clean-all:
-	@echo "Removing local volumes for a fresh start..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml down -v --remove-orphans
-	COMPOSE_PROJECT_NAME=$(PROJECT_NAME) docker compose -f docker/docker-compose.prod.yml down -v
+	@echo "▶ Removing containers + volumes (fresh start)..."
+	$(DEV_COMPOSE) down -v --remove-orphans
 
-doctor:
-	@echo "Running environment preflight checks..."
-	PROJECT_NAME=$(PROJECT_NAME) PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/docker-doctor.sh
+logs:
+	$(DEV_COMPOSE) logs -f
 
-disk-usage:
-	@echo "Inspecting Docker disk usage..."
-	PROJECT_NAME=$(PROJECT_NAME) PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/docker-disk-usage.sh
+logs-frontend:
+	$(DEV_COMPOSE) logs -f frontend
 
-prune-safe:
-	@echo "Pruning unused Docker artifacts (safe mode)..."
-	./scripts/docker-prune-safe.sh
+logs-api:
+	$(DEV_COMPOSE) logs -f api
 
-cleanup-legacy-images:
-	@echo "Removing legacy base/app image tags..."
-	./scripts/cleanup-legacy-images.sh
+# ──────────────────────────────────────────────
+# Database / Migrations
+# ──────────────────────────────────────────────
 
 migrate:
-	@echo "Running migrations..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml exec api alembic upgrade head
+	$(DEV_COMPOSE) exec api alembic upgrade head
 
 migrate-create:
 	@if [ -z "$(name)" ]; then \
-		echo "Error: Migration name not provided. Use 'make migrate-create name=your_migration_name'"; \
+		echo "Error: provide migration name: make migrate-create name=add_column"; \
 		exit 1; \
 	fi
-	@echo "Creating migration: $(name)"
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml exec api alembic revision --autogenerate -m "$(name)"
+	$(DEV_COMPOSE) exec api alembic revision --autogenerate -m "$(name)"
 
-db: migrate
+# ──────────────────────────────────────────────
+# Shells
+# ──────────────────────────────────────────────
 
-db: migrate
+shell-api:
+	$(DEV_COMPOSE) exec api sh
 
-auth:
-	@echo "Setting up local development authentication..."
-	./scripts/setup-local-auth.sh
+shell-db:
+	$(DEV_COMPOSE) exec db psql -U postgres ondeck
 
-setup-prod-env:
-	@echo "Setting up production environment..."
-	./scripts/setup-production-env.sh
+shell-frontend:
+	$(DEV_COMPOSE) exec frontend sh
+
+# ──────────────────────────────────────────────
+# Production
+# ──────────────────────────────────────────────
+
+prod:
+	@echo "▶ Starting production environment..."
+	$(PROD_COMPOSE) up --build -d
+
+# ──────────────────────────────────────────────
+# Maintenance
+# ──────────────────────────────────────────────
+
+clean:
+	docker system prune -f
+
+doctor:
+	@echo "▶ Docker:"; docker info --format 'Client: {{.ClientInfo.Version}}  Server: {{.ServerVersion}}' 2>/dev/null || echo "  Docker unreachable"
+	@echo "▶ Node:  $(shell node -v 2>/dev/null || echo 'not found')"
+	@echo "▶ npm:   $(shell npm -v 2>/dev/null || echo 'not found')"
+	@echo "▶ Env:   $(shell [ -f .env.development ] && echo '.env.development ✓' || echo '.env.development MISSING')"
+
+# ──────────────────────────────────────────────
+# Help
+# ──────────────────────────────────────────────
 
 help:
-	@echo "Available commands (grouped)"
-	@echo "Core:"
-	@echo "  make dev                     - Start with shared base images (default)"
-	@echo "  make dev-build               - Rebuild app images, then start fast stack"
-	@echo "  make dev-ultra               - Start with ultra overrides"
-	@echo "  make down                    - Stop all stacks"
-	@echo "  make logs                    - Tail development logs"
 	@echo ""
-	@echo "Maintenance:"
-	@echo "  make doctor                  - Preflight checks (docker/env/ports)"
-	@echo "  make disk-usage              - Show Docker image/volume/cache usage"
-	@echo "  make prune-safe              - Safe Docker cleanup (containers/images/cache)"
-	@echo "  make cleanup-legacy-images   - Remove legacy FullDock image tags"
-	@echo "  make migrate                 - Run Alembic migrations"
-	@echo "  make db                      - Alias for migrate (FastAPI/Alembic)"
-	@echo "  make migrate-create name=X   - Create Alembic migration"
+	@echo "OnDeck 2.0.0 — available commands"
 	@echo ""
-	@echo "Project setup:"
-	@echo "  make auth                    - Validate local auth using .env credentials"
-	@echo "  make setup-prod-env          - Configure production env file"
+	@echo "  Development:"
+	@echo "    make dev                        Start (uses cached images)"
+	@echo "    make dev-build                  Rebuild images + start"
+	@echo "    make down                       Stop all containers"
+	@echo "    make clean-all                  Stop + remove volumes (fresh start)"
+	@echo "    make logs                       Tail all logs"
+	@echo "    make logs-frontend / logs-api   Tail one service"
+	@echo ""
+	@echo "  Database:"
+	@echo "    make migrate                    Run pending Alembic migrations"
+	@echo "    make migrate-create name=X      Auto-generate a migration"
+	@echo ""
+	@echo "  Shells:"
+	@echo "    make shell-api                  sh inside api container"
+	@echo "    make shell-db                   psql inside db container"
+	@echo "    make shell-frontend             sh inside frontend container"
+	@echo ""
+	@echo "  Production:"
+	@echo "    make prod                       Start production stack"
+	@echo ""
+	@echo "  Maintenance:"
+	@echo "    make doctor                     Preflight environment check"
+	@echo "    make clean                      docker system prune"
+	@echo ""

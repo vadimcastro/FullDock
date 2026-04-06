@@ -1,140 +1,142 @@
 # OnDeck 2.0.0
 
-High-fidelity prompt queue management system built with Next.js 16, React 19, FastAPI, PostgreSQL, and Redis.
+High-fidelity AI prompt queue management system — built on a hardened full-stack infrastructure.
 
-It is designed for:
-- managing AI prompt queues across multiple models
-- ensuring high-fidelity persistence with backend synchronization
-- providing a premium, native-feeling UI with Tailwind v4 OKLCH
+**Stack:** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · FastAPI · PostgreSQL · Redis · Docker
 
-## Stack
+---
 
-- Frontend: Next.js 16 (OnDeck 2.0.0), React 19, TypeScript, Tailwind CSS v4
-- Backend: FastAPI, SQLAlchemy, Alembic
-- Services: PostgreSQL, Redis
-- Local workflow: Docker Compose + Makefile commands
-- Auth: JWT access + refresh flow with login throttling and session revocation
-- UI: Unified, role-aware account management with premium styling
+## Quick Start
 
-## Quick Start (First 5 Minutes)
+```bash
+git clone <your-repo> && cd FullDock
+cp .env.example .env.development
+make doctor       # preflight check
+make dev-build    # first-time build (installs all deps)
+```
 
-1.  **Clone & Setup:**
-    ```bash
-    git clone <your-repo> OnDeck && cd OnDeck
-    cp .env.example .env.development
-    ```
-2.  **Verify Environment:**
-    ```bash
-    make doctor
-    ```
-3.  **Launch Stack:**
-    ```bash
-    make dev
-    ```
-4.  **Configure Auth:**
-    ```bash
-    make auth
-    ```
+- **Frontend:** http://localhost:3000
+- **API:** http://localhost:8000
+- **API docs:** http://localhost:8000/docs
 
-- API docs: `http://localhost:8000/docs`
-- Frontend: `http://localhost:3000`
-- API: `http://localhost:8000`
+---
 
 ## Core Commands
 
 ```bash
-make dev
-make dev-build
-make dev-ultra
-make down
-make logs
-make auth
-make migrate
-make migrate-create name=example_change
-make doctor
-make disk-usage
-make prune-safe
-make cleanup-legacy-images
-make setup-prod-env
+make dev             # Start (uses cached images)
+make dev-build       # Rebuild images + start (run after any dep changes)
+make down            # Stop all containers
+make clean-all       # Stop + delete volumes (fresh start)
+make logs            # Tail all logs
+make logs-frontend   # Frontend logs only
+make logs-api        # API logs only
 ```
-
-## Project Configuration
-
-OnDeck uses a shared project slug for Docker orchestration:
-- `PROJECT_SLUG` is defined as `ondeck` in the `Makefile`.
-- Shared base images:
-  - `ondeck-frontend-base:latest`
-  - `ondeck-backend-base:latest`
-
-## Security Defaults
-
-The following security features are active:
-- production fail-fast checks for weak or missing secrets
-- production CORS validation
-- login throttling
-- refresh token rotation
-- refresh-session revocation
-- `logout` and `logout-all`
-- auth event logging
-- HTTPS-aware cookie handling in the frontend auth flow
-
-## OAuth Configuration
-
-1.  **Provision Secrets:** Populate `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, and `GITHUB_CLIENT_SECRET` in `.env.development`.
-2.  **Run Migration:** Ensure the OAuth database table exists:
-    ```bash
-    make migrate
-    ```
-3.  **Use Provider URLs:** The backend handles social login via:
-    - `http://localhost:8000/api/v1/auth/oauth/google`
-    - `http://localhost:8000/api/v1/auth/oauth/github`
-4.  **Behavior:** Upon successful login, the backend writes secure cookies, and the frontend automatically synchronizes.
-5.  **Unified Experience:** The UI features a single `ProfileDropdown` trigger (premium "Blue") for all authenticated users. Administrative tools like the "Dashboard" are dynamically integrated into the dropdown based on the `is_superuser` role.
-
-Recommended production entrypoint:
 
 ```bash
-docker compose -f docker/docker-compose.https.yml up -d --build
+make migrate                       # Run Alembic migrations
+make migrate-create name=add_x     # Auto-generate migration
+make shell-api                     # Shell into API container
+make shell-db                      # psql into database
+make doctor                        # Environment preflight check
 ```
+
+```bash
+make prod            # Start production stack
+```
+
+---
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16.1.6, React 19.2.4, TypeScript, Tailwind CSS v4 |
+| UI Library | Shadcn/ui with Radix UI primitives, OKLCH design tokens |
+| Backend | FastAPI, SQLAlchemy, Alembic, Uvicorn |
+| Database | PostgreSQL 15 |
+| Cache/Sessions | Redis 7 |
+| Auth | JWT access + refresh rotation, login throttling, session revocation |
+| Docker | Single `docker-compose.dev.yml`, two-stage `Dockerfile.dev`, three-stage `Dockerfile.prod` |
+
+---
+
+## Project Structure
+
+```
+frontend/          Next.js 16 app (OnDeck UI)
+  src/
+    app/           App Router pages + layout
+    components/    OnDeck components + Shadcn UI
+    hooks/         usePrompts, useSettings, useMobile
+    lib/           Types, API client, settings types
+    styles/        globals.css (OKLCH tokens)
+backend/           FastAPI app
+  app/
+    api/v1/        prompts, settings, auth endpoints
+    models/        SQLAlchemy models
+    schemas/       Pydantic schemas
+docker/
+  Dockerfile                 API image
+  docker-compose.dev.yml     Development stack
+  docker-compose.prod.yml    Production stack
+  frontend/
+    Dockerfile.dev           Dev (2-stage, layer-cached deps)
+    Dockerfile.prod          Prod (3-stage, minimal runner)
+  nginx/                     nginx config for prod
+scripts/                     Setup and maintenance helpers
+docs/                        Guides and architecture docs
+```
+
+---
+
+## Security
+
+- JWT access + refresh token rotation
+- Login throttling (rate-limited per IP)
+- Session revocation (`logout` and `logout-all`)
+- Auth event logging
+- Production fail-fast on weak secrets, CORS validation
+- HTTPS-aware cookie handling
+
+## OAuth
+
+Populate in `.env.development`:
+```
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GITHUB_CLIENT_ID=...
+GITHUB_CLIENT_SECRET=...
+```
+
+Provider endpoints:
+- `http://localhost:8000/api/v1/auth/oauth/google`
+- `http://localhost:8000/api/v1/auth/oauth/github`
+
+---
+
+## Troubleshooting
+
+```bash
+# Packages not found after dep changes
+make clean-all && make dev-build
+
+# Port conflicts
+lsof -i :3000 && lsof -i :8000
+
+# Full fresh reset
+make clean-all && make dev-build
+```
+
+---
 
 ## Documentation
 
 - [Setup Guide](./docs/SETUP_GUIDE.md)
 - [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
+- [Integration Review](./docs/ONDECK_INTEGRATION_REVIEW.md)
 
-## Roadmap
-
-- [x] **OnDeck 2.0.0 Integration**: High-fidelity prompt queue + persistent FastAPI storage.
-- [ ] Pre-built base images (`ondeck-base-py`, `ondeck-base-node`) for CD environments.
-- [ ] Integrated auth tests (login throttling, refresh rotation).
-- [ ] GitHub Actions CI/CD examples.
-- [ ] Standardized MTU settings for Linux networking.
-
-## Project Structure
-
-```text
-frontend/   Next.js app
-backend/    FastAPI app
-docker/     Compose files and Dockerfiles
-scripts/    setup and maintenance helpers
-docs/       OnDeck 2.0.0 integration and setup docs
-```
-
-## Troubleshooting
-
-- **Dependency Errors:** If `make dev-build` fails with `httpx` distribution errors, ensure you are using `httpx==0.28.1` in `backend/requirements-minimal.txt`.
-- **Infrastructure:** If the stack does not come up cleanly:
-  ```bash
-  make doctor
-  make logs
-  make down
-  make dev-build
-  ```
-- **Storage:** If Docker storage grows too much:
-  ```bash
-  make disk-usage
-  make prune-safe
-  ```
+---
 
 ## License
 

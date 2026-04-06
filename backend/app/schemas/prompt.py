@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 class PromptBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
     model_id: str
     content: str
     notes: Optional[str] = ""

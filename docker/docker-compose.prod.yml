@@ -1,72 +1,69 @@
 # docker/docker-compose.prod.yml
-version: '3.8'
+# OnDeck 2.0.0 — production stack
+
 services:
   frontend:
     build:
       context: ..
-      dockerfile: docker/frontend/Dockerfile
+      dockerfile: docker/frontend/Dockerfile.prod
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://api.{{DOMAIN_NAME}}
-    # Explicitly no volumes - use built files only
+      - NEXT_PUBLIC_API_URL=${API_URL:-https://api.yourdomain.com}
+      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=OnDeck 2.0.0
+    restart: unless-stopped
 
   api:
     build:
-      dockerfile: docker/Dockerfile
       context: ..
+      dockerfile: docker/Dockerfile
       args:
         GIT_BRANCH: ${GIT_BRANCH:-unknown}
         GIT_COMMIT_HASH: ${GIT_COMMIT_HASH:-unknown}
-        GIT_COMMIT_MESSAGE: ${GIT_COMMIT_MESSAGE:-unknown}
-        GIT_COMMIT_DATE: ${GIT_COMMIT_DATE:-unknown}
     command: >
       sh -c '
-        echo "Running migrations..." &&
         /app/scripts/migrate.sh &&
-        echo "Waiting for tables to be ready..." &&
-        sleep 5 &&
-        echo "Initializing database..." &&
-        python3 /app/scripts/init_db.py || echo "Database init failed, continuing..." &&
-        echo "Starting server..." &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
       '
     ports:
       - "8000:8000"
     env_file:
       - ../.env.production.local
     environment:
-      - PYTHONPATH=/app:/app/app
+      - PYTHONPATH=/app
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     env_file:
       - ../.env.production.local
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ondeck_postgres_prod:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 3
+      retries: 5
+    restart: unless-stopped
 
   redis:
-    image: redis:6
-    command: redis-server --appendonly yes
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
     volumes:
-      - redis_data:/data
+      - ondeck_redis_prod:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 3
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data:
+  ondeck_postgres_prod:
+  ondeck_redis_prod:

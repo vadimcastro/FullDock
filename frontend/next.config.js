@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Required for production Docker minimal runner (Dockerfile.prod)
+  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'http',

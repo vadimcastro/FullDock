@@ -1,39 +1,51 @@
-// src/app/layout.tsx
-import type { Metadata } from 'next';
-import { Inter, Poppins } from 'next/font/google';
-import '../styles/globals.css';
-import { Providers } from './providers';
-import Navbar from '../components/layout/navbar';
-import Footer from '../components/layout/footer';
+import type { Metadata, Viewport } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import '../styles/globals.css'
+import { Providers } from './providers'
+import { ThemeProvider } from '@/components/theme-provider'
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const poppins = Poppins({ 
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-poppins',
-});
+const geist = Geist({ subsets: ['latin'] })
+const geistMono = Geist_Mono({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_PROJECT_DISPLAY_NAME || '{{PROJECT_DISPLAY_NAME}}',
-  description: process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || '{{PROJECT_DESCRIPTION}}',
-};
+  title: 'On Deck — AI Prompt Manager',
+  description:
+    'Track and manage prompts across multiple AI models. Queue, organize, and coordinate your AI workflow.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'On Deck',
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#1a1a1a',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${poppins.variable} antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
+      <body className={`${geist.className} antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            {children}
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

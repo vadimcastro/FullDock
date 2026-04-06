@@ -1,20 +1,105 @@
-# template development overrides
+# docker/docker-compose.dev.yml
+# OnDeck 2.0.0 — single development compose
+# Usage: make dev   (or make dev-build for full rebuild)
 
 services:
   frontend:
-    env_file:
-      - ../.env.development
-    environment:
-      - NEXT_PUBLIC_ADMIN_NAME=${ADMIN_NAME:-Admin}
-      - NEXT_PUBLIC_ADMIN_ROLE=${ADMIN_ROLE:-Administrator}
-      - NEXT_PUBLIC_ADMIN_INITIALS=${ADMIN_INITIALS:-A}
-      - NEXT_PUBLIC_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
-      - NEXT_PUBLIC_DEV_PASSWORD=${ADMIN_PASSWORD:-changeme}
-      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=Template Project
-      - NEXT_PUBLIC_PROJECT_DESCRIPTION=Project template development environment
-      
-  api:
-    env_file:
-      - ../.env.development
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile.dev
+    ports:
+      - "3000:3000"
     volumes:
-      - ../backend/.env:/app/.env:ro
+      # Bind-mount source for hot reload (node_modules stays in image layer)
+      - ../frontend/src:/app/src
+      - ../frontend/public:/app/public
+      - ../frontend/next.config.js:/app/next.config.js
+      - ../frontend/tsconfig.json:/app/tsconfig.json
+      - ../frontend/postcss.config.mjs:/app/postcss.config.mjs
+      - /app/.next  # anonymous volume for Next.js build cache
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=OnDeck 2.0.0
+      - NEXT_PUBLIC_PROJECT_DESCRIPTION=High-fidelity prompt queue management system
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app
+    command: >
+      sh -c '
+        /app/scripts/migrate.sh &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      '
+    environment:
+      - PYTHONPATH=/app
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=ondeck
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - ../.env.development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=ondeck
+    volumes:
+      - ondeck_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ondeck_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 3s
+
+volumes:
+  ondeck_postgres_data:
+  ondeck_redis_data:
+  # No node_modules volume — lives in the image layer

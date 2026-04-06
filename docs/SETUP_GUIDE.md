@@ -1,174 +1,166 @@
-# Setup Guide
-
-Step-by-step setup for **OnDeck 2.0.0**.
+# Setup Guide — OnDeck 2.0.0
 
 ## Prerequisites
 
-- Docker Desktop or Docker Engine with Compose plugin
-- Git
+- Docker Engine + Compose plugin
 - `make`
-- Node.js >= 20.9.0 (if running outside Docker)
-
-Verify the basics:
+- Git
 
 ```bash
 docker --version
 docker compose version
-git --version
 make --version
 ```
+
+---
 
 ## First Run
 
 ```bash
-git clone <your-fork-or-repo-url> OnDeck
-cd OnDeck
+git clone <repo-url> && cd FullDock
 cp .env.example .env.development
-make doctor
-make dev
-make auth
+# Edit .env.development with your secrets
+make doctor        # preflight check
+make dev-build     # builds images and starts all services
 ```
 
-Expected local URLs (OnDeck 2.0.0):
-- Frontend: `http://localhost:3000`
-- API: `http://localhost:8000`
-- API docs: `http://localhost:8000/docs`
+Services:
+- **Frontend:** http://localhost:3000
+- **API:** http://localhost:8000
+- **API Docs:** http://localhost:8000/docs
 
-## What `make doctor` Checks
+---
 
-- Docker is installed
-- Docker daemon is reachable
-- Docker Compose plugin is available
-- `.env.development` exists
-- `PROJECT_SLUG` is configured or falls back safely
-- common local ports are free or clearly reported
-
-Run it before the first `make dev` on a new machine.
-
-
-## Shared Base-Image Reuse
-
-Generated projects inherit:
+## Daily Workflow
 
 ```bash
-PROJECT_NAME=OnDeck
-PROJECT_SLUG=ondeck
+make dev           # Start (fast — uses cached Docker images)
+make down          # Stop everything
+make logs          # Tail all logs
+make logs-frontend # Frontend only
+make logs-api      # API only
 ```
 
-That lets multiple projects reuse shared Docker base images:
-- `${PROJECT_SLUG}-frontend-base:latest`
-- `${PROJECT_SLUG}-backend-base:latest`
+**After changing `package.json` or Python deps:**
+```bash
+make dev-build     # Rebuilds images with new deps baked in
+```
 
-Behavior:
-- first project on a machine builds the shared base images
-- later projects with the same `PROJECT_SLUG` reuse them automatically
+**Full clean reset** (removes all data volumes):
+```bash
+make clean-all && make dev-build
+```
 
-## Daily Development Workflow
+---
+
+## Docker Architecture
+
+OnDeck uses a **single, simple compose setup**:
+
+| File | Purpose |
+|---|---|
+| `docker/docker-compose.dev.yml` | Development stack |
+| `docker/docker-compose.prod.yml` | Production stack |
+| `docker/frontend/Dockerfile.dev` | Dev frontend (2-stage, deps cached in image layer) |
+| `docker/frontend/Dockerfile.prod` | Prod frontend (3-stage, minimal standalone runner) |
+| `docker/Dockerfile` | API (Python/FastAPI) |
+
+**Key design decision:** `node_modules` lives inside the Docker image layer, **not** in a named volume. This means:
+- No stale cache issues when adding new npm packages
+- `make dev-build` always gives you a clean, consistent dependency set
+- `make dev` is fast because Docker layer caching handles the `npm install` step
+
+---
+
+## Database / Migrations
 
 ```bash
-make dev
-make logs
-make down
+make migrate                         # Apply all pending migrations
+make migrate-create name=add_column  # Generate new migration from models
+make shell-db                        # Direct psql session
 ```
 
-Use these when needed:
+Migrations run automatically on container startup via `scripts/migrate.sh`.
+
+---
+
+## Authentication
+
+Local admin credentials come from `.env.development`:
 
 ```bash
-make dev-build
-make dev-ultra
-make migrate
-make migrate-create name=add_feature_x
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=changeme
 ```
 
-## Authentication Notes
+Auth features:
+- JWT access + refresh token rotation
+- Login throttling (rate-limited)
+- Session revocation (`/auth/logout`, `/auth/logout-all`)
+- Auth event logging
 
-Local auth setup:
+---
+
+## OAuth Setup
+
+1. Add to `.env.development`:
+   ```
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   GITHUB_CLIENT_ID=...
+   GITHUB_CLIENT_SECRET=...
+   ```
+2. Run `make migrate` (creates `oauth_accounts` table)
+3. Provider redirect URIs:
+   - `http://localhost:8000/api/v1/auth/oauth/google`
+   - `http://localhost:8000/api/v1/auth/oauth/github`
+
+---
+
+## Production
 
 ```bash
-make auth
+# Requires .env.production.local with strong secrets
+make prod
 ```
 
-OnDeck auth behavior includes:
-- access + refresh tokens
-- refresh token rotation
-- session revoke support
-- login throttling
-- **Unified UI**: Consolidates all account and admin actions into a single `ProfileDropdown`.
-- **Role Awareness**: Dynamically adjusts visibility of administrative links (e.g., Dashboard) based on your role.
-
-## Production Setup
-
-Generate a production env scaffold:
-
-```bash
-make setup-prod-env
-```
-
-Recommended production runtime:
-
-```bash
-docker compose -f docker/docker-compose.https.yml up -d --build
-```
-
-Production safeguards currently enforced:
-- `SECRET_KEY` must exist and be strong
+Production safeguards:
+- `SECRET_KEY` must be strong
 - `ADMIN_PASSWORD` must be strong
-- `POSTGRES_PASSWORD` must be strong
-- `CORS_ORIGINS` must be explicit and production-safe
+- `POSTGRES_PASSWORD` must be set
+- CORS origins must be explicit
 
-## OAuth Configuration
-
-1.  **Provision Secrets:** Populate `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, and `GITHUB_CLIENT_SECRET` in `.env.development` or `.env.production.local`.
-2.  **Run Migration:** The backend requires a specific table for OAuth accounts. Run this once your API service is healthy:
-    ```bash
-    make migrate
-    ```
-    *Note: This executes `alembic upgrade head` inside the container.*
-3.  **Frontend Integration:** The backend exposes provider-specific redirect endpoints:
-    - `http://localhost:8000/api/v1/auth/oauth/google`
-    - `http://localhost:8000/api/v1/auth/oauth/github`
-4.  **Behavior:** Upon successful login, the backend writes `accessToken` and `refreshToken` cookies. The frontend `ProfileDropdown` then provides a unified command center for both standard users and administrators.
-5.  **Dashboard Access:** For Administrators (`is_superuser: true`), the Dashboard link is conveniently located inside the user profile dropdown to maintain a clean navigation bar.
-
-## Maintenance Commands
-
-Check local Docker usage:
-
-```bash
-make disk-usage
-```
-
-Conservative cleanup:
-
-```bash
-make prune-safe
-```
-
-Legacy image-tag cleanup after migrations:
-
-```bash
-make cleanup-legacy-images
-```
+---
 
 ## Troubleshooting
 
-- **HTTPX Version Errors:** If `make dev-build` fails with "cannot find distribution for httpx", check `backend/requirements-minimal.txt`. It must be pinned to `httpx==0.28.1`. Versions like `0.29.x` or `0.30.0` do not have stable releases on PyPI as of early 2026.
-- **Port Conflicts:** If `make dev` fails early, ports might be in use:
-  ```bash
-  lsof -i :3000
-  lsof -i :8000
-  lsof -i :5432
-  lsof -i :6379
-  ```
-- **Clean Reset:** If you need a total local reset:
-  ```bash
-  make down
-  make clean-all
-  make dev
-  make auth
-  ```
+| Problem | Fix |
+|---|---|
+| New npm package not found | `make clean-all && make dev-build` |
+| Port conflicts | `lsof -i :3000`, `:8000`, `:5432`, `:6379` |
+| DB out of sync | `make migrate` |
+| Full reset | `make clean-all && make dev-build` |
+| Environment check | `make doctor` |
 
-## Additional Reading
+---
 
-- [README](../README.md)
-- [Knowledge Base](./KNOWLEDGE_BASE.md)
+## All Commands
+
+```bash
+make dev                          # Start with cached images
+make dev-build                    # Rebuild images + start
+make down                         # Stop all services
+make clean-all                    # Stop + delete all volumes
+make logs                         # All logs
+make logs-frontend                # Frontend logs
+make logs-api                     # API logs
+make migrate                      # Run migrations
+make migrate-create name=X        # Create migration
+make shell-api                    # sh in API container
+make shell-db                     # psql in DB container
+make shell-frontend               # sh in frontend container
+make prod                         # Production stack
+make doctor                       # Preflight check
+make clean                        # docker system prune
+make help                         # Full command list
+```
