@@ -6,7 +6,7 @@
 
 set -e
 
-echo "⚡ setup-local-auth-fast"
+echo "[INFO] setup-local-auth-fast"
 echo "📋 Checking services (optimized)"
 
 ENV_FILE=".env.development"

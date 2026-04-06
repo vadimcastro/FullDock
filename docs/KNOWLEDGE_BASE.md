@@ -1,15 +1,15 @@
-# VPT Knowledge Base
+# FullDock Knowledge Base
 
-**Project:** vadim-project-template (VPT)  
+**Project:** FullDock  
 **Description:** Docker-first infrastructure for Next.js, FastAPI, PostgreSQL, and Redis.
 
 ## 🏗️ Architectural Patterns
 
 ### 1. Dual-Purpose Template
-VPT is designed to be both a fast-start repo for new apps and a stable baseline for complex downstream projects (like `ondeck`).
+FullDock is designed to be both a fast-start repo for new apps and a stable baseline for complex downstream projects (like `ondeck`).
 
 ### 2. Standalone & Decoupled
-Each project generated from VPT is completely self-contained. There are no runtime dependencies on sibling repositories or shared parent directories.
+Each project generated from FullDock is completely self-contained. There are no runtime dependencies on sibling repositories or shared parent directories.
 
 ### 3. Docker-First Workflow
 - **Development:** `make dev` starts the stack with hot-reloading.
@@ -48,14 +48,14 @@ Each project generated from VPT is completely self-contained. There are no runti
 
 - **Fail Fast:** Clear errors over silent failures.
 - **Efficiency:** Minimize context switching between tools.
-- **Consistency:** Same commands work across all VPT-derived projects.
+- **Consistency:** Same commands work across all FullDock-derived projects.
 - **Documentation as Code:** Keep guides in sync with the CLI surface.
 
 ---
 
-## 🌐 OAuth Implementation Guide
+## OAuth Implementation Guide
 
-VPT supports Google and GitHub OAuth out of the box. 
+FullDock supports Google and GitHub OAuth out of the box. 
 
 1.  **Secrets:** Define client IDs/secrets in `.env.development`.
 2.  **Migration:** Run `make migrate` to create the `oauth_accounts` table.

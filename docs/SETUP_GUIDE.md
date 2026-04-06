@@ -1,6 +1,6 @@
 # Setup Guide
 
-Step-by-step setup for `vadim-project-template` and projects generated from it.
+Step-by-step setup for `FullDock` and projects generated from it.
 
 ## Prerequisites
 
@@ -20,8 +20,8 @@ make --version
 ## First Run in the Template Repo
 
 ```bash
-git clone <your-fork-or-repo-url> vadim-project-template
-cd vadim-project-template
+git clone <your-fork-or-repo-url> FullDock
+cd FullDock
 cp .env.example .env.development
 make doctor
 make dev
@@ -44,7 +44,7 @@ Expected local URLs:
 
 Run it before the first `make dev` on a new machine.
 
-## Create a New Project From VPT
+## Create a New Project From FullDock
 
 From the template root:
 
@@ -66,7 +66,7 @@ By default the generated project is created as a sibling directory of the templa
 Example:
 
 ```bash
-cd /path/to/vadim-project-template
+cd /path/to/FullDock
 make newpro
 cd ../ondeck
 make dev
@@ -78,7 +78,7 @@ make auth
 Generated projects inherit:
 
 ```bash
-PROJECT_SLUG=vpt-core
+PROJECT_SLUG=fulldock-core
 ```
 
 That lets multiple projects reuse shared Docker base images:
@@ -122,7 +122,7 @@ Current template auth behavior includes:
 - **Unified UI**: Consolidates all account and admin actions into a single `ProfileDropdown`.
 - **Role Awareness**: Dynamically adjusts visibility of administrative links (e.g., Dashboard) based on your role.
 
-If you are integrating an older generated project, check that its frontend auth flow matches the current VPT refresh-token behavior.
+If you are integrating an older generated project, check that its frontend auth flow matches the current FullDock refresh-token behavior.
 
 ## Production Setup
 
@@ -198,6 +198,5 @@ make cleanup-legacy-images
 
 ## Additional Reading
 
-- [README](./README.md)
-- [VPT Open Source Readiness Plan](./docs/OPEN_SOURCE_READINESS.md)
-- [OnDeck Integration Review](./docs/ONDECK_INTEGRATION_REVIEW.md)
+- [README](../README.md)
+- [Knowledge Base](./KNOWLEDGE_BASE.md)

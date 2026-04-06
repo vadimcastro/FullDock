@@ -4,11 +4,11 @@
 
 set -e
 
-PROJECT_SLUG="${PROJECT_SLUG:-vpt-core}"
+PROJECT_SLUG="${PROJECT_SLUG:-fulldock-core}"
 FRONTEND_IMAGE="${PROJECT_SLUG}-frontend-base:latest"
 BACKEND_IMAGE="${PROJECT_SLUG}-backend-base:latest"
 
-echo "🏗️ Building ${PROJECT_SLUG} base images for ultra-fast testing..."
+echo "[BUILD] Building ${PROJECT_SLUG} base images..."
 
 # Build frontend base image with pre-installed dependencies
 echo "📦 Building frontend base image..."
@@ -18,8 +18,8 @@ docker build -t "${FRONTEND_IMAGE}" -f docker/base/Dockerfile.frontend.base .
 echo "📦 Building backend base image..."
 docker build -t "${BACKEND_IMAGE}" -f docker/Dockerfile .
 
-echo "✅ Base images built successfully!"
-echo "💡 Use 'make dev-ultra' for lightning-fast test project startup"
+echo "[DONE] Base images built successfully!"
+echo "[INFO] Use 'make dev-ultra' for lightning-fast test project startup"
 
 # Show image sizes
 echo "📊 Image sizes:"

@@ -33,9 +33,9 @@ services:
         - APP_PATH=backend/app
     command: >
       sh -c '
-        echo "⚡ Fast startup - running migrations..." &&
+        echo "[INFO] Fast startup - running migrations..." &&
         /app/scripts/migrate.sh &&
-        echo "⚡ Starting server with hot reload..." &&
+        echo "[INFO] Starting server with hot reload..." &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       '
     environment:

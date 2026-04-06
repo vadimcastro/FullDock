@@ -15,4 +15,4 @@ RUN npm install --silent && npm cache clean --force
 # Default command for development
 CMD ["npm", "run", "dev"]
 
-# Create a base image tag: docker build -t vadim-frontend-base:latest -f docker/base/Dockerfile.frontend.base .
+# Create a base image tag: docker build -t fulldock-core-frontend-base:latest -f docker/base/Dockerfile.frontend.base .
