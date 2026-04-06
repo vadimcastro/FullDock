@@ -10,26 +10,26 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "next": "14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "tailwindcss": "^3.3.0",
-    "lucide-react": "^0.263.1",
+    "next": "16.1.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwindcss": "^4.2.0",
+    "lucide-react": "^0.564.0",
     "js-cookie": "^3.0.5",
-    "next-themes": "^0.3.0",
+    "next-themes": "^0.4.6",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
-    "@types/node": "^20.8.0",
-    "@types/react": "^18.2.25",
-    "@types/react-dom": "^18.2.11",
+    "@tailwindcss/postcss": "^4.2.0",
+    "@types/node": "^22",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
     "@types/js-cookie": "^3.0.6",
-    "autoprefixer": "^10.4.16",
-    "eslint": "^8.51.0",
-    "eslint-config-next": "14.0.0",
-    "postcss": "^8.4.31",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.1.6",
+    "postcss": "^8.5",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "typescript": "5.7.3"
   }
 }

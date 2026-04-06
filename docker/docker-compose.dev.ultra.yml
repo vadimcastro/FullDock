@@ -19,8 +19,8 @@ services:
       - NEXT_PUBLIC_ADMIN_INITIALS=${ADMIN_INITIALS:-A}
       - NEXT_PUBLIC_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
       - NEXT_PUBLIC_DEV_PASSWORD=${ADMIN_PASSWORD:-changeme}
-      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=Template Project
-      - NEXT_PUBLIC_PROJECT_DESCRIPTION=Project template development environment
+      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=OnDeck 2.0.0
+      - NEXT_PUBLIC_PROJECT_DESCRIPTION=High-fidelity prompt queue management system
     command: sh -c "npm run dev"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]

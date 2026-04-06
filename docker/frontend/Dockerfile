@@ -1,5 +1,5 @@
 # docker/frontend/Dockerfile
-FROM node:18-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 # Copy package files from frontend directory
@@ -13,8 +13,6 @@ RUN npm install
 # Copy the rest of the frontend code (excluding node_modules)
 COPY frontend/src ./src
 COPY frontend/public ./public
-COPY frontend/next.config.js ./
-COPY frontend/tailwind.config.js ./
 COPY frontend/postcss.config.js ./
 COPY frontend/tsconfig.json ./
 

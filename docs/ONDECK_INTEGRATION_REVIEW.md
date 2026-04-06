@@ -89,9 +89,27 @@ Steps:
 4. Replace the Supabase helpers (`lib/supabase`) with a small wrapper that calls the new OAuth endpoints; once everything works, remove unused Supabase artifacts.
 5. Update `components/cloud-sync.tsx` + `hooks/use-settings.tsx` to show real provider-based auth buttons and to consume FullDock’s `/auth` endpoints, including login, logout, and refresh flows.
 
-## Immediate Next Moves
+## Current Status (2026-04-06) ✅
 
-- Choose: port OnDeck UI into the existing Next.js 14 frontend or upgrade the template’s Next.js version (the former is faster).
-- Draft prompt API schema and wire it to a new FastAPI router (call it `PromptsRouter`) before reimplementing the `usePrompts` hook.
-- Align `SettingsProvider` with FullDock’s auth backend instead of the Supabase stub; retire unused `lib/supabase` files if they do not serve a purpose.
-- After the backend hooks are in place, regenerate `ondeck` via `make newpro` and swap in the new prompt UI so the demo matches the OnDeck experience.
+The core integration of **OnDeck+** is complete. The project now successfully absorbs the OnDeck product features into the FullDock hardened infrastructure.
+
+- **Infrastructure**: SQLAlchemy models for `prompts` and `user_settings` are live with Alembic migrations.
+- **API**: FastAPI endpoints are implemented and registered under `/api/v1/prompts` and `/api/v1/settings`.
+- **Frontend**: Successfully upgraded to **Next.js 16.1.6**, **React 19.2.4**, and **Tailwind v4**.
+- **Porting**: All 50+ UI primitives and core OnDeck components have been migrated to the `src` directory.
+- **Hooks**: `usePrompts` and `useSettings` are refactored to sync directly with the FastAPI backend via `useProtectedApi`.
+
+## Next To-Dos 🚀
+
+1. **Verification & Smoke Testing**: 
+   - Deploy the `boss` project and verify the full CRUD flow for prompts.
+   - Confirm backend persistence after container restarts.
+2. **OAuth Provider Setup**:
+   - Configure real Google/GitHub credentials in `.env` to replace the previous Supabase mock flows.
+   - Verify the callback handlers in `backend/app/api/v1/oauth.py` correctly upsert users.
+3. **Frontend Polish**:
+   - Audit the ported Radix components for any React 19/Next 16 hydration mismatches.
+   - Refine the OKLCH-based accent color injection for the most "premium" visual feel.
+4. **Build Optimization**:
+   - Monitor Docker build times with the new @tailwindcss/postcss stack.
+   - Update `ROADMAP.md` to reflect the successful pivot to OnDeck+.

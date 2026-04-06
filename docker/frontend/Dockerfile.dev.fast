@@ -1,6 +1,6 @@
 # docker/frontend/Dockerfile.dev.fast
 # Optimized development frontend with persistent node_modules volume
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 

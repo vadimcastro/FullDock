@@ -1,16 +1,16 @@
 # {{PROJECT_NAME}} Makefile
 # Standalone project commands
 
-PROJECT_NAME ?= $(notdir $(CURDIR))
-PROJECT_SLUG ?= fulldock-core
-COMPOSE = COMPOSE_PROJECT_NAME=$(PROJECT_NAME) docker compose
+PROJECT_NAME = OnDeck
+PROJECT_SLUG = ondeck
+COMPOSE = COMPOSE_PROJECT_NAME=ondeck docker compose
 FRONTEND_IMAGE = $(PROJECT_NAME)-frontend:latest
 API_IMAGE = $(PROJECT_NAME)-api:latest
 ULTRA_FRONTEND_IMAGE = $(PROJECT_SLUG)-frontend-base:latest
 ULTRA_API_IMAGE = $(PROJECT_SLUG)-backend-base:latest
 
 .PHONY: dev dev-build dev-fast dev-ultra dev-debug build-base prod down logs clean clean-all \
-	migrate migrate-create db auth setup-prod-env newpro help doctor disk-usage prune-safe cleanup-legacy-images
+	migrate migrate-create db auth setup-prod-env help doctor disk-usage prune-safe cleanup-legacy-images
 
 dev:
 	@echo "Starting development environment..."
@@ -111,10 +111,6 @@ setup-prod-env:
 	@echo "Setting up production environment..."
 	./scripts/setup-production-env.sh
 
-newpro:
-	@echo "Launching interactive fast project creation..."
-	./init-project-fast.sh
-
 help:
 	@echo "Available commands (grouped)"
 	@echo "Core:"
@@ -136,4 +132,3 @@ help:
 	@echo "Project setup:"
 	@echo "  make auth                    - Validate local auth using .env credentials"
 	@echo "  make setup-prod-env          - Configure production env file"
-	@echo "  make newpro                  - Create a new project from this template"

@@ -4,7 +4,7 @@
 
 set -e
 
-PROJECT_SLUG="${PROJECT_SLUG:-fulldock-core}"
+PROJECT_SLUG="${PROJECT_SLUG:-ondeck}"
 FRONTEND_IMAGE="${PROJECT_SLUG}-frontend-base:latest"
 BACKEND_IMAGE="${PROJECT_SLUG}-backend-base:latest"
 

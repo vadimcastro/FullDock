@@ -1,12 +1,13 @@
 # Setup Guide
 
-Step-by-step setup for `FullDock` and projects generated from it.
+Step-by-step setup for **OnDeck 2.0.0**.
 
 ## Prerequisites
 
 - Docker Desktop or Docker Engine with Compose plugin
 - Git
 - `make`
+- Node.js >= 20.9.0 (if running outside Docker)
 
 Verify the basics:
 
@@ -17,18 +18,18 @@ git --version
 make --version
 ```
 
-## First Run in the Template Repo
+## First Run
 
 ```bash
-git clone <your-fork-or-repo-url> FullDock
-cd FullDock
+git clone <your-fork-or-repo-url> OnDeck
+cd OnDeck
 cp .env.example .env.development
 make doctor
 make dev
 make auth
 ```
 
-Expected local URLs:
+Expected local URLs (OnDeck 2.0.0):
 - Frontend: `http://localhost:3000`
 - API: `http://localhost:8000`
 - API docs: `http://localhost:8000/docs`
@@ -44,41 +45,14 @@ Expected local URLs:
 
 Run it before the first `make dev` on a new machine.
 
-## Create a New Project From FullDock
-
-From the template root:
-
-```bash
-make newpro
-```
-
-The initializer asks for:
-- project name
-- display name
-- description
-- admin email, username, and display name
-- development password
-- optional production IP, domain, and SSH alias
-- target directory
-
-By default the generated project is created as a sibling directory of the template repo.
-
-Example:
-
-```bash
-cd /path/to/FullDock
-make newpro
-cd ../ondeck
-make dev
-make auth
-```
 
 ## Shared Base-Image Reuse
 
 Generated projects inherit:
 
 ```bash
-PROJECT_SLUG=fulldock-core
+PROJECT_NAME=OnDeck
+PROJECT_SLUG=ondeck
 ```
 
 That lets multiple projects reuse shared Docker base images:
@@ -114,15 +88,13 @@ Local auth setup:
 make auth
 ```
 
-Current template auth behavior includes:
+OnDeck auth behavior includes:
 - access + refresh tokens
 - refresh token rotation
 - session revoke support
 - login throttling
 - **Unified UI**: Consolidates all account and admin actions into a single `ProfileDropdown`.
 - **Role Awareness**: Dynamically adjusts visibility of administrative links (e.g., Dashboard) based on your role.
-
-If you are integrating an older generated project, check that its frontend auth flow matches the current FullDock refresh-token behavior.
 
 ## Production Setup
 

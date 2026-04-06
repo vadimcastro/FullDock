@@ -1,14 +1,15 @@
-# FullDock
+# OnDeck 2.0.0
 
-Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.
+High-fidelity prompt queue management system built with Next.js 16, React 19, FastAPI, PostgreSQL, and Redis.
 
-It is designed for two jobs:
-- start a new app quickly with sane defaults
-- act as the stable infrastructure baseline for downstream projects such as `ondeck`
+It is designed for:
+- managing AI prompt queues across multiple models
+- ensuring high-fidelity persistence with backend synchronization
+- providing a premium, native-feeling UI with Tailwind v4 OKLCH
 
 ## Stack
 
-- Frontend: Next.js 14, React 18, TypeScript, Tailwind CSS
+- Frontend: Next.js 16 (OnDeck 2.0.0), React 19, TypeScript, Tailwind CSS v4
 - Backend: FastAPI, SQLAlchemy, Alembic
 - Services: PostgreSQL, Redis
 - Local workflow: Docker Compose + Makefile commands
@@ -19,7 +20,7 @@ It is designed for two jobs:
 
 1.  **Clone & Setup:**
     ```bash
-    git clone <your-repo> FullDock && cd FullDock
+    git clone <your-repo> OnDeck && cd OnDeck
     cp .env.example .env.development
     ```
 2.  **Verify Environment:**
@@ -34,16 +35,6 @@ It is designed for two jobs:
     ```bash
     make auth
     ```
-5.  **Create Your First Project:**
-    ```bash
-    make newpro
-    ```
-
-    The initializer:
-    - asks for project metadata and admin defaults
-    - copies the template into a sibling directory
-    - replaces template placeholders
-    - removes template git history and initializer scripts from the generated project
 
 - API docs: `http://localhost:8000/docs`
 - Frontend: `http://localhost:3000`
@@ -65,25 +56,19 @@ make disk-usage
 make prune-safe
 make cleanup-legacy-images
 make setup-prod-env
-make newpro
 ```
 
-## Shared Base Images
+## Project Configuration
 
-FullDock can reuse shared Docker base images across multiple generated projects.
-
-- `PROJECT_SLUG` defaults to `FullDock-core`
-- `make dev` and `make dev-ultra` look for:
-  - `${PROJECT_SLUG}-frontend-base:latest`
-  - `${PROJECT_SLUG}-backend-base:latest`
-- first use on a machine builds them automatically
-- later projects with the same `PROJECT_SLUG` reuse them
-
-Use a different `PROJECT_SLUG` only if you intentionally want isolated base images.
+OnDeck uses a shared project slug for Docker orchestration:
+- `PROJECT_SLUG` is defined as `ondeck` in the `Makefile`.
+- Shared base images:
+  - `ondeck-frontend-base:latest`
+  - `ondeck-backend-base:latest`
 
 ## Security Defaults
 
-Implemented in the current template:
+The following security features are active:
 - production fail-fast checks for weak or missing secrets
 - production CORS validation
 - login throttling
@@ -119,8 +104,8 @@ docker compose -f docker/docker-compose.https.yml up -d --build
 
 ## Roadmap
 
-- [ ] "First 5 minutes" comprehensive tutorial link.
-- [ ] Pre-built base images (`fulldock-core-base-py`, `fulldock-core-base-node`) for CD environments.
+- [x] **OnDeck 2.0.0 Integration**: High-fidelity prompt queue + persistent FastAPI storage.
+- [ ] Pre-built base images (`ondeck-base-py`, `ondeck-base-node`) for CD environments.
 - [ ] Integrated auth tests (login throttling, refresh rotation).
 - [ ] GitHub Actions CI/CD examples.
 - [ ] Standardized MTU settings for Linux networking.
@@ -132,7 +117,7 @@ frontend/   Next.js app
 backend/    FastAPI app
 docker/     Compose files and Dockerfiles
 scripts/    setup and maintenance helpers
-docs/       roadmap and integration docs
+docs/       OnDeck 2.0.0 integration and setup docs
 ```
 
 ## Troubleshooting
