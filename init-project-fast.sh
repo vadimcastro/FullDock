@@ -20,7 +20,7 @@ DEFAULT_PRODUCTION_IP="127.0.0.1"
 DEFAULT_LOCAL_HOST="localhost"
 DEFAULT_SSH_ALIAS="droplet"
 DEFAULT_TARGET_PATH="../"
-DEFAULT_PROJECT_SLUG="vpt-core"
+DEFAULT_PROJECT_SLUG="fulldock-core"
 DEFAULT_OAUTH_ID="changeme"
 DEFAULT_OAUTH_SECRET="changeme"
 
@@ -40,7 +40,7 @@ escape_sed() {
   printf '%s' "$1" | sed -e 's/[\/&|]/\\&/g'
 }
 
-echo "Fast Project Initializer"
+echo "FullDock Project Initializer"
 echo ""
 
 PROJECT_NAME=""
@@ -120,7 +120,7 @@ PROJECT_NAME_CLEAN="${PROJECT_NAME//-/}"
 SECRET_KEY="$(openssl rand -base64 32 2>/dev/null || date +%s | sha256sum | head -c 32)"
 
 echo ""
-echo "Creating project at: $PROJECT_PATH"
+echo "[INFO] Creating project at: $PROJECT_PATH"
 mkdir -p "$PROJECT_PATH"
 cp -R . "$PROJECT_PATH"
 

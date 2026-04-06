@@ -2,7 +2,7 @@
 # Standalone project commands
 
 PROJECT_NAME ?= $(notdir $(CURDIR))
-PROJECT_SLUG ?= vpt-core
+PROJECT_SLUG ?= fulldock-core
 COMPOSE = COMPOSE_PROJECT_NAME=$(PROJECT_NAME) docker compose
 FRONTEND_IMAGE = $(PROJECT_NAME)-frontend:latest
 API_IMAGE = $(PROJECT_NAME)-api:latest
@@ -128,7 +128,7 @@ help:
 	@echo "  make doctor                  - Preflight checks (docker/env/ports)"
 	@echo "  make disk-usage              - Show Docker image/volume/cache usage"
 	@echo "  make prune-safe              - Safe Docker cleanup (containers/images/cache)"
-	@echo "  make cleanup-legacy-images   - Remove legacy VPT image tags"
+	@echo "  make cleanup-legacy-images   - Remove legacy FullDock image tags"
 	@echo "  make migrate                 - Run Alembic migrations"
 	@echo "  make db                      - Alias for migrate (FastAPI/Alembic)"
 	@echo "  make migrate-create name=X   - Create Alembic migration"

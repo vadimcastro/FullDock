@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_DEV="${ROOT_DIR}/.env.development"
 
-echo "VPT Doctor"
-echo "=========="
+echo "FullDock Doctor"
+echo "================"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "❌ docker not found in PATH"
@@ -31,7 +31,7 @@ fi
 echo "✅ .env.development found"
 
 if ! grep -q '^PROJECT_SLUG=' "${ENV_DEV}"; then
-  echo "⚠️ PROJECT_SLUG not set in .env.development (defaulting to vpt-core)"
+  echo "[WARN] PROJECT_SLUG not set in .env.development (defaulting to fulldock-core)"
 else
   echo "✅ PROJECT_SLUG configured"
 fi

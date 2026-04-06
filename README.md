@@ -1,4 +1,4 @@
-# vadim-project-template
+# FullDock
 
 Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.
 
@@ -15,41 +15,39 @@ It is designed for two jobs:
 - Auth: JWT access + refresh flow with login throttling and session revocation
 - UI: Unified, role-aware account management with premium styling
 
-## Quick Start
+## Quick Start (First 5 Minutes)
 
-```bash
-git clone <your-fork-or-repo-url> vadim-project-template
-cd vadim-project-template
-cp .env.example .env.development
-make doctor
-make dev
-make auth
-```
+1.  **Clone & Setup:**
+    ```bash
+    git clone <your-repo> FullDock && cd FullDock
+    cp .env.example .env.development
+    ```
+2.  **Verify Environment:**
+    ```bash
+    make doctor
+    ```
+3.  **Launch Stack:**
+    ```bash
+    make dev
+    ```
+4.  **Configure Auth:**
+    ```bash
+    make auth
+    ```
+5.  **Create Your First Project:**
+    ```bash
+    make newpro
+    ```
 
-Default local URLs:
+    The initializer:
+    - asks for project metadata and admin defaults
+    - copies the template into a sibling directory
+    - replaces template placeholders
+    - removes template git history and initializer scripts from the generated project
+
+- API docs: `http://localhost:8000/docs`
 - Frontend: `http://localhost:3000`
 - API: `http://localhost:8000`
-- API docs: `http://localhost:8000/docs`
-
-## Create a New Project
-
-```bash
-make newpro
-```
-
-The initializer:
-- asks for project metadata and admin defaults
-- copies the template into a sibling directory
-- replaces template placeholders
-- removes template git history and initializer scripts from the generated project
-
-After creation:
-
-```bash
-cd ../your-project
-make dev
-make auth
-```
 
 ## Core Commands
 
@@ -72,9 +70,9 @@ make newpro
 
 ## Shared Base Images
 
-VPT can reuse shared Docker base images across multiple generated projects.
+FullDock can reuse shared Docker base images across multiple generated projects.
 
-- `PROJECT_SLUG` defaults to `vpt-core`
+- `PROJECT_SLUG` defaults to `FullDock-core`
 - `make dev` and `make dev-ultra` look for:
   - `${PROJECT_SLUG}-frontend-base:latest`
   - `${PROJECT_SLUG}-backend-base:latest`
@@ -116,9 +114,16 @@ docker compose -f docker/docker-compose.https.yml up -d --build
 
 ## Documentation
 
-- [Setup Guide](./SETUP_GUIDE.md)
-- [VPT Open Source Readiness Plan](./docs/OPEN_SOURCE_READINESS.md)
-- [OnDeck Integration Review](./docs/ONDECK_INTEGRATION_REVIEW.md)
+- [Setup Guide](./docs/SETUP_GUIDE.md)
+- [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
+
+## Roadmap
+
+- [ ] "First 5 minutes" comprehensive tutorial link.
+- [ ] Pre-built base images (`fulldock-core-base-py`, `fulldock-core-base-node`) for CD environments.
+- [ ] Integrated auth tests (login throttling, refresh rotation).
+- [ ] GitHub Actions CI/CD examples.
+- [ ] Standardized MTU settings for Linux networking.
 
 ## Project Structure
 

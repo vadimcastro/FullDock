@@ -2,7 +2,7 @@
 
 services:
   frontend:
-    image: ${PROJECT_SLUG:-vpt-core}-frontend-base:latest
+    image: ${PROJECT_SLUG:-fulldock-core}-frontend-base:latest
     ports:
       - "3000:3000"
     volumes:
@@ -30,12 +30,12 @@ services:
       start_period: 20s
 
   api:
-    image: ${PROJECT_SLUG:-vpt-core}-backend-base:latest
+    image: ${PROJECT_SLUG:-fulldock-core}-backend-base:latest
     command: >
       sh -c '
-        echo "⚡ Ultra startup - running migrations..." &&
+        echo "[INFO] Ultra startup - running migrations..." &&
         /app/scripts/migrate.sh &&
-        echo "⚡ Starting server with hot reload..." &&
+        echo "[INFO] Starting server with hot reload..." &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       '
     ports:

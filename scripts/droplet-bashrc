@@ -119,7 +119,7 @@ function shortcuts() {
     echo "  dlog → docker logs -f"
     echo "  dex → docker exec -it"
     echo ""
-    echo "⚡ Development:"
+    echo "[INFO] Development:"
     echo "  dev → make dev"
     echo "  prod → make prod"
     echo "  deploy → make deploy"

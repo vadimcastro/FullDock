@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_NAME="${PROJECT_NAME:-$(basename "$(pwd)")}"
-PROJECT_SLUG="${PROJECT_SLUG:-vpt-core}"
+PROJECT_SLUG="${PROJECT_SLUG:-fulldock-core}"
 
 echo "Docker disk usage summary"
 echo "========================="
@@ -15,7 +15,7 @@ echo
 echo "Relevant images (project/slug/legacy)"
 echo "-------------------------------------"
 docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | \
-  grep -E "(${PROJECT_NAME}|${PROJECT_SLUG}|vadimcastro-me|docker-api|docker-frontend)" || true
+  grep -E "(${PROJECT_NAME}|${PROJECT_SLUG}|docker-api|docker-frontend)" || true
 echo
 echo "Top volumes by size"
 echo "-------------------"
