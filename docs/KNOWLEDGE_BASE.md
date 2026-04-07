@@ -35,6 +35,7 @@
 - Build hardening applied:
   - removed `next/font/google` build-time dependency from root layout
   - set `turbopack.root` to frontend directory for workspace-root stability
+  - removed unused root `package-lock.json`; `frontend/package-lock.json` is the single npm lockfile
 - CI hardening applied for `v2.1.4` readiness:
   - added `Backend Smoke + Persistence` CI job with Postgres + Redis services
   - automated smoke regression execution via `scripts/ci_backend_smoke.py`

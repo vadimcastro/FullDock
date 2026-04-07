@@ -24,6 +24,7 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 - Build hardening:
   - removed build-time Google font fetch dependency from App Router layout
   - set `turbopack.root` to frontend directory for workspace-root stability
+  - standardized npm lockfile strategy: `frontend/package-lock.json` only
 - Current cleanup and integration status are summarized in `docs/KNOWLEDGE_BASE.md` (Integration Overview section).
 
 ---
