@@ -24,6 +24,9 @@ class PromptUpdate(BaseModel):
     order: Optional[int] = None
     linked_prompt_id: Optional[str] = None
 
+class PromptTransition(BaseModel):
+    status: PromptStatus
+
 class PromptInDBBase(PromptBase):
     id: str
     user_id: int

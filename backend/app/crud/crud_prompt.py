@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
@@ -76,5 +77,78 @@ class CRUDPrompt(CRUDBase[Prompt, PromptCreate, PromptUpdate]):
             db.delete(obj)
             db.commit()
         return obj
+
+    def transition_status(
+        self, db: Session, *, db_obj: Prompt, new_status: str
+    ) -> Prompt:
+        """Atomically update prompt status and dependent model-queue transitions."""
+        now = datetime.now(timezone.utc)
+        if new_status == "on-deck":
+            self.demote_other_on_deck(
+                db,
+                user_id=db_obj.user_id,
+                model_id=db_obj.model_id,
+                exclude_id=db_obj.id,
+            )
+            db_obj.status = "on-deck"
+            db_obj.updated_at = now
+        elif new_status == "complete":
+            db_obj.status = "complete"
+            db_obj.updated_at = now
+            next_prompt = (
+                db.query(self.model)
+                .filter(
+                    self.model.user_id == db_obj.user_id,
+                    self.model.model_id == db_obj.model_id,
+                    self.model.id != db_obj.id,
+                    self.model.status.in_(["queued", "forked"]),
+                )
+                .order_by(self.model.order.asc())
+                .first()
+            )
+            if next_prompt:
+                next_prompt.status = "on-deck"
+                next_prompt.updated_at = now
+                self.demote_other_on_deck(
+                    db,
+                    user_id=db_obj.user_id,
+                    model_id=db_obj.model_id,
+                    exclude_id=next_prompt.id,
+                )
+                db.add(next_prompt)
+        elif new_status == "needs-edit":
+            was_on_deck = db_obj.status == "on-deck"
+            db_obj.status = "needs-edit"
+            db_obj.updated_at = now
+            if was_on_deck:
+                next_prompt = (
+                    db.query(self.model)
+                    .filter(
+                        self.model.user_id == db_obj.user_id,
+                        self.model.model_id == db_obj.model_id,
+                        self.model.id != db_obj.id,
+                        self.model.status.in_(["queued", "forked"]),
+                    )
+                    .order_by(self.model.order.asc())
+                    .first()
+                )
+                if next_prompt:
+                    next_prompt.status = "on-deck"
+                    next_prompt.updated_at = now
+                    self.demote_other_on_deck(
+                        db,
+                        user_id=db_obj.user_id,
+                        model_id=db_obj.model_id,
+                        exclude_id=next_prompt.id,
+                    )
+                    db.add(next_prompt)
+        else:
+            db_obj.status = new_status
+            db_obj.updated_at = now
+
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
 crud_prompt = CRUDPrompt(Prompt)

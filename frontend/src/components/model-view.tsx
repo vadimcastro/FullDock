@@ -53,6 +53,21 @@ export function ModelView({
     complete: true,
   })
 
+  const categoryOrder = settings.promptCategoryOrder ?? [
+    'on-deck',
+    'needs-edit',
+    'queued',
+    'forked',
+    'complete',
+  ]
+  const enabledCategories = new Set(
+    settings.enabledPromptCategories ?? ['on-deck', 'needs-edit', 'queued', 'forked', 'complete']
+  )
+  const getSectionOrder = (key: PromptStatus): number => {
+    const index = categoryOrder.indexOf(key)
+    return index >= 0 ? index : 999
+  }
+
   const handleAdd = () => {
     if (newContent.trim()) {
       onAddPrompt(model.id, newContent.trim(), newNotes.trim(), newTitle.trim())
@@ -70,12 +85,12 @@ export function ModelView({
     return prompt.content
   }
 
-  const modelColorClass = {
+  const modelColorClass = ({
     claude: 'border-claude',
     gpt: 'border-gpt',
     grok: 'border-grok',
     gemini: 'border-gemini',
-  }[model.id]
+  } as Record<string, string>)[model.id] ?? 'border-primary'
 
   const toggleSection = (key: keyof typeof collapsedSections) => {
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -192,10 +207,10 @@ export function ModelView({
 
       {/* Prompts List - Vertical scrolling */}
       <ScrollArea className="flex-1 min-h-0">
-        <div className="p-4 space-y-6">
+        <div className="p-4 flex flex-col gap-6">
           {/* On Deck Section */}
-          {onDeck && (
-            <section>
+          {onDeck && enabledCategories.has('on-deck') && (
+            <section style={{ order: getSectionOrder('on-deck') }}>
               <button
                 type="button"
                 onClick={() => toggleSection('onDeck')}
@@ -229,8 +244,8 @@ export function ModelView({
           )}
 
           {/* Needs Edit Section */}
-          {needsEdit.length > 0 && (
-            <section>
+          {needsEdit.length > 0 && enabledCategories.has('needs-edit') && (
+            <section style={{ order: getSectionOrder('needs-edit') }}>
               <button
                 type="button"
                 onClick={() => toggleSection('needsEdit')}
@@ -269,8 +284,8 @@ export function ModelView({
           )}
 
           {/* Queued Section */}
-          {queued.length > 0 && (
-            <section>
+          {queued.length > 0 && enabledCategories.has('queued') && (
+            <section style={{ order: getSectionOrder('queued') }}>
               <button
                 type="button"
                 onClick={() => toggleSection('queued')}
@@ -309,8 +324,8 @@ export function ModelView({
           )}
 
           {/* Forked Section */}
-          {forked.length > 0 && (
-            <section>
+          {forked.length > 0 && enabledCategories.has('forked') && (
+            <section style={{ order: getSectionOrder('forked') }}>
               <button
                 type="button"
                 onClick={() => toggleSection('forked')}
@@ -349,8 +364,8 @@ export function ModelView({
           )}
 
           {/* Complete Section */}
-          {complete.length > 0 && (
-            <section>
+          {complete.length > 0 && enabledCategories.has('complete') && (
+            <section style={{ order: getSectionOrder('complete') }}>
               <button
                 type="button"
                 onClick={() => toggleSection('complete')}

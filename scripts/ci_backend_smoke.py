@@ -109,6 +109,7 @@ def main() -> int:
     password = "Secret123!"
     new_password = "NewSecret123!"
     prompt_id = str(uuid.uuid4())
+    fork_prompt_id = str(uuid.uuid4())
 
     register = client.request(
         "POST",
@@ -172,35 +173,108 @@ def main() -> int:
         json_body={
             "id": prompt_id,
             "model_id": "gpt",
+            "title": "ci smoke title",
             "content": "ci smoke prompt",
             "notes": "",
-            "status": "queued",
+            "status": "on-deck",
             "order": 0,
         },
     )
     require(prompt_create.status == 200, f"prompts_create_status={prompt_create.status}")
     require(prompt_create.body.get("id") == prompt_id, "prompts_create_id_mismatch")
+    require(prompt_create.body.get("title") == "ci smoke title", "prompts_create_title_mismatch")
     pass_line("prompts_create")
+
+    fork_create = client.request(
+        "POST",
+        "/api/v1/prompts/",
+        token=access,
+        json_body={
+            "id": fork_prompt_id,
+            "model_id": "gpt",
+            "title": "ci smoke fork",
+            "content": "ci smoke fork prompt",
+            "notes": "",
+            "status": "forked",
+            "order": 1,
+        },
+    )
+    require(fork_create.status == 200, f"fork_create_status={fork_create.status}")
+    require(fork_create.body.get("id") == fork_prompt_id, "fork_create_id_mismatch")
+    pass_line("fork_create")
 
     prompts_list = client.request("GET", "/api/v1/prompts/", token=access)
     require(prompts_list.status == 200, f"prompts_list_status={prompts_list.status}")
     found = any(str(item.get("id")) == prompt_id for item in prompts_list.body)
     require(found, "prompts_list_missing_created_prompt")
+    created_item = next((item for item in prompts_list.body if str(item.get("id")) == prompt_id), {})
+    require(created_item.get("title") == "ci smoke title", "prompts_list_title_mismatch")
     pass_line("prompts_list")
 
-    prompts_patch = client.request(
-        "PATCH",
-        f"/api/v1/prompts/{prompt_id}",
+    transition_needs_edit = client.request(
+        "POST",
+        f"/api/v1/prompts/{prompt_id}/transition",
+        token=access,
+        json_body={"status": "needs-edit"},
+    )
+    require(transition_needs_edit.status == 200, f"transition_needs_edit_status={transition_needs_edit.status}")
+    require(transition_needs_edit.body.get("status") == "needs-edit", "transition_needs_edit_status_mismatch")
+    pass_line("prompts_transition_needs_edit")
+
+    post_transition_list = client.request("GET", "/api/v1/prompts/", token=access)
+    require(post_transition_list.status == 200, f"post_transition_list_status={post_transition_list.status}")
+    fork_item = next((item for item in post_transition_list.body if str(item.get("id")) == fork_prompt_id), {})
+    require(fork_item.get("status") == "on-deck", "fork_not_promoted_to_on_deck")
+    pass_line("fork_promoted_from_needs_edit")
+
+    transition_back_on_deck = client.request(
+        "POST",
+        f"/api/v1/prompts/{prompt_id}/transition",
+        token=access,
+        json_body={"status": "on-deck"},
+    )
+    require(transition_back_on_deck.status == 200, f"transition_back_on_deck_status={transition_back_on_deck.status}")
+    require(transition_back_on_deck.body.get("status") == "on-deck", "transition_back_on_deck_status_mismatch")
+    pass_line("prompts_transition_back_on_deck")
+
+    list_after_back = client.request("GET", "/api/v1/prompts/", token=access)
+    require(list_after_back.status == 200, f"list_after_back_status={list_after_back.status}")
+    fork_after_back = next((item for item in list_after_back.body if str(item.get("id")) == fork_prompt_id), {})
+    require(fork_after_back.get("status") == "queued", "fork_not_demoted_when_original_back_on_deck")
+    pass_line("fork_demoted_on_back_on_deck")
+
+    transition_complete = client.request(
+        "POST",
+        f"/api/v1/prompts/{prompt_id}/transition",
         token=access,
         json_body={"status": "complete"},
     )
-    require(prompts_patch.status == 200, f"prompts_patch_status={prompts_patch.status}")
-    require(prompts_patch.body.get("status") == "complete", "prompts_patch_status_mismatch")
-    pass_line("prompts_patch")
+    require(transition_complete.status == 200, f"transition_complete_status={transition_complete.status}")
+    require(transition_complete.body.get("status") == "complete", "transition_complete_status_mismatch")
+    pass_line("prompts_transition_complete")
+
+    list_after_complete = client.request("GET", "/api/v1/prompts/", token=access)
+    require(list_after_complete.status == 200, f"list_after_complete_status={list_after_complete.status}")
+    fork_after_complete = next((item for item in list_after_complete.body if str(item.get("id")) == fork_prompt_id), {})
+    require(fork_after_complete.get("status") == "on-deck", "fork_not_promoted_after_complete")
+    pass_line("fork_promoted_after_complete")
+
+    invalid_status = client.request(
+        "POST",
+        f"/api/v1/prompts/{prompt_id}/transition",
+        token=access,
+        json_body={"status": "completed"},
+    )
+    require(invalid_status.status == 422, f"invalid_status_expected_422_got={invalid_status.status}")
+    pass_line("invalid_status_rejected")
 
     prompts_delete = client.request("DELETE", f"/api/v1/prompts/{prompt_id}", token=access)
     require(prompts_delete.status == 200, f"prompts_delete_status={prompts_delete.status}")
     pass_line("prompts_delete")
+
+    fork_delete = client.request("DELETE", f"/api/v1/prompts/{fork_prompt_id}", token=access)
+    require(fork_delete.status == 200, f"fork_delete_status={fork_delete.status}")
+    pass_line("fork_delete")
 
     logout = client.request(
         "POST",

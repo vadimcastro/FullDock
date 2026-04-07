@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { isValidElement, useCallback, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface SwipeContainerProps {
@@ -103,11 +103,15 @@ export function SwipeContainer({
           transform: `translateX(calc(-${currentIndex * 100}% + ${isDragging ? dragOffset : 0}px))`,
         }}
       >
-        {children.map((child, index) => (
-          <div key={index} className="w-full flex-shrink-0 h-full overflow-hidden">
+        {children.map((child, index) => {
+          const childKey =
+            isValidElement(child) && child.key != null ? String(child.key) : `slide-${index}`
+          return (
+          <div key={childKey} className="w-full flex-shrink-0 h-full overflow-hidden">
             {child}
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

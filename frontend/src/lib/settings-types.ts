@@ -1,3 +1,5 @@
+import type { AIModel, PromptStatus } from '@/lib/types'
+
 export type AccentColor = 'teal' | 'blue' | 'purple' | 'green' | 'coral'
 
 export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error'
@@ -10,6 +12,11 @@ export interface UserSettings {
   autoSave?: boolean
   fontScale?: number
   showPromptTitles?: boolean
+  modelTabOrder?: string[]
+  enabledModelTabs?: string[]
+  modelTabTitles?: Record<string, string>
+  promptCategoryOrder?: PromptStatus[]
+  enabledPromptCategories?: PromptStatus[]
 }
 
 export interface CloudSyncState {
@@ -53,6 +60,16 @@ export const DEFAULT_SETTINGS: UserSettings = {
   autoSave: true,
   fontScale: 100,
   showPromptTitles: true,
+  modelTabOrder: ['claude', 'gemini', 'gpt', 'grok'],
+  enabledModelTabs: ['claude', 'gemini', 'gpt', 'grok'],
+  modelTabTitles: {
+    claude: 'Claude',
+    gemini: 'Gemini',
+    gpt: 'GPT',
+    grok: 'Grok',
+  },
+  promptCategoryOrder: ['on-deck', 'needs-edit', 'queued', 'forked', 'complete'],
+  enabledPromptCategories: ['on-deck', 'needs-edit', 'queued', 'forked', 'complete'],
 }
 
 export const DEFAULT_SYNC_STATE: CloudSyncState = {

@@ -1,7 +1,6 @@
 # Setup Guide — OnDeck 2.1.5
 
 `v2.0.0` remains the integration baseline. `v2.1.1` through `v2.1.5` progress is summarized in `docs/KNOWLEDGE_BASE.md`.
-Prompt category/list backend gap analysis and remediation plan: `docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md`.
 
 ## Validation Snapshot (v2.1.5)
 
@@ -116,9 +115,9 @@ make shell-db                        # Direct psql session
   - `prompts.order`
   - `prompts.linked_prompt_id`
   - `prompts.title`
-- Current startup migration script (`backend/scripts/migrate.sh`) needs hardening:
-  - Alembic-tracked DBs now run `alembic upgrade head` on startup.
-  - Untracked/bootstrap DBs still use `create_all` + `alembic stamp head` for initial baseline.
+- Current startup migration script (`backend/scripts/migrate.sh`) behavior:
+  - Fresh and Alembic-tracked DBs now run full `alembic upgrade head`.
+  - Legacy untracked DBs use a compatibility `alembic stamp head` path (no schema replay).
   - Alembic revision IDs were normalized to fit the default `alembic_version.version_num` size:
     - `0003_prompt_titles_settings`
     - `0004_prompt_status_indexes`

@@ -1,8 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { AI_MODELS } from '@/lib/types'
-import type { AIModel, Prompt } from '@/lib/types'
+import type { AIModel, ModelConfig, Prompt } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Settings } from 'lucide-react'
 
@@ -10,10 +9,10 @@ interface ModelTabsProps {
   currentIndex: number
   onSelect: (index: number) => void
   prompts: Prompt[]
-  totalTabs: number
+  models: ModelConfig[]
 }
 
-export function ModelTabs({ currentIndex, onSelect, prompts, totalTabs }: ModelTabsProps) {
+export function ModelTabs({ currentIndex, onSelect, prompts, models }: ModelTabsProps) {
   const getStats = (modelId: AIModel) => {
     const modelPrompts = prompts.filter((p) => p.modelId === modelId)
     const onDeck = modelPrompts.filter((p) => p.status === 'on-deck').length
@@ -21,20 +20,20 @@ export function ModelTabs({ currentIndex, onSelect, prompts, totalTabs }: ModelT
     return { total: modelPrompts.length, onDeck, needsEdit }
   }
 
-  const prefsIndex = totalTabs - 1
+  const prefsIndex = models.length
 
   return (
     <div className="flex overflow-x-auto scrollbar-hide border-b border-border bg-card">
-      {AI_MODELS.map((model, index) => {
+      {models.map((model, index) => {
         const stats = getStats(model.id)
         const isActive = index === currentIndex
 
-        const colorClass = {
+        const colorClass = ({
           claude: 'border-claude',
           gpt: 'border-gpt',
           grok: 'border-grok',
           gemini: 'border-gemini',
-        }[model.id]
+        } as Record<string, string>)[model.id] ?? 'border-primary'
 
         return (
           <button
@@ -93,13 +92,13 @@ export function ModelTabs({ currentIndex, onSelect, prompts, totalTabs }: ModelT
           'flex-1 flex flex-col items-center py-2 px-1 transition-all relative min-w-[60px]',
           'border-b-2 -mb-[2px]',
           currentIndex === prefsIndex ? 'border-foreground' : 'border-transparent',
-          currentIndex === prefsIndex ? 'opacity-100' : 'opacity-60 hover:opacity-80'
+          currentIndex === prefsIndex ? 'bg-secondary/35' : 'hover:bg-secondary/20'
         )}
       >
         <div
           className={cn(
             'w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium mb-1',
-            'bg-muted text-muted-foreground'
+            'bg-secondary ring-1 ring-border text-foreground'
           )}
         >
           <Settings className="h-4 w-4" />

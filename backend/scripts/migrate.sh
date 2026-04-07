@@ -45,48 +45,43 @@ except Exception as e:
 
 # Migration strategy:
 # - Existing DBs tracked by Alembic: apply upgrades.
-# - Untracked DBs (bootstrap/template): create tables from models, then stamp head.
+# - Fresh DBs without Alembic tracking: apply full Alembic migration chain.
+# - Legacy pre-Alembic DBs without version table but with app tables: stamp head.
 echo "Determining migration strategy..."
-HAS_ALEMBIC_VERSION=$(python3 -c "
+DB_MIGRATION_MODE=$(python3 -c "
 import sys
 sys.path.append('/app')
 from app.db.base import engine
 from sqlalchemy import inspect
 
 inspector = inspect(engine)
-print('1' if inspector.has_table('alembic_version') else '0')
+has_version = inspector.has_table('alembic_version')
+if has_version:
+    print('tracked')
+else:
+    # Legacy schema fingerprint: tables exist but DB is not Alembic-tracked.
+    legacy_tables = {'users', 'prompts', 'user_settings', 'oauth_accounts'}
+    existing = set(inspector.get_table_names())
+    print('legacy_untracked' if existing.intersection(legacy_tables) else 'fresh_untracked')
 ")
 
 if [ -d "alembic" ] && [ -f "alembic/env.py" ]; then
-  if [ \"$HAS_ALEMBIC_VERSION\" = \"1\" ]; then
+  if [ "$DB_MIGRATION_MODE" = "tracked" ]; then
     echo "Alembic version table found. Applying migrations..."
     alembic upgrade head
-  else
-    echo "Alembic version table not found. Bootstrapping schema from models..."
-    python3 -c "
-import sys
-sys.path.append('/app')
-from app.db.base import Base, engine
-from sqlalchemy import inspect
-
-print('Creating all tables...')
-Base.metadata.create_all(bind=engine)
-inspector = inspect(engine)
-print(f'📋 Tables in database: {inspector.get_table_names()}')
-"
-    echo "Stamping current schema as Alembic head for bootstrap database..."
+  elif [ "$DB_MIGRATION_MODE" = "fresh_untracked" ]; then
+    echo "Fresh untracked DB detected. Running full Alembic migration chain..."
+    alembic upgrade head
+  elif [ "$DB_MIGRATION_MODE" = "legacy_untracked" ]; then
+    echo "Legacy untracked DB detected. Stamping Alembic head without schema replay..."
     alembic stamp head
+  else
+    echo "Unknown migration mode: $DB_MIGRATION_MODE"
+    exit 1
   fi
 else
-  echo "Alembic not configured; creating tables from models only..."
-  python3 -c "
-import sys
-sys.path.append('/app')
-from app.db.base import Base, engine
-
-Base.metadata.create_all(bind=engine)
-print('✅ Tables created successfully (no Alembic).')
-"
+  echo "Alembic not configured; migration-first startup requires Alembic."
+  exit 1
 fi
 
 # Initialize database with admin user

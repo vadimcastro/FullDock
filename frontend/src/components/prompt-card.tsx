@@ -125,9 +125,15 @@ export function PromptCard({
     return () => cancelAnimationFrame(frame)
   }, [isEditing, focusField])
 
-  const linkedModel = linkedPrompt
-    ? AI_MODELS.find((m) => m.id === linkedPrompt.modelId)
-    : null
+  const getModelDisplayName = useCallback(
+    (modelId: string): string => {
+      const overridden = settings.modelTabTitles?.[modelId]?.trim()
+      if (overridden) return overridden
+      const base = AI_MODELS.find((m) => m.id === modelId)?.name
+      return base ?? modelId
+    },
+    [settings.modelTabTitles]
+  )
 
   const otherModelPrompts = allPrompts.filter(
     (p) => p.modelId !== prompt.modelId && p.status !== 'complete'
@@ -197,10 +203,10 @@ export function PromptCard({
           )}
         </Button>
 
-        {linkedPrompt && linkedModel && (
+        {linkedPrompt && (
           <Badge variant="outline" className="shrink-0 gap-1 text-[10px] py-0">
             <Link2 className="h-3 w-3" />
-            {linkedModel.name}
+            {getModelDisplayName(linkedPrompt.modelId)}
           </Badge>
         )}
 
@@ -341,7 +347,7 @@ export function PromptCard({
                     <div className="flex items-center gap-2 mb-2">
                       <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                       <p className="text-xs font-medium text-muted-foreground">
-                        Linked to {linkedModel?.name}
+                        Linked to {getModelDisplayName(linkedPrompt.modelId)}
                       </p>
                     </div>
                     <p className="text-sm line-clamp-2 text-foreground/80">{linkedPrompt.content}</p>
@@ -370,7 +376,6 @@ export function PromptCard({
                         </p>
                       ) : (
                         otherModelPrompts.map((p) => {
-                          const model = AI_MODELS.find((m) => m.id === p.modelId)
                           return (
                             <button
                               key={p.id}
@@ -384,7 +389,7 @@ export function PromptCard({
                                 variant="outline"
                                 className="shrink-0 text-xs"
                               >
-                                {model?.name}
+                                {getModelDisplayName(p.modelId)}
                               </Badge>
                               <span className="line-clamp-1">{p.content}</span>
                             </button>
@@ -432,7 +437,7 @@ export function PromptCard({
                 <Button
                   size="sm"
                   variant="default"
-                  className="gap-1.5 px-3.5"
+                  className="gap-1.5 px-3.5 bg-primary hover:bg-primary/85 active:bg-primary/75 text-white hover:!text-white active:!text-white"
                     onClick={() => {
                       playIfEnabled(playUiRetrySound)
                       onUpdateStatus(prompt.id, 'on-deck')

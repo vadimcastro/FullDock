@@ -1,4 +1,5 @@
-export type AIModel = 'claude' | 'gpt' | 'grok' | 'gemini'
+export type DefaultAIModel = 'claude' | 'gpt' | 'grok' | 'gemini'
+export type AIModel = string
 
 export type PromptStatus = 'queued' | 'on-deck' | 'needs-edit' | 'forked' | 'complete'
 
@@ -16,7 +17,7 @@ export interface Prompt {
 }
 
 export interface ModelConfig {
-  id: AIModel
+  id: string
   name: string
   color: string
   icon: string

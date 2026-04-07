@@ -17,13 +17,13 @@
   - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
   - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
   - Prompt status hardening migration applied (`0003_prompt_titles_settings`, `0004_prompt_status_indexes`)
-  - Prompt CRUD/server path now demotes competing `on-deck` prompts on create/update
+  - Prompt CRUD/server path now demotes competing `on-deck` prompts on create/update and promotes next queued/forked on `needs-edit`/`complete` transitions
   - Model logos rendered in tabs/header/empty states; completed section defaulted to collapsed
+  - Preferences now support model-tab ordering/enablement/custom title and prompt-category ordering/visibility
 - Latest validation:
   - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile, backend smoke+persistence)
   - Local 18-step smoke regression pass, persistence pass, reset-password session invalidation, and migration idempotence verified
   - Local frontend production build pass after removing build-time Google font fetch dependency
-- Prompt category/list backend audit details: `docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md`
 
 ---
 
@@ -61,36 +61,35 @@ Completed in this cycle:
 2. Migration execution reliability is improved for Alembic-tracked environments.
 3. Prompt-card/category UX requests are implemented (`complete` collapsed default + success-accent complete content).
 4. Model logos replaced initials in key model UI surfaces.
+5. Atomic status transition endpoint is live (`POST /api/v1/prompts/{id}/transition`) and frontend uses it for status changes.
+6. CI smoke path now includes title persistence, forked-promotion flow, and invalid-status rejection checks.
+7. CI now initializes DB with `alembic upgrade head` and verifies prompt schema constraints/indexes via `scripts/verify_prompt_schema.py`.
 
 Remaining next steps:
-1. Add transactional list-transition endpoint(s) to reduce multi-call race windows.
-2. Extend CI smoke coverage for `forked`, `title`, and invalid-status rejection.
-3. Retire `create_all + stamp` bootstrap fallback once migration-first cold-start baseline is available.
+1. Add explicit FK/ownership constraints for `linked_prompt_id` if cross-user links should be blocked at schema level.
+2. Add transactional reorder/bulk transition endpoint(s) to reduce ordering race windows beyond status transitions.
+3. Wire `scripts/verify_prompt_schema.py` into deployment runbooks/post-deploy health checks.
 
 ---
 
-## Prompt Category Backend Audit (2026-04-07)
+## Prompt Categories Overview
 
-Implementation update (same day):
-- Added migration `0004_prompt_status_indexes` for status normalization/constraint and prompt query indexes.
-- Added server-side `on-deck` demotion logic in prompt create/update flow.
-- Updated startup migration script to run `alembic upgrade head` when DB is Alembic-tracked.
-- Fixed smoke regression status payload to canonical `complete`.
-
-### Implemented Hardening
-
-- Prompt status is now constrained to canonical values in DB migration `0004`.
-- Prompt query indexes for user/model list paths were added in `0004`.
-- API/CRUD now demote competing `on-deck` prompts when a prompt is created/updated to `on-deck`.
-- Smoke regression script now uses canonical status `complete`.
-- Startup migration logic now upgrades Alembic-tracked databases with `alembic upgrade head`.
-
-### Remaining Work
-
-1. Replace bootstrap `create_all + stamp` flow with a fully migration-first bootstrap path once base schema revisions cover full cold-start.
-2. Add transactional server endpoint(s) for multi-step list transitions (reorder/promote/complete chains) to reduce client-side race windows.
-3. Expand CI tests for `forked` lifecycle, `title` persistence, and invalid-status rejection scenarios.
-4. Add deployment-time schema assertions after migration (for example via `information_schema` checks).
+- Canonical prompt statuses are enforced in API + DB: `queued`, `on-deck`, `needs-edit`, `forked`, `complete`.
+- DB hardening in place:
+  - status check constraint: `ck_prompts_status_valid`
+  - list/query indexes: `ix_prompts_user_id`, `ix_prompts_user_model_order`, `ix_prompts_user_model_status`
+  - migration head: `0004_prompt_status_indexes`
+- Queue transition behavior:
+  - creating/updating `on-deck` demotes competing `on-deck` in same user/model thread
+  - marking `on-deck` as `needs-edit` or `complete` atomically promotes next `queued|forked` prompt
+  - frontend status updates use `POST /api/v1/prompts/{id}/transition`
+- Layout customization:
+  - model tab order and visibility are user-configurable
+  - a custom model tab can be enabled and renamed
+  - prompt category order/visibility are user-configurable
+- Migration strategy:
+  - fresh/tracked DBs: `alembic upgrade head`
+  - legacy untracked DBs: stamp-only compatibility path
 
 ---
 

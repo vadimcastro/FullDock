@@ -20,21 +20,23 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
   - Global UI interaction sound effects with user toggle
   - OAuth button polish + cloud-sync auth state fixes
   - Prompt category backend hardening (`status` normalization + constraint/index migration, `on-deck` demotion handling)
+  - Queue transition hardening (`on-deck -> needs-edit` now promotes next queued/forked prompt)
   - Migration execution hardening (`alembic upgrade head` for tracked DBs)
   - Prompt card/UI polish (`complete` section collapsed by default, success-accent complete card text, model logos in tabs/header/empty states)
+  - New layout settings for model-tab/category ordering, enable/disable, and custom model tab title
 - Latest validation passes:
   - GitHub CI: frontend build + backend import/compile + backend smoke+persistence jobs passing
   - Local (2026-04-07): 18-step smoke regression pass + restart persistence pass + reset-password verification pass + migration idempotence pass
 - Prompt category/list backend audit (2026-04-07):
   - Frontend category UX (`queued`, `on-deck`, `needs-edit`, `forked`, `complete`) is implemented and persisted through `prompts.status`.
-  - Migration flow is now hardened for tracked DBs (`alembic upgrade head`), with bootstrap fallback for untracked DBs.
-  - Status normalization is aligned (`complete` canonical) and DB-level status constraint/index hardening was added in Alembic `0004`.
-  - Backend now demotes competing `on-deck` prompts on create/update when a prompt is set to `on-deck`.
+  - Migration flow is migration-first (`alembic upgrade head`) for fresh and tracked DBs, with a legacy stamp fallback only for pre-existing untracked schemas.
+  - Status normalization is aligned (`complete` canonical) and DB-level status constraint/index hardening was added in Alembic `0004_prompt_status_indexes`.
+  - Backend now supports atomic prompt status transitions (`/api/v1/prompts/{id}/transition`) including complete→next-on-deck promotion.
 - Build hardening:
   - removed build-time Google font fetch dependency from App Router layout
   - set `turbopack.root` to frontend directory for workspace-root stability
   - standardized npm lockfile strategy: `frontend/package-lock.json` only
-- Current cleanup, integration status, and prompt category backend remediation plan are summarized in `docs/KNOWLEDGE_BASE.md`.
+- Current cleanup, integration status, and prompt category backend overview are summarized in `docs/KNOWLEDGE_BASE.md`.
 
 ### v2.1.5 Progress Tracker (2026-04-07)
 
@@ -48,9 +50,9 @@ Completed:
 - frontend: model logos added to tabs, model headers, and empty states
 
 Next steps:
-1. Add transactional backend endpoint(s) for multi-step list transitions (`complete`/promotion chains) to remove client race windows.
-2. Expand smoke tests for `forked` lifecycle, `title` persistence, and invalid-status rejection.
-3. Replace bootstrap `create_all + stamp` fallback with fully migration-first bootstrap once legacy baseline is retired.
+1. Add explicit linked-prompt FK/ownership constraints if cross-user linking should be blocked at DB level.
+2. Add transactional endpoints for reorder/bulk transitions to further reduce client-side ordering race windows.
+3. Add deployment-time schema assertion execution (`scripts/verify_prompt_schema.py`) to production runbooks.
 
 ---
 
@@ -189,7 +191,6 @@ make clean-all && make dev-build
 
 - [Setup Guide](./docs/SETUP_GUIDE.md)
 - [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
-- [Prompt Categories Backend Audit](./docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md)
 - Repo handoff tutorial (new canonical OnDeck repo): see `Setup Guide -> Repo Handoff (Brother OnDeck Repo)`
 
 ---

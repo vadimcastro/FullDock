@@ -234,14 +234,11 @@ export function usePrompts() {
               ? { ...p, status: 'queued' as PromptStatus, updatedAt: Date.now() }
               : p
           )
-          if (isAuthenticated) {
-            api.patch(`/api/v1/prompts/${existingOnDeck.id}`, { status: 'queued' })
-          }
         }
       }
 
       // If marking complete, promote next queued to on-deck
-      if (status === 'complete') {
+      if (status === 'complete' || (status === 'needs-edit' && prompt.status === 'on-deck')) {
         const nextQueued = updated
           .filter((p: Prompt) => p.modelId === prompt.modelId && (p.status === 'queued' || p.status === 'forked'))
           .sort((a: Prompt, b: Prompt) => a.order - b.order)[0]
@@ -250,16 +247,14 @@ export function usePrompts() {
           updated = updated.map((p: Prompt) =>
             p.id === nextQueued.id ? { ...p, status: 'on-deck' as PromptStatus, updatedAt: Date.now() } : p
           )
-          if (isAuthenticated) {
-            api.patch(`/api/v1/prompts/${nextQueued.id}`, { status: 'on-deck' })
-          }
         }
       }
       setPrompts(updated)
 
       if (isAuthenticated) {
         try {
-          await api.patch(`/api/v1/prompts/${id}`, { status })
+          await api.post(`/api/v1/prompts/${id}/transition`, { status })
+          fetchPrompts()
         } catch (error) {
           console.error('Failed to update status in cloud:', error)
           fetchPrompts()

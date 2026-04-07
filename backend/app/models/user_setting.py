@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from app.db.base_class import Base
 
 class UserSetting(Base):
@@ -12,3 +12,21 @@ class UserSetting(Base):
     auto_save = Column(Boolean, default=True, nullable=False)
     font_scale = Column(Integer, default=100, nullable=False)
     show_prompt_titles = Column(Boolean, default=True, nullable=False)
+    model_tab_order = Column(
+        Text, default='["claude","gemini","gpt","grok","custom"]', nullable=False
+    )
+    enabled_model_tabs = Column(
+        Text, default='["claude","gemini","gpt","grok"]', nullable=False
+    )
+    model_tab_titles = Column(
+        Text,
+        default='{"claude":"Claude","gemini":"Gemini","gpt":"GPT","grok":"Grok","custom":"Custom"}',
+        nullable=False,
+    )
+    custom_model_tab_title = Column(String, default="Custom", nullable=False)
+    prompt_category_order = Column(
+        Text, default='["on-deck","needs-edit","queued","forked","complete"]', nullable=False
+    )
+    enabled_prompt_categories = Column(
+        Text, default='["on-deck","needs-edit","queued","forked","complete"]', nullable=False
+    )

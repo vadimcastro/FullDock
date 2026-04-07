@@ -40,6 +40,17 @@ function applyFontScale(fontScale: number): void {
   document.documentElement.style.fontSize = `${clamped}%`
 }
 
+const parseJsonArray = <T,>(raw: unknown, fallback: T[]): T[] => {
+  if (Array.isArray(raw)) return raw as T[]
+  if (typeof raw !== 'string' || !raw.trim()) return fallback
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as T[]) : fallback
+  } catch {
+    return fallback
+  }
+}
+
 const mapToBackend = (s: Partial<UserSettings>) => {
   const mapped: any = {}
   if (s.theme !== undefined) mapped.theme = s.theme
@@ -49,6 +60,13 @@ const mapToBackend = (s: Partial<UserSettings>) => {
   if (s.autoSave !== undefined) mapped.auto_save = s.autoSave
   if (s.fontScale !== undefined) mapped.font_scale = s.fontScale
   if (s.showPromptTitles !== undefined) mapped.show_prompt_titles = s.showPromptTitles
+  if (s.modelTabOrder !== undefined) mapped.model_tab_order = JSON.stringify(s.modelTabOrder)
+  if (s.enabledModelTabs !== undefined) mapped.enabled_model_tabs = JSON.stringify(s.enabledModelTabs)
+  if (s.modelTabTitles !== undefined) mapped.model_tab_titles = JSON.stringify(s.modelTabTitles)
+  if (s.promptCategoryOrder !== undefined) mapped.prompt_category_order = JSON.stringify(s.promptCategoryOrder)
+  if (s.enabledPromptCategories !== undefined) {
+    mapped.enabled_prompt_categories = JSON.stringify(s.enabledPromptCategories)
+  }
   return mapped
 }
 
@@ -60,6 +78,29 @@ const mapFromBackend = (data: any): UserSettings => ({
   autoSave: data.auto_save ?? true,
   fontScale: data.font_scale ?? 100,
   showPromptTitles: data.show_prompt_titles ?? true,
+  modelTabOrder: parseJsonArray(data.model_tab_order, DEFAULT_SETTINGS.modelTabOrder ?? []),
+  enabledModelTabs: parseJsonArray(data.enabled_model_tabs, DEFAULT_SETTINGS.enabledModelTabs ?? []),
+  modelTabTitles:
+    typeof data.model_tab_titles === 'string'
+      ? (() => {
+          try {
+            const parsed = JSON.parse(data.model_tab_titles)
+            return typeof parsed === 'object' && parsed !== null
+              ? (parsed as Record<string, string>)
+              : (DEFAULT_SETTINGS.modelTabTitles ?? {})
+          } catch {
+            return DEFAULT_SETTINGS.modelTabTitles ?? {}
+          }
+        })()
+      : (DEFAULT_SETTINGS.modelTabTitles ?? {}),
+  promptCategoryOrder: parseJsonArray(
+    data.prompt_category_order,
+    DEFAULT_SETTINGS.promptCategoryOrder ?? []
+  ),
+  enabledPromptCategories: parseJsonArray(
+    data.enabled_prompt_categories,
+    DEFAULT_SETTINGS.enabledPromptCategories ?? []
+  ),
 })
 
 export function SettingsProvider({ children }: { children: ReactNode }) {

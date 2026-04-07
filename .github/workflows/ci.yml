@@ -118,8 +118,11 @@ jobs:
 
       - name: Initialize database
         run: |
-          python -c "from app.db.base import Base, engine; Base.metadata.create_all(bind=engine)"
+          alembic upgrade head
           PYTHONPATH=. python scripts/init_db.py
+
+      - name: Verify prompt schema constraints/indexes
+        run: python ../scripts/verify_prompt_schema.py
 
       - name: Start API
         run: |

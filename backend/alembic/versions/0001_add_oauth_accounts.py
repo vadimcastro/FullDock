@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "0001_add_oauth_accounts"
-down_revision = None
+down_revision = "0000_initial_core_auth"
 branch_labels = None
 depends_on = None
 

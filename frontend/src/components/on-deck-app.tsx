@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { usePrompts } from '@/hooks/use-prompts'
-import { AI_MODELS } from '@/lib/types'
+import { AI_MODELS, type ModelConfig } from '@/lib/types'
 import { ModelTabs } from '@/components/model-tabs'
 import { ModelView } from '@/components/model-view'
 import { SwipeContainer } from '@/components/swipe-container'
@@ -12,11 +12,9 @@ import { Layers } from 'lucide-react'
 import { useSettings } from '@/hooks/use-settings'
 import { playUiTabSwitchSound } from '@/lib/sound-effects'
 
-// Total tabs: 4 AI models + 1 Preferences
-const TOTAL_TABS = AI_MODELS.length + 1
-
 export function OnDeckApp() {
   const [currentModelIndex, setCurrentModelIndex] = useState(0)
+  const prevVisibleCountRef = useRef<number>(0)
   const { settings } = useSettings()
   const {
     prompts,
@@ -28,6 +26,79 @@ export function OnDeckApp() {
     deletePrompt,
     getPromptById,
   } = usePrompts()
+
+  const visibleModels = useMemo<ModelConfig[]>(() => {
+    const defaultMap = new Map(AI_MODELS.map((m) => [m.id, m]))
+    const order = settings.modelTabOrder ?? ['claude', 'gemini', 'gpt', 'grok']
+    const enabled = new Set<string>(settings.enabledModelTabs ?? ['claude', 'gemini', 'gpt', 'grok'])
+    const titles = settings.modelTabTitles ?? {}
+
+    const knownIds = new Set<string>([
+      ...AI_MODELS.map((m) => m.id),
+      ...order,
+      ...Array.from(enabled),
+      ...Object.keys(titles),
+    ])
+    const modelMap = new Map<string, ModelConfig>()
+    for (const id of Array.from(knownIds)) {
+      const defaultModel = defaultMap.get(id)
+      if (defaultModel) {
+        modelMap.set(id, defaultModel)
+        continue
+      }
+      const title = titles[id]?.trim() || id
+      const icon = title
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((word: string) => word[0]?.toUpperCase() ?? '')
+        .join('')
+        .slice(0, 2) || title.slice(0, 2).toUpperCase() || 'M'
+      modelMap.set(id, {
+        id,
+        name: title,
+        color: 'bg-muted',
+        icon,
+      })
+    }
+
+    const ordered = order
+      .filter((id) => modelMap.has(id))
+      .filter((id) => enabled.has(id))
+
+    const result = ordered
+      .map((id) => modelMap.get(id))
+      .filter((m): m is ModelConfig => Boolean(m))
+      .map((model) =>
+        ({
+          ...model,
+          name: titles[model.id]?.trim() || model.name,
+        })
+      )
+
+    if (result.length > 0) return result
+    const fallback = modelMap.get('gpt')
+    return fallback ? [fallback] : []
+  }, [
+    settings.modelTabOrder,
+    settings.enabledModelTabs,
+    settings.modelTabTitles,
+  ])
+
+  const totalTabs = visibleModels.length + 1
+
+  useEffect(() => {
+    const prevVisibleCount = prevVisibleCountRef.current
+    const newPrefsIndex = visibleModels.length
+    const wasOnSettings = currentModelIndex === prevVisibleCount
+
+    if (wasOnSettings && currentModelIndex !== newPrefsIndex) {
+      setCurrentModelIndex(newPrefsIndex)
+    } else if (currentModelIndex > newPrefsIndex) {
+      setCurrentModelIndex(newPrefsIndex)
+    }
+
+    prevVisibleCountRef.current = visibleModels.length
+  }, [currentModelIndex, visibleModels.length])
 
   const handleTabSelect = useCallback(
     (index: number) => {
@@ -44,7 +115,7 @@ export function OnDeckApp() {
       setCurrentModelIndex((prev) => {
         let next = prev
         if (direction === 'left') {
-          next = Math.min(prev + 1, TOTAL_TABS - 1)
+          next = Math.min(prev + 1, totalTabs - 1)
         } else {
           next = Math.max(prev - 1, 0)
         }
@@ -54,7 +125,7 @@ export function OnDeckApp() {
         return next
       })
     },
-    [settings.soundEnabled]
+    [settings.soundEnabled, totalTabs]
   )
 
   if (!isLoaded) {
@@ -94,7 +165,7 @@ export function OnDeckApp() {
           currentIndex={currentModelIndex}
           onSelect={handleTabSelect}
           prompts={prompts}
-          totalTabs={TOTAL_TABS}
+          models={visibleModels}
         />
       </div>
 
@@ -105,7 +176,7 @@ export function OnDeckApp() {
         className="flex-1 min-h-0"
       >
         {[
-          ...AI_MODELS.map((model) => (
+          ...visibleModels.map((model) => (
             <ModelView
               key={model.id}
               model={model}
@@ -124,7 +195,7 @@ export function OnDeckApp() {
 
       {/* Swipe Hint / Navigation Dots */}
       <div className="flex justify-center gap-2 py-2 bg-card border-t border-border shrink-0">
-        {Array.from({ length: TOTAL_TABS }).map((_, index) => (
+        {Array.from({ length: totalTabs }).map((_, index) => (
           <button
             key={index}
             onClick={() => {
@@ -135,7 +206,7 @@ export function OnDeckApp() {
                 ? 'bg-primary w-4'
                 : 'bg-muted-foreground/30'
             }`}
-            aria-label={index < AI_MODELS.length ? AI_MODELS[index].name : 'Settings'}
+            aria-label={index < visibleModels.length ? visibleModels[index].name : 'Settings'}
           />
         ))}
       </div>
