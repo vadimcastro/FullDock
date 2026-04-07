@@ -133,6 +133,29 @@ export function PromptCard({
     (p) => p.modelId !== prompt.modelId && p.status !== 'complete'
   )
 
+  const statusAccent = {
+    'on-deck': {
+      border: 'border-primary',
+      text: 'text-primary',
+    },
+    'needs-edit': {
+      border: 'border-warning',
+      text: 'text-warning',
+    },
+    'queued': {
+      border: 'border-grok',
+      text: 'text-grok',
+    },
+    'forked': {
+      border: 'border-claude',
+      text: 'text-claude',
+    },
+    'complete': {
+      border: 'border-success',
+      text: 'text-success',
+    },
+  }[prompt.status]
+
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (isEditing) return
     const target = event.target as HTMLElement
@@ -149,6 +172,8 @@ export function PromptCard({
         'transition-all duration-200',
         prompt.status === 'on-deck' && 'ring-2 ring-primary',
         prompt.status === 'needs-edit' && 'ring-2 ring-warning',
+        prompt.status === 'queued' && 'ring-2 ring-grok/60',
+        prompt.status === 'forked' && 'ring-2 ring-claude/70',
         prompt.status === 'complete' && 'opacity-60'
       )}
     >
@@ -281,11 +306,12 @@ export function PromptCard({
                 }
               }}
               className={cn(
-                'w-full text-left p-3 bg-secondary/50 rounded-md border-l-2 border-primary hover:bg-secondary/70 transition-colors cursor-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
+                'w-full text-left p-3 bg-secondary/50 rounded-md border-l-2 hover:bg-secondary/70 transition-colors cursor-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                statusAccent.border
               )}
               aria-label="Edit prompt text"
             >
-              <p className="text-xs font-medium text-primary mb-1 uppercase tracking-wide">PROMPT TEXT</p>
+              <p className={cn('text-xs font-medium mb-1 uppercase tracking-wide', statusAccent.text)}>PROMPT TEXT</p>
               <pre className={cn(
                 'whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-foreground/90',
                 !isExpanded && 'line-clamp-2'
@@ -299,9 +325,12 @@ export function PromptCard({
                 <button
                   type="button"
                   onClick={() => startEditing('notes')}
-                  className="mt-3 w-full text-left p-3 bg-secondary/50 rounded-md border-l-2 border-primary hover:bg-secondary/70 transition-colors"
+                  className={cn(
+                    'mt-3 w-full text-left p-3 bg-secondary/50 rounded-md border-l-2 hover:bg-secondary/70 transition-colors',
+                    statusAccent.border
+                  )}
                 >
-                  <p className="text-xs font-medium text-primary mb-1 uppercase tracking-wide">NOTES</p>
+                  <p className={cn('text-xs font-medium mb-1 uppercase tracking-wide', statusAccent.text)}>NOTES</p>
                   <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
                     {prompt.notes || 'Click to add notes or context...'}
                   </p>
@@ -375,7 +404,7 @@ export function PromptCard({
                     <Button
                       size="sm"
                       variant="default"
-                      className="gap-1.5 px-3.5 bg-success hover:bg-success/90 text-background font-medium"
+                      className="gap-1.5 px-3.5 bg-success hover:bg-success/90 active:bg-success/85 text-white hover:!text-black active:!text-black font-medium"
                       onClick={() => {
                         playIfEnabled(playUiCompleteSound)
                         onUpdateStatus(prompt.id, 'complete')
@@ -387,7 +416,7 @@ export function PromptCard({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="gap-1.5 px-3.5 border-warning/50 text-warning hover:bg-warning/10"
+                      className="gap-1.5 px-3.5 border-warning/60 text-warning hover:bg-warning hover:!text-white hover:border-warning active:bg-warning/90 active:!text-white"
                       onClick={() => {
                         playIfEnabled(playUiNeedsEditSound)
                         onUpdateStatus(prompt.id, 'needs-edit')
@@ -418,7 +447,7 @@ export function PromptCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1.5 px-3.5"
+                  className="gap-1.5 px-3.5 border-grok/60 text-grok hover:bg-grok hover:!text-white hover:border-grok active:bg-grok/90 active:!text-white"
                     onClick={() => {
                       playIfEnabled(playUiClickSound)
                       onUpdateStatus(prompt.id, 'on-deck')
@@ -432,7 +461,7 @@ export function PromptCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5 px-3.5"
+                    className="gap-1.5 px-3.5 border-claude/60 text-claude hover:bg-claude hover:!text-white hover:border-claude active:bg-claude/90 active:!text-white"
                     onClick={() => {
                       playIfEnabled(playUiClickSound)
                       onUpdateStatus(prompt.id, 'on-deck')

@@ -106,8 +106,8 @@ export function ModelView({
               {needsEdit.length > 0 && (
                 <span className="text-warning font-medium">{needsEdit.length} needs edit</span>
               )}
-              {queued.length > 0 && <span>{queued.length} queued</span>}
-              {forked.length > 0 && <span className="text-primary">{forked.length} forked</span>}
+              {queued.length > 0 && <span className="text-grok font-medium">{queued.length} queued</span>}
+              {forked.length > 0 && <span className="text-claude font-medium">{forked.length} forked</span>}
               {complete.length > 0 && <span className="text-success">{complete.length} done</span>}
               {prompts.length === 0 && <span>No prompts</span>}
             </div>
@@ -262,14 +262,14 @@ export function ModelView({
                 onClick={() => toggleSection('queued')}
                 className="flex items-center gap-2 mb-3 w-full text-left"
               >
-                <div className="h-2 w-2 rounded-full bg-muted-foreground/50" />
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1">
+                <div className="h-2 w-2 rounded-full bg-grok/80" />
+                <h3 className="text-xs font-semibold text-grok uppercase tracking-wider flex-1">
                   Queued ({queued.length})
                 </h3>
                 {collapsedSections.queued ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4 text-grok" />
                 ) : (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  <ChevronUp className="h-4 w-4 text-grok" />
                 )}
               </button>
               {!collapsedSections.queued && (

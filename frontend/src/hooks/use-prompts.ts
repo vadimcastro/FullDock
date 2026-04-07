@@ -219,6 +219,27 @@ export function usePrompts() {
         p.id === id ? { ...p, status, updatedAt: Date.now() } : p
       )
 
+      // Keep exactly one on-deck prompt per model by demoting the existing one.
+      if (status === 'on-deck') {
+        const existingOnDeck = updated.find(
+          (p: Prompt) =>
+            p.modelId === prompt.modelId &&
+            p.status === 'on-deck' &&
+            p.id !== id
+        )
+
+        if (existingOnDeck) {
+          updated = updated.map((p: Prompt) =>
+            p.id === existingOnDeck.id
+              ? { ...p, status: 'queued' as PromptStatus, updatedAt: Date.now() }
+              : p
+          )
+          if (isAuthenticated) {
+            api.patch(`/api/v1/prompts/${existingOnDeck.id}`, { status: 'queued' })
+          }
+        }
+      }
+
       // If marking complete, promote next queued to on-deck
       if (status === 'complete') {
         const nextQueued = updated
