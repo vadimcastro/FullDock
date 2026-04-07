@@ -1,5 +1,5 @@
 # docker/docker-compose.prod.yml
-# OnDeck 2.0.0 — production stack
+# OnDeck 2.1.7 — production stack
 
 services:
   frontend:
@@ -11,7 +11,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${API_URL:-https://api.yourdomain.com}
-      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=OnDeck 2.0.0
+      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=OnDeck 2.1.7
     restart: unless-stopped
 
   api:

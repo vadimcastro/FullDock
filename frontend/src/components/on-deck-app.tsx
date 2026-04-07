@@ -45,7 +45,8 @@ function hueForModelId(id: string): number {
 }
 
 export function OnDeckApp() {
-  const [currentTabId, setCurrentTabId] = useState<string>('claude')
+  const [currentTabId, setCurrentTabId] = useState<string>('')
+  const [hasUserSelectedTab, setHasUserSelectedTab] = useState<boolean>(false)
   const { settings } = useSettings()
   const {
     prompts,
@@ -121,8 +122,14 @@ export function OnDeckApp() {
   ])
 
   const tabIds = useMemo(() => [...visibleModels.map((m) => m.id), 'settings'], [visibleModels])
+  const preferredInitialTabId = visibleModels[0]?.id ?? 'settings'
   const currentModelIndex = Math.max(0, tabIds.indexOf(currentTabId))
   const totalTabs = tabIds.length
+
+  useEffect(() => {
+    if (hasUserSelectedTab) return
+    setCurrentTabId(preferredInitialTabId)
+  }, [hasUserSelectedTab, preferredInitialTabId])
 
   useEffect(() => {
     if (currentTabId === 'settings') return
@@ -132,6 +139,7 @@ export function OnDeckApp() {
 
   const handleTabSelect = useCallback(
     (index: number) => {
+      setHasUserSelectedTab(true)
       if (settings.soundEnabled && index !== currentModelIndex) {
         playUiTabSwitchSound()
       }
@@ -142,6 +150,7 @@ export function OnDeckApp() {
 
   const handleSwipe = useCallback(
     (direction: 'left' | 'right') => {
+      setHasUserSelectedTab(true)
       const prev = currentModelIndex
       let next = prev
       if (direction === 'left') {

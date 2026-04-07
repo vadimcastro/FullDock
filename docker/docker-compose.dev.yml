@@ -1,5 +1,5 @@
 # docker/docker-compose.dev.yml
-# OnDeck 2.0.0 — single development compose
+# OnDeck 2.1.7 — single development compose
 # Usage: make dev   (or make dev-build for full rebuild)
 
 services:
@@ -23,7 +23,7 @@ services:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
       - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=OnDeck 2.0.0
+      - NEXT_PUBLIC_PROJECT_DISPLAY_NAME=OnDeck 2.1.7
       - NEXT_PUBLIC_PROJECT_DESCRIPTION=High-fidelity prompt queue management system
     depends_on:
       api:

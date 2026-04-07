@@ -1,5 +1,5 @@
 # docker/frontend/Dockerfile.prod
-# OnDeck 2.0.0 — Production frontend image (multi-stage)
+# OnDeck 2.1.7 — Production frontend image (multi-stage)
 
 # Stage 1: Install dependencies
 FROM node:22-alpine AS deps

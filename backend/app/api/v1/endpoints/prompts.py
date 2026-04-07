@@ -6,6 +6,7 @@ from app.db.utils import get_db
 from app.core.security import get_user_from_token
 from app.core.config import settings
 from app.core.api_errors import bad_request, too_many_requests
+from app.core.ops_metrics import ops_metrics
 from app.core.write_protection import write_protection
 from fastapi.security import OAuth2PasswordBearer
 from app.crud.crud_prompt import crud_prompt
@@ -26,6 +27,7 @@ def _enforce_prompt_write_limit(request: Request, identity: str) -> None:
         per_minute_limit=settings.WRITE_RATE_LIMIT_PER_MINUTE,
     )
     if not allowed:
+        ops_metrics.incr("prompts.rate_limited")
         raise too_many_requests(
             code="WRITE_RATE_LIMITED",
             message=f"Too many write requests. Retry in {retry_after}s.",
@@ -66,6 +68,7 @@ def create_prompt(
     try:
         prompt = crud_prompt.create_with_user(db, obj_in=prompt_in, user_id=user.id)
     except ValueError as exc:
+        ops_metrics.incr("prompts.validation_failed")
         raise bad_request(
             code="PROMPT_VALIDATION_FAILED",
             message=str(exc),
@@ -100,6 +103,7 @@ def update_prompt(
     try:
         prompt = crud_prompt.update_with_validation(db, db_obj=prompt, obj_in=prompt_in)
     except ValueError as exc:
+        ops_metrics.incr("prompts.validation_failed")
         raise bad_request(
             code="PROMPT_VALIDATION_FAILED",
             message=str(exc),

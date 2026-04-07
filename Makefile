@@ -1,4 +1,4 @@
-# OnDeck 2.0.0 — Makefile
+# OnDeck 2.1.7 — Makefile
 
 PROJECT_NAME  = OnDeck
 PROJECT_SLUG  = ondeck
@@ -8,18 +8,18 @@ PROD_COMPOSE  = $(COMPOSE) -f docker/docker-compose.prod.yml
 
 .PHONY: dev dev-build down logs clean clean-all \
         migrate migrate-create shell-api shell-db \
-        help doctor
+        help doctor release-check
 
 # ──────────────────────────────────────────────
 # Development
 # ──────────────────────────────────────────────
 
 dev:
-	@echo "▶ Starting OnDeck 2.0.0 dev environment..."
+	@echo "▶ Starting OnDeck 2.1.7 dev environment..."
 	$(DEV_COMPOSE) up
 
 dev-build:
-	@echo "▶ Rebuilding images and starting OnDeck 2.0.0..."
+	@echo "▶ Rebuilding images and starting OnDeck 2.1.7..."
 	$(DEV_COMPOSE) up --build
 
 down:
@@ -88,13 +88,23 @@ doctor:
 	@echo "▶ npm:   $(shell npm -v 2>/dev/null || echo 'not found')"
 	@echo "▶ Env:   $(shell [ -f .env.development ] && echo '.env.development ✓' || echo '.env.development MISSING')"
 
+release-check:
+	@echo "▶ Running release validation checks..."
+	cd frontend && npx tsc --noEmit
+	python3 -m compileall backend/app backend/alembic/versions scripts
+	$(MAKE) migrate
+	python3 scripts/verify_prompt_schema.py
+	python3 scripts/ci_frontend_settings_contract.py
+	python3 scripts/ci_backend_smoke.py http://127.0.0.1:8000
+	python3 scripts/ci_rate_limit.py http://127.0.0.1:8000
+
 # ──────────────────────────────────────────────
 # Help
 # ──────────────────────────────────────────────
 
 help:
 	@echo ""
-	@echo "OnDeck 2.0.0 — available commands"
+	@echo "OnDeck 2.1.7 — available commands"
 	@echo ""
 	@echo "  Development:"
 	@echo "    make dev                        Start (uses cached images)"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -219,7 +219,8 @@ export function PreferencesView() {
   } = useSettings()
   const [notificationsMessage, setNotificationsMessage] = useState<string | null>(null)
   const [newModelTabName, setNewModelTabName] = useState('')
-  const [openSection, setOpenSection] = useState<SectionKey | null>('layout')
+  const [openSection, setOpenSection] = useState<SectionKey | null>(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
   const [modelOrderDraft, setModelOrderDraft] = useState<string[]>(settings.modelTabOrder ?? DEFAULT_MODEL_ORDER)
   const [enabledModelsDraft, setEnabledModelsDraft] = useState<string[]>(
     settings.enabledModelTabs ?? DEFAULT_ENABLED_MODELS
@@ -251,6 +252,23 @@ export function PreferencesView() {
   useEffect(() => {
     setEnabledCategoriesDraft(settings.enabledPromptCategories ?? DEFAULT_CATEGORY_ORDER)
   }, [settings.enabledPromptCategories])
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (!openSection) return
+      const target = event.target as HTMLElement | null
+      if (!target) return
+      if (target.closest('input, textarea, select, [contenteditable="true"]')) return
+      if (rootRef.current && !rootRef.current.contains(target)) {
+        setOpenSection(null)
+      }
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [openSection])
 
   const maybePlaySound = () => {
     if (!settings.soundEnabled) return
@@ -385,7 +403,7 @@ export function PreferencesView() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div ref={rootRef} className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b-2 bg-card/50 shrink-0 border-primary">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-semibold">
@@ -573,8 +591,12 @@ export function PreferencesView() {
                       if (next.size === 0) next.add('gpt')
                     }
                     const nextEnabled = Array.from(next)
+                    const nextOrder = checked
+                      ? orderedModelTabs
+                      : [...orderedModelTabs.filter((item) => item !== id), id]
+                    setModelOrderDraft(nextOrder)
                     setEnabledModelsDraft(nextEnabled)
-                    void reorderModelTabs(orderedModelTabs, nextEnabled)
+                    void reorderModelTabs(nextOrder, nextEnabled)
                   },
                   onRemove: () => {
                     maybePlaySound()
@@ -754,7 +776,7 @@ export function PreferencesView() {
           </SettingsSection>
 
           <div className="text-center py-4 text-xs text-muted-foreground">
-            <p>On Deck v1.0.0</p>
+            <p>On Deck v2.1.7</p>
             <p className="mt-1">AI Prompt Tracker</p>
           </div>
         </div>

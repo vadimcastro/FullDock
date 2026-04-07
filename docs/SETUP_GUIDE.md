@@ -1,4 +1,4 @@
-# Setup Guide — OnDeck (v2.1.6 Released)
+# Setup Guide — OnDeck (v2.1.7 Released)
 
 ## Prerequisites
 
@@ -70,12 +70,22 @@ python3 scripts/verify_prompt_schema.py
 
 ## Release Validation Checklist
 
+Preferred single-command gate:
+
+```bash
+make release-check
+```
+
+Expanded command sequence:
+
 ```bash
 cd frontend && npx tsc --noEmit
 cd ..
 python3 -m compileall backend/app backend/alembic/versions scripts
 make migrate
+python3 scripts/ci_frontend_settings_contract.py
 python3 scripts/ci_backend_smoke.py http://127.0.0.1:8000
+python3 scripts/ci_rate_limit.py http://127.0.0.1:8000
 ```
 
 Optional persistence validation:

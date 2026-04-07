@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.api_errors import error_payload
+from app.core.ops_metrics import ops_metrics
 import logging
 import sys
 import os
@@ -48,7 +49,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="OnDeck backend API",
-    version="2.0.0",
+    version="2.1.7",
     debug=settings.DEBUG,
     lifespan=lifespan
 )
@@ -85,6 +86,8 @@ async def add_cors_headers_on_error(request: Request, call_next):
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+        if response.status_code >= 400:
+            ops_metrics.incr(f"http.status.{response.status_code}")
         logger.info(
             "request_complete method=%s path=%s status=%s request_id=%s duration_ms=%s",
             request.method,
@@ -96,6 +99,7 @@ async def add_cors_headers_on_error(request: Request, call_next):
         return response
     except Exception as e:
         elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+        ops_metrics.incr("http.unhandled_exception")
         logger.error(
             "request_failed method=%s path=%s request_id=%s duration_ms=%s error=%s",
             request.method,
@@ -152,13 +156,16 @@ async def test_cors(request: Request):
 
 @app.get("/health")
 async def health_check(request: Request):
-    return {
+    payload = {
         "status": "healthy",
         "database": "skipped",
         "cache": "disabled", 
         "environment": ENVIRONMENT,
         "client_host": request.client.host if request.client else None
     }
+    if not settings.is_production:
+        payload["ops_metrics_top"] = ops_metrics.snapshot(limit=10)
+    return payload
 
 @app.post("/admin/init-db")
 async def initialize_database():

@@ -1,60 +1,54 @@
-# Next Steps — v2.1.7 Tracker
+# Next Steps — v2.1.8 Tracker
 
-## v2.1.6 Summary (Released: April 7, 2026)
+## v2.1.7 Summary (Released: April 7, 2026)
 
-`v2.1.6` delivered stability + hardening across data integrity, settings UX, and security posture:
-- linked prompt integrity migration (`0007_prompt_linked_integrity`)
-- linked prompt ownership/self-link constraints + query index
-- transactional settings layout endpoints (tabs/categories/title)
-- strict server-side layout payload validation
-- settings UI state isolation (draft state + commit semantics)
-- debounced settings sync to reduce write churn
-- structured backend error payloads with request IDs
-- sync diagnostics in UI (`error code`, `message`, `request id`)
-- write-rate limits for prompt/settings mutation endpoints
-- OAuth callback state-cookie validation
-- expanded backend smoke coverage for layout + linked-prompt validation
+`v2.1.7` delivered release automation and observability groundwork on top of v2.1.6 hardening:
+- deterministic release gate (`make release-check`)
+- frontend settings regression contract check (`scripts/ci_frontend_settings_contract.py`)
+- API write-rate limit regression check (`scripts/ci_rate_limit.py`)
+- lightweight operational metrics counters (`ops_metrics`)
+- request-id aware error/status tracking reflected in health diagnostics
+- expanded docs and workflow alignment to release automation
 
-## v2.1.7 Goal
+## v2.1.8 Goal
 
-Focus `v2.1.7` on release engineering maturity, deeper observability, and targeted regression automation.
+Focus `v2.1.8` on deeper observability, release-note/changelog automation, and additional quality gates.
 
-## v2.1.7 Planned Work
+## v2.1.8 Planned Work
 
 ### P0 (Release Readiness)
 
-- [ ] Add deterministic release gate command (`make release-check`)
-- [ ] Add explicit API rate-limit behavior test script
-- [ ] Add focused UI regression checks for settings edge interactions
-- [ ] Finalize v2.1.7 release notes/changelog template
+- [ ] Finalize v2.1.8 release notes/changelog template
+- [ ] Add docs/version consistency assertion in release gate
+- [ ] Add optional `release-check` dry-run mode for local iteration
 
 ### P1 (Operational Visibility)
 
-- [ ] Add lightweight metrics counters for settings/layout/sync failure classes
-- [ ] Standardize request-id logging format across API endpoints
-- [ ] Add operator-friendly sync failure taxonomy mapping (code -> remediation)
+- [ ] Extend metrics counters for sync-failure taxonomy buckets
+- [ ] Add request-id search guidance/runbook snippets for incident triage
+- [ ] Add operator mapping table (error code -> probable cause -> remediation)
 
 ### P2 (Quality and Maintainability)
 
 - [ ] Expand transactional guarantees for prompt reorder/multi-update flows
-- [ ] Add stricter docs/version consistency check in release gate
 - [ ] Add optional profiling check for settings render churn regressions
+- [ ] Add targeted API assertions for metric counter behavior
 
 ## Efficiency and Security Review
 
-What improved in v2.1.6:
-- reduced redundant settings sync calls and UI reflow churn
-- moved critical queue/link invariants closer to DB enforcement
-- improved failure diagnostics and traceability with request IDs
+What improved in v2.1.7:
+- release validation is now scriptable and repeatable
+- rate-limit behavior has explicit regression coverage
+- operations now have lightweight counters for failure visibility
 
-Remaining risks to address in v2.1.7:
-- release process still relies on manual command sequencing
-- limited automated UI regression coverage for dynamic settings paths
-- observability is improved but not yet metricized for operations dashboards
+Remaining risks to address in v2.1.8:
+- observability is useful but still shallow for production dashboards
+- release notes/changelog process is still partly manual
+- transaction guarantees for some multi-step prompt operations can be strengthened
 
 ## Recommended Execution Order
 
-1. `make release-check` + scripted API rate-limit assertions
-2. UI regression checks for settings interaction paths
-3. metrics counters + request-id log normalization
-4. changelog/release-note automation polish
+1. release-note/changelog template + docs/version gate
+2. sync taxonomy metrics + triage runbook mapping
+3. prompt transactional guarantee expansion
+4. profiling and metric assertion coverage

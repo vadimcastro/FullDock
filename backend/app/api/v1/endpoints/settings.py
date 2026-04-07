@@ -6,6 +6,7 @@ from app.db.utils import get_db
 from app.core.security import get_user_from_token
 from app.core.config import settings as app_settings
 from app.core.api_errors import bad_request, too_many_requests
+from app.core.ops_metrics import ops_metrics
 from app.core.write_protection import write_protection
 from fastapi.security import OAuth2PasswordBearer
 from app.crud.crud_user_setting import crud_user_setting
@@ -38,6 +39,7 @@ def _enforce_settings_write_limit(request: Request, identity: str, *, layout: bo
         ),
     )
     if not allowed:
+        ops_metrics.incr("settings.rate_limited")
         raise too_many_requests(
             code="WRITE_RATE_LIMITED",
             message=f"Too many write requests. Retry in {retry_after}s.",
@@ -105,6 +107,7 @@ def reorder_model_tabs(
     try:
         return crud_user_setting.reorder_model_tabs(db, db_obj=settings, payload=payload)
     except ValueError as exc:
+        ops_metrics.incr("settings.layout.validation_failed")
         raise bad_request(
             code="SETTINGS_LAYOUT_INVALID",
             message=str(exc),
@@ -133,6 +136,7 @@ def reorder_prompt_categories(
     try:
         return crud_user_setting.reorder_prompt_categories(db, db_obj=settings, payload=payload)
     except ValueError as exc:
+        ops_metrics.incr("settings.layout.validation_failed")
         raise bad_request(
             code="SETTINGS_LAYOUT_INVALID",
             message=str(exc),
@@ -161,6 +165,7 @@ def update_model_tab_title(
     try:
         return crud_user_setting.upsert_model_tab_title(db, db_obj=settings, payload=payload)
     except ValueError as exc:
+        ops_metrics.incr("settings.layout.validation_failed")
         raise bad_request(
             code="SETTINGS_LAYOUT_INVALID",
             message=str(exc),

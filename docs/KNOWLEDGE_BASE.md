@@ -8,9 +8,10 @@ Concise technical reference for architecture, schema state, queue semantics, set
 
 - `v2.1.5` released
 - `v2.1.6` released
-- `v2.1.7` queued for automation/observability improvements
+- `v2.1.7` released
+- `v2.1.8` queued for automation/observability improvements
 
-## v2.1.6 Delivered
+## v2.1.7 Delivered
 
 Backend/data layer:
 - Linked prompt integrity migration `0007_prompt_linked_integrity`
@@ -75,13 +76,16 @@ Backend:
 ## Validation Coverage
 
 Release checks:
+- Deterministic gate: `make release-check`
 - Frontend typecheck (`npx tsc --noEmit`)
 - Backend compile/import (`python3 -m compileall ...`)
 - Migration to head (`make migrate`)
 - Backend smoke regression (`scripts/ci_backend_smoke.py`)
+- Frontend settings contract regression (`scripts/ci_frontend_settings_contract.py`)
+- Rate-limit behavior regression (`scripts/ci_rate_limit.py`)
 - Optional persistence verification (`scripts/ci_backend_persistence.py`)
 - Schema verifier (`scripts/verify_prompt_schema.py`)
 
 ## Source of Truth for Upcoming Work
 
-All `v2.1.7` follow-ups are centralized in [docs/NEXT_STEPS.md](NEXT_STEPS.md).
+All `v2.1.8` follow-ups are centralized in [docs/NEXT_STEPS.md](NEXT_STEPS.md).

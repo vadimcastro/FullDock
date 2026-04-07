@@ -8,9 +8,10 @@ High-fidelity AI prompt queue management across models.
 
 - `v2.1.5` released (April 7, 2026)
 - `v2.1.6` released (April 7, 2026)
-- `v2.1.7` planned (stability automation + observability depth)
+- `v2.1.7` released (April 7, 2026)
+- `v2.1.8` planned (observability depth + release automation polish)
 
-## v2.1.6 Highlights
+## v2.1.7 Highlights
 
 - DB integrity for linked prompts (`0007_prompt_linked_integrity`)
 - Transactional settings layout APIs (model tabs/categories/title)
@@ -53,6 +54,7 @@ make migrate-create name=add_x
 make shell-api
 make shell-db
 make doctor
+make release-check
 ```
 
 ## Validation Commands
