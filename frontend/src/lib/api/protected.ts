@@ -4,6 +4,44 @@
 import { useMemo } from 'react';
 import { useAuth } from '../auth/AuthContext';
 
+export class ProtectedApiError extends Error {
+  status: number
+  code?: string
+  requestId?: string
+
+  constructor(message: string, status: number, code?: string, requestId?: string) {
+    super(message)
+    this.name = 'ProtectedApiError'
+    this.status = status
+    this.code = code
+    this.requestId = requestId
+  }
+}
+
+async function parseApiError(response: Response): Promise<ProtectedApiError> {
+  const requestId = response.headers.get('x-request-id') ?? undefined
+  let message = `API request failed (${response.status})`
+  let code: string | undefined
+
+  try {
+    const body = await response.json()
+    const detail = body?.detail
+    if (typeof detail === 'string') {
+      message = detail
+    } else if (detail && typeof detail === 'object') {
+      message = String(detail.message ?? message)
+      code = detail.code ? String(detail.code) : undefined
+      if (!requestId && detail.request_id) {
+        return new ProtectedApiError(message, response.status, code, String(detail.request_id))
+      }
+    }
+  } catch {
+    // Ignore parse errors and use default message.
+  }
+
+  return new ProtectedApiError(message, response.status, code, requestId)
+}
+
 export const useProtectedApi = () => {
   const { access_token, refreshAccessToken } = useAuth();
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -45,12 +83,12 @@ export const useProtectedApi = () => {
             'Authorization': `Bearer ${currentToken}`,
           }
         });
-        if (!retryResponse.ok) throw new Error('API request failed');
+        if (!retryResponse.ok) throw await parseApiError(retryResponse);
         return retryResponse.json();
       }
     }
 
-    if (!response.ok) throw new Error('API request failed');
+    if (!response.ok) throw await parseApiError(response);
     return response.json();
   };
 

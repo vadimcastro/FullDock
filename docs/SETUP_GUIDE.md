@@ -1,4 +1,4 @@
-# Setup Guide — OnDeck 2.1.5
+# Setup Guide — OnDeck (v2.1.6 Released)
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ make shell-db
 Migration behavior:
 - Fresh/tracked DBs: `alembic upgrade head`
 - Legacy untracked DBs: infer baseline, stamp inferred revision, then upgrade to head
-- Current head: `0006_model_tab_titles`
+- Current head: `0007_prompt_linked_integrity`
 
 Quick schema verification:
 
@@ -68,45 +68,19 @@ make migrate
 python3 scripts/verify_prompt_schema.py
 ```
 
-Expected settings columns include:
-- `model_tab_order`
-- `enabled_model_tabs`
-- `model_tab_titles`
-- `prompt_category_order`
-- `enabled_prompt_categories`
-
-## Auth/OAuth
-
-Configured via `.env.development`:
-
-```bash
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=changeme
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-```
-
-OAuth endpoints:
-- `http://localhost:8000/api/v1/oauth/google`
-- `http://localhost:8000/api/v1/oauth/github`
-
-## Validation Checklist (Release)
-
-Run before release/push:
+## Release Validation Checklist
 
 ```bash
 cd frontend && npx tsc --noEmit
 cd ..
-python3 -m compileall backend/app
+python3 -m compileall backend/app backend/alembic/versions scripts
 make migrate
+python3 scripts/ci_backend_smoke.py http://127.0.0.1:8000
 ```
 
-Optional smoke + persistence:
+Optional persistence validation:
 
 ```bash
-python3 scripts/ci_backend_smoke.py http://127.0.0.1:8000
 python3 scripts/ci_backend_persistence.py create http://127.0.0.1:8000 /tmp/state.json
 python3 scripts/ci_backend_persistence.py verify http://127.0.0.1:8000 /tmp/state.json
 ```
@@ -116,9 +90,10 @@ python3 scripts/ci_backend_persistence.py verify http://127.0.0.1:8000 /tmp/stat
 - If frontend deps look stale: `make clean-all && make dev-build`
 - If migration drift appears: run `make migrate` then `python3 scripts/verify_prompt_schema.py`
 - If auth/cloud-sync behaves unexpectedly: verify API health at `/health` and inspect API logs via `make logs-api`
+- If local port conflicts occur (e.g., `5432` busy): stop duplicate compose projects before running `make dev-build`
 
 ## Reference Docs
 
 - Project summary: [../README.md](../README.md)
 - Technical reference: [KNOWLEDGE_BASE.md](KNOWLEDGE_BASE.md)
-- Planning/roadmap: [NEXT_STEPS.md](NEXT_STEPS.md)
+- Next release tracker: [NEXT_STEPS.md](NEXT_STEPS.md)

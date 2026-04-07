@@ -1,5 +1,7 @@
-from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from typing import Dict, List, Literal, Optional
+from pydantic import BaseModel, ConfigDict, Field
+
+PromptCategory = Literal["on-deck", "needs-edit", "queued", "forked", "complete"]
 
 class UserSettingBase(BaseModel):
     theme: Optional[str] = "dark"
@@ -21,6 +23,22 @@ class UserSettingCreate(UserSettingBase):
 
 class UserSettingUpdate(UserSettingBase):
     pass
+
+
+class ModelTabsLayoutUpdate(BaseModel):
+    order: List[str] = Field(min_length=1)
+    enabled: List[str] = Field(min_length=1)
+
+
+class PromptCategoriesLayoutUpdate(BaseModel):
+    order: List[PromptCategory] = Field(min_length=1)
+    enabled: List[PromptCategory] = Field(min_length=1)
+
+
+class ModelTabTitleUpdate(BaseModel):
+    tab_id: str
+    title: str
+
 
 class UserSettingInDBBase(UserSettingBase):
     user_id: int

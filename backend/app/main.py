@@ -1,10 +1,14 @@
 # app/main.py
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.api_errors import error_payload
 import logging
 import sys
 import os
+import time
+from uuid import uuid4
 from app.api.v1.router import api_router
 from app.db.session import SessionLocal
 from app.db.init_db import init_db
@@ -65,6 +69,8 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'; base-uri 'self'"
     if settings.is_production:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
@@ -72,20 +78,48 @@ async def add_security_headers(request: Request, call_next):
 # Add error handling middleware to ensure CORS headers on errors
 @app.middleware("http")
 async def add_cors_headers_on_error(request: Request, call_next):
+    request_id = request.headers.get("x-request-id") or str(uuid4())
+    request.state.request_id = request_id
+    started = time.perf_counter()
     try:
         response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+        logger.info(
+            "request_complete method=%s path=%s status=%s request_id=%s duration_ms=%s",
+            request.method,
+            request.url.path,
+            response.status_code,
+            request_id,
+            elapsed_ms,
+        )
         return response
     except Exception as e:
-        logger.error(f"Unhandled error in {request.url}: {str(e)}")
-        from fastapi.responses import JSONResponse
+        elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+        logger.error(
+            "request_failed method=%s path=%s request_id=%s duration_ms=%s error=%s",
+            request.method,
+            request.url.path,
+            request_id,
+            elapsed_ms,
+            str(e),
+            exc_info=True,
+        )
+        message = "Internal server error" if settings.is_production else str(e)
+        allow_origin = (
+            settings.CORS_ORIGINS_RESOLVED[0]
+            if settings.CORS_ORIGINS_RESOLVED
+            else "*"
+        )
         return JSONResponse(
             status_code=500,
-            content={"detail": str(e)},
+            content={"detail": error_payload("INTERNAL_SERVER_ERROR", message, request_id)},
             headers={
-                "Access-Control-Allow-Origin": settings.CORS_ORIGINS_RESOLVED[0],
+                "Access-Control-Allow-Origin": allow_origin,
                 "Access-Control-Allow-Credentials": "true",
                 "Access-Control-Allow-Methods": ", ".join(settings.CORS_METHODS),
                 "Access-Control-Allow-Headers": ", ".join(settings.CORS_HEADERS),
+                "X-Request-ID": request_id,
             }
         )
 

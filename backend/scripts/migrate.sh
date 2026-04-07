@@ -89,8 +89,13 @@ if 'user_settings' in tables:
     user_cols = {c['name'] for c in inspector.get_columns('user_settings')}
 if 'prompts' in tables:
     prompt_cols = {c['name'] for c in inspector.get_columns('prompts')}
+prompt_constraints = set()
+if 'prompts' in tables:
+    prompt_constraints = {c['name'] for c in inspector.get_foreign_keys('prompts')} | {c['name'] for c in inspector.get_check_constraints('prompts')} | {c['name'] for c in inspector.get_unique_constraints('prompts')}
 
-if 'model_tab_titles' in user_cols:
+if {'fk_prompts_linked_prompt_owner','ck_prompts_linked_prompt_not_self','uq_prompts_id_user_id'}.issubset(prompt_constraints):
+    print('0007_prompt_linked_integrity')
+elif 'model_tab_titles' in user_cols:
     print('0006_model_tab_titles')
 elif {'model_tab_order','enabled_model_tabs','prompt_category_order','enabled_prompt_categories'}.issubset(user_cols):
     print('0005_settings_ordering')

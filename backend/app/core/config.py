@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     AUTH_MAX_FAILED_ATTEMPTS: int = int(os.getenv("AUTH_MAX_FAILED_ATTEMPTS", "5"))
     AUTH_FAILED_WINDOW_SECONDS: int = int(os.getenv("AUTH_FAILED_WINDOW_SECONDS", "300"))
     AUTH_LOCKOUT_SECONDS: int = int(os.getenv("AUTH_LOCKOUT_SECONDS", "900"))
+    WRITE_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("WRITE_RATE_LIMIT_PER_MINUTE", "180"))
+    WRITE_LAYOUT_RATE_LIMIT_PER_MINUTE: int = int(
+        os.getenv("WRITE_LAYOUT_RATE_LIMIT_PER_MINUTE", "240")
+    )
 
     # CORS settings
     DEFAULT_CORS_ORIGINS: ClassVar[List[str]] = [
@@ -180,6 +184,13 @@ class Settings(BaseSettings):
             for origin in cors_origins:
                 if any(fragment in origin for fragment in invalid_fragments):
                     errors.append(f"CORS origin is not production-safe: {origin}")
+
+        oauth_post_login_url = self.OAUTH_POST_LOGIN_URL.strip().lower()
+        oauth_redirect_base = self.OAUTH_REDIRECT_BASE.strip().lower()
+        if not oauth_post_login_url.startswith("https://"):
+            errors.append("OAUTH_POST_LOGIN_URL must use https in production.")
+        if not oauth_redirect_base.startswith("https://"):
+            errors.append("OAUTH_REDIRECT_BASE must use https in production.")
 
         if errors:
             joined = "\n- ".join(errors)

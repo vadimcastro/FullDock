@@ -66,6 +66,18 @@ def main() -> int:
                 """,
             )
             require("ck_prompts_status_valid" in constraints, "missing_constraint=ck_prompts_status_valid")
+            require(
+                "ck_prompts_linked_prompt_not_self" in constraints,
+                "missing_constraint=ck_prompts_linked_prompt_not_self",
+            )
+            require(
+                "fk_prompts_linked_prompt_owner" in constraints,
+                "missing_constraint=fk_prompts_linked_prompt_owner",
+            )
+            require(
+                "uq_prompts_id_user_id" in constraints,
+                "missing_constraint=uq_prompts_id_user_id",
+            )
 
             indexes = fetch_set(
                 cur,
@@ -79,12 +91,13 @@ def main() -> int:
                 "ix_prompts_user_id",
                 "ix_prompts_user_model_order",
                 "ix_prompts_user_model_status",
+                "ix_prompts_user_linked_prompt_id",
             ):
                 require(index in indexes, f"missing_index={index}")
 
             cur.execute("SELECT version_num FROM alembic_version")
             version = str(cur.fetchone()[0])
-            require(version == "0006_model_tab_titles", f"unexpected_alembic_head={version}")
+            require(version == "0007_prompt_linked_integrity", f"unexpected_alembic_head={version}")
 
         print("PASS prompt_schema")
         return 0

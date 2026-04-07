@@ -8,6 +8,24 @@ from app.schemas.prompt import PromptCreate, PromptUpdate
 
 
 class CRUDPrompt(CRUDBase[Prompt, PromptCreate, PromptUpdate]):
+    def _validate_linked_prompt(
+        self, db: Session, *, user_id: int, prompt_id: str, linked_prompt_id: Optional[str]
+    ) -> None:
+        if not linked_prompt_id:
+            return
+        if linked_prompt_id == prompt_id:
+            raise ValueError("linked_prompt_id cannot reference the same prompt")
+        linked = (
+            db.query(self.model)
+            .filter(
+                self.model.id == linked_prompt_id,
+                self.model.user_id == user_id,
+            )
+            .first()
+        )
+        if not linked:
+            raise ValueError("linked_prompt_id must reference another prompt owned by this user")
+
     def get_multi_by_user(
         self, db: Session, *, user_id: int, model_id: Optional[str] = None, skip: int = 0, limit: int = 100
     ) -> List[Prompt]:
@@ -24,6 +42,12 @@ class CRUDPrompt(CRUDBase[Prompt, PromptCreate, PromptUpdate]):
             self.model.id == obj_in.id,
             self.model.user_id == user_id
         ).first()
+        self._validate_linked_prompt(
+            db,
+            user_id=user_id,
+            prompt_id=obj_in.id,
+            linked_prompt_id=obj_in.linked_prompt_id,
+        )
         
         if existing_prompt:
             # Update existing
@@ -54,6 +78,19 @@ class CRUDPrompt(CRUDBase[Prompt, PromptCreate, PromptUpdate]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def update_with_validation(
+        self, db: Session, *, db_obj: Prompt, obj_in: PromptUpdate
+    ) -> Prompt:
+        update_data = obj_in.model_dump(exclude_unset=True)
+        linked_prompt_id = update_data.get("linked_prompt_id", db_obj.linked_prompt_id)
+        self._validate_linked_prompt(
+            db,
+            user_id=db_obj.user_id,
+            prompt_id=db_obj.id,
+            linked_prompt_id=linked_prompt_id,
+        )
+        return self.update(db, db_obj=db_obj, obj_in=obj_in)
 
     def demote_other_on_deck(
         self, db: Session, *, user_id: int, model_id: str, exclude_id: str

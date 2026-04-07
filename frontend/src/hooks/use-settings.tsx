@@ -15,8 +15,9 @@ import type {
   CloudSyncState,
   SettingsContextValue,
 } from '@/lib/settings-types'
+import type { PromptStatus } from '@/lib/types'
 import { DEFAULT_SETTINGS, DEFAULT_SYNC_STATE, ACCENT_COLORS } from '@/lib/settings-types'
-import { useProtectedApi } from '@/lib/api/protected'
+import { ProtectedApiError, useProtectedApi } from '@/lib/api/protected'
 import { useAuth } from '@/lib/auth/AuthContext'
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
@@ -126,6 +127,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, login, register, logout, user } = useAuth()
   const api = useProtectedApi()
   const syncInProgress = useRef(false)
+  const pendingUpdatesRef = useRef<Partial<UserSettings>>({})
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const toSyncError = (error: unknown): Pick<CloudSyncState, 'errorCode' | 'errorMessage' | 'requestId'> => {
+    if (error instanceof ProtectedApiError) {
+      return {
+        errorCode: error.code ?? 'SYNC_REQUEST_FAILED',
+        errorMessage: error.message,
+        requestId: error.requestId ?? null,
+      }
+    }
+    const message =
+      typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as any).message)
+        : 'Sync request failed'
+    return {
+      errorCode: 'SYNC_REQUEST_FAILED',
+      errorMessage: message,
+      requestId: null,
+    }
+  }
 
   // 1. Initial Load from LocalStorage
   useEffect(() => {
@@ -154,13 +176,56 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (data) {
         const mapped = mapFromBackend(data)
         setSettings(mapped)
-        setSyncState((prev: CloudSyncState) => ({ ...prev, lastSynced: Date.now(), status: 'synced' }))
+        setSyncState((prev: CloudSyncState) => ({
+          ...prev,
+          lastSynced: Date.now(),
+          status: 'synced',
+          errorCode: null,
+          errorMessage: null,
+          requestId: null,
+        }))
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error)
-      setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error' }))
+      const syncError = toSyncError(error)
+      setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error', ...syncError }))
     }
   }, [api, isAuthenticated])
+
+  const flushPendingSettingsSync = useCallback(async () => {
+    if (!isAuthenticated) return
+    const updates = pendingUpdatesRef.current
+    pendingUpdatesRef.current = {}
+    if (Object.keys(updates).length === 0) return
+    try {
+      await api.post('/api/v1/settings/', mapToBackend(updates))
+      setSyncState((prev: CloudSyncState) => ({
+        ...prev,
+        lastSynced: Date.now(),
+        status: 'synced',
+        errorCode: null,
+        errorMessage: null,
+        requestId: null,
+      }))
+    } catch (error) {
+      console.error('Failed to sync settings:', error)
+      const syncError = toSyncError(error)
+      setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error', ...syncError }))
+    }
+  }, [api, isAuthenticated])
+
+  const queueSettingsSync = useCallback(
+    (updates: Partial<UserSettings>) => {
+      if (!isAuthenticated) return
+      pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates }
+      setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'syncing' }))
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = setTimeout(() => {
+        void flushPendingSettingsSync()
+      }, 250)
+    },
+    [flushPendingSettingsSync, isAuthenticated]
+  )
 
   // Keep cloud sync auth state derived from the single source of truth (AuthContext).
   useEffect(() => {
@@ -206,15 +271,102 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const updateSettings = useCallback(
     async (updates: Partial<UserSettings>) => {
       setSettings((prev: UserSettings) => ({ ...prev, ...updates }))
+      queueSettingsSync(updates)
+    },
+    [queueSettingsSync]
+  )
 
-      if (isAuthenticated) {
-        try {
-          await api.post('/api/v1/settings/', mapToBackend(updates))
-          setSyncState((prev: CloudSyncState) => ({ ...prev, lastSynced: Date.now(), status: 'synced' }))
-        } catch (error) {
-          console.error('Failed to sync settings:', error)
-          setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error' }))
+  const reorderModelTabs = useCallback(
+    async (order: string[], enabled: string[]) => {
+      setSettings((prev) => ({
+        ...prev,
+        modelTabOrder: order,
+        enabledModelTabs: enabled,
+      }))
+      if (!isAuthenticated) return
+      try {
+        setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'syncing' }))
+        const data = await api.post<any>('/api/v1/settings/layout/model-tabs', { order, enabled })
+        if (data) {
+          setSettings(mapFromBackend(data))
         }
+        setSyncState((prev: CloudSyncState) => ({
+          ...prev,
+          lastSynced: Date.now(),
+          status: 'synced',
+          errorCode: null,
+          errorMessage: null,
+          requestId: null,
+        }))
+      } catch (error) {
+        console.error('Failed to reorder model tabs:', error)
+        const syncError = toSyncError(error)
+        setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error', ...syncError }))
+      }
+    },
+    [api, isAuthenticated]
+  )
+
+  const reorderPromptCategories = useCallback(
+    async (order: PromptStatus[], enabled: PromptStatus[]) => {
+      setSettings((prev) => ({
+        ...prev,
+        promptCategoryOrder: order,
+        enabledPromptCategories: enabled,
+      }))
+      if (!isAuthenticated) return
+      try {
+        setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'syncing' }))
+        const data = await api.post<any>('/api/v1/settings/layout/prompt-categories', { order, enabled })
+        if (data) {
+          setSettings(mapFromBackend(data))
+        }
+        setSyncState((prev: CloudSyncState) => ({
+          ...prev,
+          lastSynced: Date.now(),
+          status: 'synced',
+          errorCode: null,
+          errorMessage: null,
+          requestId: null,
+        }))
+      } catch (error) {
+        console.error('Failed to reorder prompt categories:', error)
+        const syncError = toSyncError(error)
+        setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error', ...syncError }))
+      }
+    },
+    [api, isAuthenticated]
+  )
+
+  const updateModelTabTitle = useCallback(
+    async (tabId: string, title: string) => {
+      const trimmed = title.trim()
+      setSettings((prev) => ({
+        ...prev,
+        modelTabTitles: { ...(prev.modelTabTitles ?? {}), [tabId]: trimmed },
+      }))
+      if (!isAuthenticated) return
+      try {
+        setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'syncing' }))
+        const data = await api.post<any>('/api/v1/settings/layout/model-tab-title', {
+          tab_id: tabId,
+          title: trimmed,
+        })
+        if (data) {
+          setSettings(mapFromBackend(data))
+        }
+        setSyncState((prev: CloudSyncState) => ({
+          ...prev,
+          lastSynced: Date.now(),
+          status: 'synced',
+          errorCode: null,
+          errorMessage: null,
+          requestId: null,
+        }))
+      } catch (error) {
+        console.error('Failed to update model tab title:', error)
+        const syncError = toSyncError(error)
+        setSyncState((prev: CloudSyncState) => ({ ...prev, status: 'error', ...syncError }))
       }
     },
     [api, isAuthenticated]
@@ -240,17 +392,33 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [register, api, settings])
 
   const signOut = useCallback(() => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = null
+    }
+    pendingUpdatesRef.current = {}
     logout()
     setSettings(DEFAULT_SETTINGS)
     localStorage.removeItem('ondeck-settings')
     setSyncState(DEFAULT_SYNC_STATE)
   }, [logout])
 
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current)
+      }
+    }
+  }, [])
+
   const cloudSync = {
     isConnected: isAuthenticated,
     status: syncState.status,
     lastSynced: syncState.lastSynced,
     user: user ? { email: user.email } : null,
+    errorCode: syncState.errorCode ?? null,
+    errorMessage: syncState.errorMessage ?? null,
+    requestId: syncState.requestId ?? null,
   }
 
   return (
@@ -260,6 +428,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         syncState,
         cloudSync,
         updateSettings,
+        reorderModelTabs,
+        reorderPromptCategories,
+        updateModelTabTitle,
         triggerSync,
         signIn,
         signUp,

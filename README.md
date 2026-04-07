@@ -1,4 +1,4 @@
-# OnDeck 2.1.5
+# OnDeck
 
 High-fidelity AI prompt queue management across models.
 
@@ -6,16 +6,20 @@ High-fidelity AI prompt queue management across models.
 
 ## Release Status
 
-`v2.1.5` is release-ready (April 7, 2026).
+- `v2.1.5` released (April 7, 2026)
+- `v2.1.6` released (April 7, 2026)
+- `v2.1.7` planned (stability automation + observability depth)
 
-This release finalizes:
-- Prompt workflow hardening (`queued`, `on-deck`, `needs-edit`, `forked`, `complete`)
-- Atomic status transitions (`POST /api/v1/prompts/{id}/transition`)
-- Queue correctness rules (demote conflicting `on-deck`, promote next queued/forked)
-- Settings UX overhaul (collapsible sections, drag ordering, model tab add/remove/toggle/rename)
-- Dynamic model tab behavior (family logo inheritance + custom titles)
-- Migration robustness for legacy/partial schemas
-- Cloud sync status UI alignment (`offline|syncing|synced|error`)
+## v2.1.6 Highlights
+
+- DB integrity for linked prompts (`0007_prompt_linked_integrity`)
+- Transactional settings layout APIs (model tabs/categories/title)
+- Settings UI stabilization for drag/add/delete/title-edit flows
+- Debounced settings sync to reduce write churn
+- Structured backend error payloads + request ID propagation
+- Write-rate limiting for prompt/settings mutation endpoints
+- OAuth callback state-cookie validation
+- Expanded backend smoke coverage + passing release checks
 
 ## Quick Start
 
@@ -51,30 +55,34 @@ make shell-db
 make doctor
 ```
 
-## Validation Snapshot (v2.1.5)
+## Validation Commands
 
-- CI coverage includes frontend build, backend import/compile, backend smoke, persistence restart checks.
-- Local release checks include:
-  - `npx tsc --noEmit`
-  - `python3 -m compileall backend/app`
-  - `make migrate`
+```bash
+cd frontend && npx tsc --noEmit
+cd ..
+python3 -m compileall backend/app backend/alembic/versions scripts
+make migrate
+python3 scripts/ci_backend_smoke.py http://127.0.0.1:8000
+```
 
 ## Docs
 
-- Setup: [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)
+- Setup and operations: [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)
 - Technical reference: [docs/KNOWLEDGE_BASE.md](docs/KNOWLEDGE_BASE.md)
-- Future planning: [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
+- Next release tracker: [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
 
-## Security
+## Security Baseline
 
-Implemented:
-- JWT access + refresh token rotation
-- Login throttling
+Implemented baseline:
+- JWT access + refresh rotation
+- Login throttling and lockout
 - Session revocation (`logout`, `logout-all`)
 - Auth event logging
-- Production fail-fast env checks for weak secrets
+- Production fail-fast checks for weak/missing secrets
+- Write-rate limits for prompt/settings mutation paths
+- OAuth callback state validation
 
-Outstanding security hardening ideas are tracked in [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
+Future hardening and automation are tracked in [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 
 ## License
 

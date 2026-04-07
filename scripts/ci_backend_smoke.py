@@ -83,6 +83,13 @@ def pass_line(name: str) -> None:
     print(f"PASS {name}")
 
 
+def detail_code(resp: Resp) -> str:
+    detail = resp.body.get("detail")
+    if isinstance(detail, dict):
+        return str(detail.get("code") or "")
+    return ""
+
+
 def wait_health(client: Client, timeout_s: int = 90) -> None:
     deadline = time.time() + timeout_s
     while time.time() < deadline:
@@ -166,6 +173,55 @@ def main() -> int:
     require(settings_post.body.get("theme") == "dark", "settings_theme_mismatch")
     pass_line("settings_post")
 
+    settings_layout_tabs = client.request(
+        "POST",
+        "/api/v1/settings/layout/model-tabs",
+        token=access,
+        json_body={
+            "order": ["claude", "gemini", "gpt", "grok", "custom-sonnet"],
+            "enabled": ["claude", "gpt", "custom-sonnet"],
+        },
+    )
+    require(settings_layout_tabs.status == 200, f"settings_layout_tabs_status={settings_layout_tabs.status}")
+    pass_line("settings_layout_tabs")
+
+    settings_layout_title = client.request(
+        "POST",
+        "/api/v1/settings/layout/model-tab-title",
+        token=access,
+        json_body={"tab_id": "custom-sonnet", "title": "Sonnet"},
+    )
+    require(settings_layout_title.status == 200, f"settings_layout_title_status={settings_layout_title.status}")
+    pass_line("settings_layout_title")
+
+    settings_layout_categories = client.request(
+        "POST",
+        "/api/v1/settings/layout/prompt-categories",
+        token=access,
+        json_body={
+            "order": ["on-deck", "queued", "needs-edit", "forked", "complete"],
+            "enabled": ["on-deck", "queued", "needs-edit", "complete"],
+        },
+    )
+    require(
+        settings_layout_categories.status == 200,
+        f"settings_layout_categories_status={settings_layout_categories.status}",
+    )
+    pass_line("settings_layout_categories")
+
+    settings_layout_invalid = client.request(
+        "POST",
+        "/api/v1/settings/layout/model-tabs",
+        token=access,
+        json_body={
+            "order": ["gpt", "grok"],
+            "enabled": ["gpt", "claude"],
+        },
+    )
+    require(settings_layout_invalid.status == 400, f"settings_layout_invalid_status={settings_layout_invalid.status}")
+    require(detail_code(settings_layout_invalid) == "SETTINGS_LAYOUT_INVALID", "settings_layout_invalid_code")
+    pass_line("settings_layout_invalid")
+
     prompt_create = client.request(
         "POST",
         "/api/v1/prompts/",
@@ -184,6 +240,25 @@ def main() -> int:
     require(prompt_create.body.get("id") == prompt_id, "prompts_create_id_mismatch")
     require(prompt_create.body.get("title") == "ci smoke title", "prompts_create_title_mismatch")
     pass_line("prompts_create")
+
+    invalid_link_create = client.request(
+        "POST",
+        "/api/v1/prompts/",
+        token=access,
+        json_body={
+            "id": str(uuid.uuid4()),
+            "model_id": "gpt",
+            "title": "ci invalid link",
+            "content": "ci invalid link prompt",
+            "notes": "",
+            "status": "queued",
+            "order": 9,
+            "linked_prompt_id": "missing-prompt-id",
+        },
+    )
+    require(invalid_link_create.status == 400, f"invalid_link_create_status={invalid_link_create.status}")
+    require(detail_code(invalid_link_create) == "PROMPT_VALIDATION_FAILED", "invalid_link_create_code")
+    pass_line("invalid_link_create_rejected")
 
     fork_create = client.request(
         "POST",

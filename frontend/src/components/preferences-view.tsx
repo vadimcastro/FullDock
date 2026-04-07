@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -64,6 +64,7 @@ interface OrderListItem {
   onRemove?: () => void
   customTitle?: string
   onCustomTitleChange?: (value: string) => void
+  onCustomTitleCommit?: () => void
 }
 
 function OrderingList({
@@ -71,16 +72,23 @@ function OrderingList({
   description,
   items,
   onReorder,
+  onCommit,
   reorderAxis = 'y',
 }: {
   title: string
   description: string
   items: OrderListItem[]
   onReorder: (nextKeys: string[]) => void
+  onCommit?: (nextKeys: string[]) => void
   reorderAxis?: 'x' | 'y'
 }) {
   const keys = items.map((item) => item.key)
+  const [draftKeys, setDraftKeys] = useState<string[]>(keys)
   const itemMap = new Map(items.map((item) => [item.key, item]))
+
+  useEffect(() => {
+    setDraftKeys(keys)
+  }, [keys.join('|')])
 
   return (
     <div className="space-y-3">
@@ -88,12 +96,25 @@ function OrderingList({
         <Label className="text-sm font-medium">{title}</Label>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
-      <Reorder.Group axis={reorderAxis} values={keys} onReorder={onReorder} className="space-y-2">
-        {keys.map((key) => {
+      <Reorder.Group
+        axis={reorderAxis}
+        values={draftKeys}
+        onReorder={(nextKeys) => {
+          setDraftKeys(nextKeys)
+          onReorder(nextKeys)
+        }}
+        className="space-y-2"
+      >
+        {draftKeys.map((key) => {
           const item = itemMap.get(key)
           if (!item) return null
           return (
-            <Reorder.Item key={item.key} value={item.key} className="rounded-md border border-border bg-card">
+            <Reorder.Item
+              key={item.key}
+              value={item.key}
+              className="rounded-md border border-border bg-card"
+              onDragEnd={() => onCommit?.(draftKeys)}
+            >
               <div className="flex items-center gap-2 p-2">
                 <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -105,6 +126,7 @@ function OrderingList({
                       aria-label={`${item.label} tab title`}
                       className="h-8 text-xs"
                       onPointerDown={(e) => e.stopPropagation()}
+                      onBlur={() => item.onCustomTitleCommit?.()}
                     />
                   ) : (
                     <p className="text-sm">{item.label}</p>
@@ -187,10 +209,48 @@ function SettingsSection({
 }
 
 export function PreferencesView() {
-  const { settings, updateSettings, cloudSync } = useSettings()
+  const {
+    settings,
+    updateSettings,
+    reorderModelTabs,
+    reorderPromptCategories,
+    updateModelTabTitle,
+    cloudSync,
+  } = useSettings()
   const [notificationsMessage, setNotificationsMessage] = useState<string | null>(null)
   const [newModelTabName, setNewModelTabName] = useState('')
   const [openSection, setOpenSection] = useState<SectionKey | null>('layout')
+  const [modelOrderDraft, setModelOrderDraft] = useState<string[]>(settings.modelTabOrder ?? DEFAULT_MODEL_ORDER)
+  const [enabledModelsDraft, setEnabledModelsDraft] = useState<string[]>(
+    settings.enabledModelTabs ?? DEFAULT_ENABLED_MODELS
+  )
+  const [modelTitlesDraft, setModelTitlesDraft] = useState<Record<string, string>>(settings.modelTabTitles ?? {})
+  const [categoryOrderDraft, setCategoryOrderDraft] = useState<PromptStatus[]>(
+    settings.promptCategoryOrder ?? DEFAULT_CATEGORY_ORDER
+  )
+  const [enabledCategoriesDraft, setEnabledCategoriesDraft] = useState<PromptStatus[]>(
+    settings.enabledPromptCategories ?? DEFAULT_CATEGORY_ORDER
+  )
+
+  useEffect(() => {
+    setModelOrderDraft(settings.modelTabOrder ?? DEFAULT_MODEL_ORDER)
+  }, [settings.modelTabOrder])
+
+  useEffect(() => {
+    setEnabledModelsDraft(settings.enabledModelTabs ?? DEFAULT_ENABLED_MODELS)
+  }, [settings.enabledModelTabs])
+
+  useEffect(() => {
+    setModelTitlesDraft(settings.modelTabTitles ?? {})
+  }, [settings.modelTabTitles])
+
+  useEffect(() => {
+    setCategoryOrderDraft(settings.promptCategoryOrder ?? DEFAULT_CATEGORY_ORDER)
+  }, [settings.promptCategoryOrder])
+
+  useEffect(() => {
+    setEnabledCategoriesDraft(settings.enabledPromptCategories ?? DEFAULT_CATEGORY_ORDER)
+  }, [settings.enabledPromptCategories])
 
   const maybePlaySound = () => {
     if (!settings.soundEnabled) return
@@ -238,20 +298,18 @@ export function PreferencesView() {
     { value: 'system', label: 'System', icon: Monitor },
   ] as const
 
-  const orderedIds = normalizeOrder(settings.modelTabOrder, settings.modelTabOrder ?? [])
+  const orderedIds = normalizeOrder(modelOrderDraft, modelOrderDraft)
   const discoveredIds = normalizeOrder(
-    [...(settings.enabledModelTabs ?? []), ...Object.keys(settings.modelTabTitles ?? {})],
-    [...(settings.enabledModelTabs ?? []), ...Object.keys(settings.modelTabTitles ?? {})]
+    [...enabledModelsDraft, ...Object.keys(modelTitlesDraft ?? {})],
+    [...enabledModelsDraft, ...Object.keys(modelTitlesDraft ?? {})]
   )
   const extraIds = discoveredIds.filter((id) => !orderedIds.includes(id)).sort((a, b) => a.localeCompare(b))
   const modelIds = [...orderedIds, ...extraIds]
   const normalizedModelIds = modelIds.length > 0 ? modelIds : DEFAULT_MODEL_ORDER
-  const orderedModelTabs = normalizeOrder(settings.modelTabOrder, normalizedModelIds)
-  const enabledModelTabs = new Set<string>(
-    (settings.enabledModelTabs ?? DEFAULT_ENABLED_MODELS).filter((id) => normalizedModelIds.includes(id))
-  )
-  const orderedCategories = normalizeOrder(settings.promptCategoryOrder, DEFAULT_CATEGORY_ORDER)
-  const enabledCategories = new Set<PromptStatus>(settings.enabledPromptCategories ?? DEFAULT_CATEGORY_ORDER)
+  const orderedModelTabs = normalizeOrder(modelOrderDraft, normalizedModelIds)
+  const enabledModelTabs = new Set<string>(enabledModelsDraft.filter((id) => normalizedModelIds.includes(id)))
+  const orderedCategories = normalizeOrder(categoryOrderDraft, DEFAULT_CATEGORY_ORDER)
+  const enabledCategories = new Set<PromptStatus>(enabledCategoriesDraft)
   const cloudStatusLabel =
     !cloudSync.isConnected
       ? 'Offline'
@@ -270,7 +328,7 @@ export function PreferencesView() {
   const cloudStatusDetail = !cloudSync.isConnected
     ? 'Not connected'
     : cloudSync.status === 'error'
-      ? `Connected as ${cloudSync.user?.email} (sync error)`
+      ? `Connected as ${cloudSync.user?.email} (sync error${cloudSync.errorCode ? `: ${cloudSync.errorCode}` : ''})`
       : cloudSync.status === 'syncing'
         ? `Connected as ${cloudSync.user?.email} (syncing...)`
         : `Connected as ${cloudSync.user?.email}`
@@ -297,33 +355,33 @@ export function PreferencesView() {
     const nextOrder = [...orderedModelTabs, candidate]
     const nextEnabled = Array.from(new Set([...Array.from(enabledModelTabs), candidate]))
     const nextTitles = {
-      ...(settings.modelTabTitles ?? {}),
+      ...(modelTitlesDraft ?? {}),
       [candidate]: title,
     }
 
     maybePlaySound()
     setNewModelTabName('')
-    await updateSettings({
-      modelTabOrder: nextOrder,
-      enabledModelTabs: nextEnabled,
-      modelTabTitles: nextTitles,
-    })
+    setModelOrderDraft(nextOrder)
+    setEnabledModelsDraft(nextEnabled)
+    setModelTitlesDraft(nextTitles)
+    await reorderModelTabs(nextOrder, nextEnabled)
+    await updateModelTabTitle(candidate, title)
   }
 
-  const removeModelTab = (id: string) => {
+  const removeModelTab = async (id: string) => {
     const nextOrder = orderedModelTabs.filter((item) => item !== id)
     const nextEnabled = Array.from(enabledModelTabs).filter((item) => item !== id)
-    const nextTitles = { ...(settings.modelTabTitles ?? {}) }
+    const nextTitles = { ...(modelTitlesDraft ?? {}) }
     delete nextTitles[id]
 
     const fallbackOrder = nextOrder.length > 0 ? nextOrder : ['gpt']
     const fallbackEnabled = nextEnabled.length > 0 ? nextEnabled : ['gpt']
 
-    void updateSettings({
-      modelTabOrder: fallbackOrder,
-      enabledModelTabs: fallbackEnabled,
-      modelTabTitles: nextTitles,
-    })
+    setModelOrderDraft(fallbackOrder)
+    setEnabledModelsDraft(fallbackEnabled)
+    setModelTitlesDraft(nextTitles)
+    await reorderModelTabs(fallbackOrder, fallbackEnabled)
+    await updateSettings({ modelTabTitles: nextTitles })
   }
 
   return (
@@ -481,18 +539,30 @@ export function PreferencesView() {
               items={orderedModelTabs.map((id) => {
                 const base = AI_MODELS.find((m) => m.id === id)
                 const fallback = base?.name ?? id
-                const currentTitle = settings.modelTabTitles?.[id] ?? fallback
+                const currentTitle = modelTitlesDraft?.[id] ?? fallback
                 return {
                   key: id,
                   label: fallback,
                   enabled: enabledModelTabs.has(id),
                   customTitle: currentTitle,
                   onCustomTitleChange: (value: string) => {
-                    const nextTitles = {
-                      ...(settings.modelTabTitles ?? {}),
+                    setModelTitlesDraft((prev) => ({
+                      ...(prev ?? {}),
                       [id]: value,
+                    }))
+                  },
+                  onCustomTitleCommit: () => {
+                    const value = (modelTitlesDraft?.[id] ?? '').trim()
+                    if (!value) {
+                      const fallbackTitle = base?.name ?? id
+                      setModelTitlesDraft((prev) => ({
+                        ...(prev ?? {}),
+                        [id]: fallbackTitle,
+                      }))
+                      void updateModelTabTitle(id, fallbackTitle)
+                      return
                     }
-                    void updateSettings({ modelTabTitles: nextTitles })
+                    void updateModelTabTitle(id, value)
                   },
                   toggle: (checked: boolean) => {
                     const next = new Set(enabledModelTabs)
@@ -502,18 +572,25 @@ export function PreferencesView() {
                       next.delete(id)
                       if (next.size === 0) next.add('gpt')
                     }
-                    void updateSettings({ enabledModelTabs: Array.from(next) })
+                    const nextEnabled = Array.from(next)
+                    setEnabledModelsDraft(nextEnabled)
+                    void reorderModelTabs(orderedModelTabs, nextEnabled)
                   },
                   onRemove: () => {
                     maybePlaySound()
-                    removeModelTab(id)
+                    void removeModelTab(id)
                   },
                 }
               })}
               onReorder={(nextKeys) => {
+                const nextOrder = normalizeOrder(nextKeys, normalizedModelIds)
+                setModelOrderDraft(nextOrder)
+              }}
+              onCommit={(nextKeys) => {
                 maybePlaySound()
                 const nextOrder = normalizeOrder(nextKeys, normalizedModelIds)
-                void updateSettings({ modelTabOrder: nextOrder })
+                setModelOrderDraft(nextOrder)
+                void reorderModelTabs(nextOrder, Array.from(enabledModelTabs))
               }}
             />
 
@@ -556,13 +633,20 @@ export function PreferencesView() {
                     next.delete(key)
                     if (next.size === 0) next.add('on-deck')
                   }
-                  void updateSettings({ enabledPromptCategories: Array.from(next) as PromptStatus[] })
+                  const nextEnabled = Array.from(next) as PromptStatus[]
+                  setEnabledCategoriesDraft(nextEnabled)
+                  void reorderPromptCategories(orderedCategories, nextEnabled)
                 },
               }))}
               onReorder={(nextKeys) => {
+                const nextOrder = normalizeOrder(nextKeys as PromptStatus[], DEFAULT_CATEGORY_ORDER)
+                setCategoryOrderDraft(nextOrder)
+              }}
+              onCommit={(nextKeys) => {
                 maybePlaySound()
                 const nextOrder = normalizeOrder(nextKeys as PromptStatus[], DEFAULT_CATEGORY_ORDER)
-                void updateSettings({ promptCategoryOrder: nextOrder })
+                setCategoryOrderDraft(nextOrder)
+                void reorderPromptCategories(nextOrder, Array.from(enabledCategories))
               }}
             />
           </SettingsSection>

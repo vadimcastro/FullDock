@@ -24,6 +24,9 @@ export interface CloudSyncState {
   lastSynced: number | null
   isAuthenticated: boolean
   userEmail: string | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  requestId?: string | null
 }
 
 export interface CloudSyncInfo {
@@ -31,6 +34,9 @@ export interface CloudSyncInfo {
   status: SyncStatus
   lastSynced: number | null
   user: { email: string } | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  requestId?: string | null
 }
 
 export interface SettingsContextValue {
@@ -38,6 +44,9 @@ export interface SettingsContextValue {
   syncState: CloudSyncState
   cloudSync: CloudSyncInfo
   updateSettings: (updates: Partial<UserSettings>) => Promise<void>
+  reorderModelTabs: (order: string[], enabled: string[]) => Promise<void>
+  reorderPromptCategories: (order: PromptStatus[], enabled: PromptStatus[]) => Promise<void>
+  updateModelTabTitle: (tabId: string, title: string) => Promise<void>
   triggerSync: () => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
@@ -77,4 +86,7 @@ export const DEFAULT_SYNC_STATE: CloudSyncState = {
   lastSynced: null,
   isAuthenticated: false,
   userEmail: null,
+  errorCode: null,
+  errorMessage: null,
+  requestId: null,
 }

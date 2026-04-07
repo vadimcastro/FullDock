@@ -1,4 +1,15 @@
-from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.sql import func
 from app.db.base_class import Base
 
@@ -10,9 +21,21 @@ class Prompt(Base):
             "status IN ('queued', 'on-deck', 'needs-edit', 'forked', 'complete')",
             name="ck_prompts_status_valid",
         ),
+        CheckConstraint(
+            "linked_prompt_id IS NULL OR linked_prompt_id <> id",
+            name="ck_prompts_linked_prompt_not_self",
+        ),
+        UniqueConstraint("id", "user_id", name="uq_prompts_id_user_id"),
+        ForeignKeyConstraint(
+            ["linked_prompt_id", "user_id"],
+            ["prompts.id", "prompts.user_id"],
+            name="fk_prompts_linked_prompt_owner",
+            ondelete="SET NULL",
+        ),
         Index("ix_prompts_user_id", "user_id"),
         Index("ix_prompts_user_model_order", "user_id", "model_id", "order"),
         Index("ix_prompts_user_model_status", "user_id", "model_id", "status"),
+        Index("ix_prompts_user_linked_prompt_id", "user_id", "linked_prompt_id"),
     )
 
     id = Column(String, primary_key=True, index=True)

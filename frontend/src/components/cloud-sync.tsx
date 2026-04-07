@@ -279,37 +279,49 @@ export function CloudSyncButton() {
           <Separator />
 
           {/* Sync Status */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {syncState.status === 'synced' && (
-                <Check className="h-4 w-4 text-success" />
-              )}
-              {syncState.status === 'syncing' && (
-                <RefreshCw className="h-4 w-4 text-primary animate-spin" />
-              )}
-              {syncState.status === 'error' && (
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              )}
-              <span className="text-sm">
-                {syncState.status === 'synced' && 'All changes synced'}
-                {syncState.status === 'syncing' && 'Syncing...'}
-                {syncState.status === 'error' && 'Sync failed'}
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={triggerSync}
-              disabled={syncState.status === 'syncing'}
-            >
-              <RefreshCw
-                className={cn(
-                  'h-4 w-4',
-                  syncState.status === 'syncing' && 'animate-spin'
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {syncState.status === 'synced' && (
+                  <Check className="h-4 w-4 text-success" />
                 )}
-              />
-            </Button>
+                {syncState.status === 'syncing' && (
+                  <RefreshCw className="h-4 w-4 text-primary animate-spin" />
+                )}
+                {syncState.status === 'error' && (
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                )}
+                <span className="text-sm">
+                  {syncState.status === 'synced' && 'All changes synced'}
+                  {syncState.status === 'syncing' && 'Syncing...'}
+                  {syncState.status === 'error' && 'Sync failed'}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={triggerSync}
+                disabled={syncState.status === 'syncing'}
+              >
+                <RefreshCw
+                  className={cn(
+                    'h-4 w-4',
+                    syncState.status === 'syncing' && 'animate-spin'
+                  )}
+                />
+              </Button>
+            </div>
+            {syncState.status === 'error' && (syncState.errorCode || syncState.requestId) ? (
+              <p className="text-xs text-muted-foreground">
+                {syncState.errorCode ? `Code: ${syncState.errorCode}` : ''}
+                {syncState.errorCode && syncState.requestId ? ' · ' : ''}
+                {syncState.requestId ? `Request: ${syncState.requestId}` : ''}
+              </p>
+            ) : null}
+            {syncState.status === 'error' && syncState.errorMessage ? (
+              <p className="text-xs text-muted-foreground">{syncState.errorMessage}</p>
+            ) : null}
           </div>
 
           <Separator />
