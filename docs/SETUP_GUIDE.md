@@ -178,6 +178,29 @@ Production safeguards:
 
 ---
 
+## Repo Handoff (Brother OnDeck Repo)
+
+Use this flow when transitioning from legacy/template history to a clean OnDeck baseline:
+
+1. Brother renames old repo to `OnDeck-legacy` (or archives it).
+2. Brother creates a new empty repo named `OnDeck`.
+3. From this repo, push `preDeck` to brother's new `main`:
+
+```bash
+git remote add bro git@github.com:<bro-username>/OnDeck.git
+git push bro preDeck:main
+git push bro --tags
+```
+
+4. In brother's new repo settings:
+   - set default branch to `main`
+   - enable branch protection for `main`
+   - add required repo secrets/env values
+
+This preserves a clean history for active OnDeck development while keeping legacy history available in `OnDeck-legacy`.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |

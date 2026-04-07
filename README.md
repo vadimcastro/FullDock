@@ -164,6 +164,7 @@ make clean-all && make dev-build
 
 - [Setup Guide](./docs/SETUP_GUIDE.md)
 - [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
+- Repo handoff tutorial (new canonical OnDeck repo): see `Setup Guide -> Repo Handoff (Brother OnDeck Repo)`
 
 ---
 
