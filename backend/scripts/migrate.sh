@@ -46,7 +46,8 @@ except Exception as e:
 # Migration strategy:
 # - Existing DBs tracked by Alembic: apply upgrades.
 # - Fresh DBs without Alembic tracking: apply full Alembic migration chain.
-# - Legacy pre-Alembic DBs without version table but with app tables: stamp head.
+# - Legacy pre-Alembic DBs without version table but with app tables:
+#   infer nearest compatible revision, stamp it, then upgrade head.
 echo "Determining migration strategy..."
 DB_MIGRATION_MODE=$(python3 -c "
 import sys
@@ -73,8 +74,39 @@ if [ -d "alembic" ] && [ -f "alembic/env.py" ]; then
     echo "Fresh untracked DB detected. Running full Alembic migration chain..."
     alembic upgrade head
   elif [ "$DB_MIGRATION_MODE" = "legacy_untracked" ]; then
-    echo "Legacy untracked DB detected. Stamping Alembic head without schema replay..."
-    alembic stamp head
+    echo "Legacy untracked DB detected. Inferring baseline revision..."
+    LEGACY_REVISION=$(python3 -c "
+import sys
+sys.path.append('/app')
+from app.db.base import engine
+from sqlalchemy import inspect
+
+inspector = inspect(engine)
+tables = set(inspector.get_table_names())
+user_cols = set()
+prompt_cols = set()
+if 'user_settings' in tables:
+    user_cols = {c['name'] for c in inspector.get_columns('user_settings')}
+if 'prompts' in tables:
+    prompt_cols = {c['name'] for c in inspector.get_columns('prompts')}
+
+if 'model_tab_titles' in user_cols:
+    print('0006_model_tab_titles')
+elif {'model_tab_order','enabled_model_tabs','prompt_category_order','enabled_prompt_categories'}.issubset(user_cols):
+    print('0005_settings_ordering')
+elif {'font_scale','show_prompt_titles'}.issubset(user_cols) and 'title' in prompt_cols:
+    print('0003_prompt_titles_settings')
+elif {'prompts','user_settings'}.issubset(tables):
+    print('0002_add_prompts_and_settings')
+elif 'oauth_accounts' in tables:
+    print('0001_add_oauth_accounts')
+else:
+    print('0000_initial_core_auth')
+")
+    echo "Stamping inferred legacy revision: $LEGACY_REVISION"
+    alembic stamp "$LEGACY_REVISION"
+    echo "Applying migrations to head from inferred legacy revision..."
+    alembic upgrade head
   else
     echo "Unknown migration mode: $DB_MIGRATION_MODE"
     exit 1

@@ -9,9 +9,9 @@ class UserSettingBase(BaseModel):
     auto_save: Optional[bool] = True
     font_scale: Optional[int] = 100
     show_prompt_titles: Optional[bool] = True
-    model_tab_order: Optional[str] = '["claude","gemini","gpt","grok","custom"]'
+    model_tab_order: Optional[str] = '["claude","gemini","gpt","grok"]'
     enabled_model_tabs: Optional[str] = '["claude","gemini","gpt","grok"]'
-    model_tab_titles: Optional[str] = '{"claude":"Claude","gemini":"Gemini","gpt":"GPT","grok":"Grok","custom":"Custom"}'
+    model_tab_titles: Optional[str] = '{"claude":"Claude","gemini":"Gemini","gpt":"GPT","grok":"Grok"}'
     custom_model_tab_title: Optional[str] = "Custom"
     prompt_category_order: Optional[str] = '["on-deck","needs-edit","queued","forked","complete"]'
     enabled_prompt_categories: Optional[str] = '["on-deck","needs-edit","queued","forked","complete"]'

@@ -13,14 +13,14 @@ class UserSetting(Base):
     font_scale = Column(Integer, default=100, nullable=False)
     show_prompt_titles = Column(Boolean, default=True, nullable=False)
     model_tab_order = Column(
-        Text, default='["claude","gemini","gpt","grok","custom"]', nullable=False
+        Text, default='["claude","gemini","gpt","grok"]', nullable=False
     )
     enabled_model_tabs = Column(
         Text, default='["claude","gemini","gpt","grok"]', nullable=False
     )
     model_tab_titles = Column(
         Text,
-        default='{"claude":"Claude","gemini":"Gemini","gpt":"GPT","grok":"Grok","custom":"Custom"}',
+        default='{"claude":"Claude","gemini":"Gemini","gpt":"GPT","grok":"Grok"}',
         nullable=False,
     )
     custom_model_tab_title = Column(String, default="Custom", nullable=False)

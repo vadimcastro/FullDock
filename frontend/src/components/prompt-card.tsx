@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Check,
+  RotateCcw,
   Edit3,
   Trash2,
   AlertTriangle,
+  ArrowUp,
   Link2,
   ChevronDown,
   ChevronUp,
@@ -141,20 +143,20 @@ export function PromptCard({
 
   const statusAccent = {
     'on-deck': {
-      border: 'border-primary',
-      text: 'text-primary',
+      border: 'border-blue-500',
+      text: 'text-blue-500',
     },
     'needs-edit': {
       border: 'border-warning',
       text: 'text-warning',
     },
     'queued': {
-      border: 'border-grok',
-      text: 'text-grok',
+      border: 'border-zinc-500',
+      text: 'text-zinc-500',
     },
     'forked': {
-      border: 'border-claude',
-      text: 'text-claude',
+      border: 'border-orange-500',
+      text: 'text-orange-500',
     },
     'complete': {
       border: 'border-success',
@@ -176,10 +178,10 @@ export function PromptCard({
       onClick={handleCardClick}
       className={cn(
         'transition-all duration-200',
-        prompt.status === 'on-deck' && 'ring-2 ring-primary',
+        prompt.status === 'on-deck' && 'ring-2 ring-blue-500',
         prompt.status === 'needs-edit' && 'ring-2 ring-warning',
-        prompt.status === 'queued' && 'ring-2 ring-grok/60',
-        prompt.status === 'forked' && 'ring-2 ring-claude/70',
+        prompt.status === 'queued' && 'ring-2 ring-zinc-500/60',
+        prompt.status === 'forked' && 'ring-2 ring-orange-500/65',
         prompt.status === 'complete' && 'opacity-60'
       )}
     >
@@ -403,13 +405,13 @@ export function PromptCard({
             )}
 
             <div className="flex items-center justify-between gap-3 mt-2 pt-2 border-t border-border/50">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                 {prompt.status === 'on-deck' && (
                   <>
                     <Button
                       size="sm"
                       variant="default"
-                      className="gap-1.5 px-3.5 bg-success hover:bg-success/90 active:bg-success/85 text-white hover:!text-black active:!text-black font-medium"
+                      className="gap-1.5 px-3.5 bg-success text-black hover:!text-white hover:bg-success/90 active:bg-success/85 active:!text-white font-medium"
                       onClick={() => {
                         playIfEnabled(playUiCompleteSound)
                         onUpdateStatus(prompt.id, 'complete')
@@ -420,8 +422,8 @@ export function PromptCard({
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="gap-1.5 px-3.5 border-warning/60 text-warning hover:bg-warning hover:!text-white hover:border-warning active:bg-warning/90 active:!text-white"
+                      variant="default"
+                      className="gap-1.5 px-3.5 bg-warning text-black hover:bg-warning/90 hover:!text-white active:bg-warning/80 active:!text-white"
                       onClick={() => {
                         playIfEnabled(playUiNeedsEditSound)
                         onUpdateStatus(prompt.id, 'needs-edit')
@@ -437,13 +439,13 @@ export function PromptCard({
                 <Button
                   size="sm"
                   variant="default"
-                  className="gap-1.5 px-3.5 bg-primary hover:bg-primary/85 active:bg-primary/75 text-white hover:!text-white active:!text-white"
+                  className="gap-1.5 px-3.5 bg-warning text-black hover:bg-warning/90 active:bg-warning/80 hover:!text-white active:!text-white"
                     onClick={() => {
                       playIfEnabled(playUiRetrySound)
                       onUpdateStatus(prompt.id, 'on-deck')
                     }}
                   >
-                    <Check className="h-3.5 w-3.5" />
+                    <RotateCcw className="h-3.5 w-3.5" />
                     Ready to Retry
                   </Button>
                 )}
@@ -451,13 +453,14 @@ export function PromptCard({
                 {prompt.status === 'queued' && (
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="gap-1.5 px-3.5 border-grok/60 text-grok hover:bg-grok hover:!text-white hover:border-grok active:bg-grok/90 active:!text-white"
+                  variant="default"
+                  className="gap-1.5 px-3.5 !border !border-zinc-500 !bg-zinc-500 !text-black hover:!bg-zinc-600 hover:!text-white hover:!border-zinc-600 active:!bg-zinc-700 active:!text-white dark:hover:!bg-zinc-600 dark:active:!bg-zinc-700 transition-colors"
                     onClick={() => {
                       playIfEnabled(playUiClickSound)
                       onUpdateStatus(prompt.id, 'on-deck')
                     }}
                   >
+                  <ArrowUp className="h-3.5 w-3.5" />
                   Move to On Deck
                 </Button>
                 )}
@@ -465,13 +468,14 @@ export function PromptCard({
                 {prompt.status === 'forked' && (
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="gap-1.5 px-3.5 border-claude/60 text-claude hover:bg-claude hover:!text-white hover:border-claude active:bg-claude/90 active:!text-white"
+                    variant="default"
+                    className="gap-1.5 px-3.5 !border !border-orange-500 !bg-orange-500 !text-black hover:!bg-orange-600 hover:!text-white hover:!border-orange-600 active:!bg-orange-700 active:!text-white dark:hover:!bg-orange-600 dark:active:!bg-orange-700 transition-colors"
                     onClick={() => {
                       playIfEnabled(playUiClickSound)
                       onUpdateStatus(prompt.id, 'on-deck')
                     }}
                   >
+                    <ArrowUp className="h-3.5 w-3.5" />
                     Move to On Deck
                   </Button>
                 )}

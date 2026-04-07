@@ -1,6 +1,6 @@
 'use client'
 
-import { isValidElement, useCallback, useRef, useState } from 'react'
+import { isValidElement, useCallback, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface SwipeContainerProps {
@@ -23,6 +23,8 @@ export function SwipeContainer({
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
   const [isHorizontalSwipe, setIsHorizontalSwipe] = useState<boolean | null>(null)
+  const [suppressTransition, setSuppressTransition] = useState(false)
+  const previousChildrenLengthRef = useRef(children.length)
 
   const minSwipeDistance = 50
 
@@ -86,6 +88,16 @@ export function SwipeContainer({
     setIsHorizontalSwipe(null)
   }, [touchStartX, touchEndX, isHorizontalSwipe, currentIndex, children.length, onSwipe])
 
+  useEffect(() => {
+    if (previousChildrenLengthRef.current === children.length) return
+    previousChildrenLengthRef.current = children.length
+    setSuppressTransition(true)
+    const frame = requestAnimationFrame(() => {
+      setSuppressTransition(false)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [children.length])
+
   return (
     <div
       ref={containerRef}
@@ -97,7 +109,7 @@ export function SwipeContainer({
       <div
         className={cn(
           'flex transition-transform h-full',
-          !isDragging && 'duration-300 ease-out'
+          !isDragging && !suppressTransition && 'duration-300 ease-out'
         )}
         style={{
           transform: `translateX(calc(-${currentIndex * 100}% + ${isDragging ? dragOffset : 0}px))`,

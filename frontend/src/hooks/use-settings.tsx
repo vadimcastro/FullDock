@@ -71,6 +71,37 @@ const mapToBackend = (s: Partial<UserSettings>) => {
 }
 
 const mapFromBackend = (data: any): UserSettings => ({
+  ...(() => {
+    const rawOrder = parseJsonArray<string>(data.model_tab_order, DEFAULT_SETTINGS.modelTabOrder ?? [])
+    const rawEnabled = parseJsonArray<string>(
+      data.enabled_model_tabs,
+      DEFAULT_SETTINGS.enabledModelTabs ?? []
+    )
+    const rawTitles =
+      typeof data.model_tab_titles === 'string'
+        ? (() => {
+            try {
+              const parsed = JSON.parse(data.model_tab_titles)
+              return typeof parsed === 'object' && parsed !== null
+                ? (parsed as Record<string, string>)
+                : (DEFAULT_SETTINGS.modelTabTitles ?? {})
+            } catch {
+              return DEFAULT_SETTINGS.modelTabTitles ?? {}
+            }
+          })()
+        : (DEFAULT_SETTINGS.modelTabTitles ?? {})
+
+    const modelTabOrder = rawOrder.filter((id) => id !== 'custom')
+    const enabledModelTabs = rawEnabled.filter((id) => id !== 'custom')
+    const modelTabTitles = { ...rawTitles }
+    delete modelTabTitles.custom
+
+    return {
+      modelTabOrder,
+      enabledModelTabs,
+      modelTabTitles,
+    }
+  })(),
   theme: data.theme || 'dark',
   accentColor: data.accent_color || 'teal',
   notifications: data.notifications ?? false,
@@ -78,21 +109,6 @@ const mapFromBackend = (data: any): UserSettings => ({
   autoSave: data.auto_save ?? true,
   fontScale: data.font_scale ?? 100,
   showPromptTitles: data.show_prompt_titles ?? true,
-  modelTabOrder: parseJsonArray(data.model_tab_order, DEFAULT_SETTINGS.modelTabOrder ?? []),
-  enabledModelTabs: parseJsonArray(data.enabled_model_tabs, DEFAULT_SETTINGS.enabledModelTabs ?? []),
-  modelTabTitles:
-    typeof data.model_tab_titles === 'string'
-      ? (() => {
-          try {
-            const parsed = JSON.parse(data.model_tab_titles)
-            return typeof parsed === 'object' && parsed !== null
-              ? (parsed as Record<string, string>)
-              : (DEFAULT_SETTINGS.modelTabTitles ?? {})
-          } catch {
-            return DEFAULT_SETTINGS.modelTabTitles ?? {}
-          }
-        })()
-      : (DEFAULT_SETTINGS.modelTabTitles ?? {}),
   promptCategoryOrder: parseJsonArray(
     data.prompt_category_order,
     DEFAULT_SETTINGS.promptCategoryOrder ?? []

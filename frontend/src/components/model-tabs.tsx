@@ -33,7 +33,7 @@ export function ModelTabs({ currentIndex, onSelect, prompts, models }: ModelTabs
           gpt: 'border-gpt',
           grok: 'border-grok',
           gemini: 'border-gemini',
-        } as Record<string, string>)[model.id] ?? 'border-primary'
+        } as Record<string, string>)[model.family ?? model.id] ?? 'border-primary'
 
         return (
           <button
@@ -48,8 +48,14 @@ export function ModelTabs({ currentIndex, onSelect, prompts, models }: ModelTabs
           >
             <div
               className={cn(
-                'w-7 h-7 rounded-md flex items-center justify-center mb-1 bg-white ring-1 ring-border'
+                'w-7 h-7 rounded-md flex items-center justify-center mb-1 ring-1 ring-border',
+                model.logoSrc ? 'bg-white' : ''
               )}
+              style={
+                model.logoSrc
+                  ? undefined
+                  : { backgroundColor: `oklch(0.78 0.14 ${model.iconHue ?? 220})` }
+              }
             >
               {model.logoSrc ? (
                 <Image
@@ -63,7 +69,7 @@ export function ModelTabs({ currentIndex, onSelect, prompts, models }: ModelTabs
                   )}
                 />
               ) : (
-                <span className="text-xs font-medium text-foreground">{model.icon}</span>
+                <span className="text-xs font-semibold text-black/90">{model.icon.slice(0, 1).toUpperCase()}</span>
               )}
             </div>
             <span className="text-[10px] text-muted-foreground">
@@ -74,7 +80,7 @@ export function ModelTabs({ currentIndex, onSelect, prompts, models }: ModelTabs
             {(stats.onDeck > 0 || stats.needsEdit > 0) && (
               <div className="absolute top-1 right-1 flex gap-0.5">
                 {stats.onDeck > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
                 )}
                 {stats.needsEdit > 0 && (
                   <span className="w-2 h-2 rounded-full bg-warning" />

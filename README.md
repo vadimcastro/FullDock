@@ -1,199 +1,80 @@
 # OnDeck 2.1.5
 
-High-fidelity AI prompt queue management system — built on a hardened full-stack infrastructure.
+High-fidelity AI prompt queue management across models.
 
-**Stack:** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · FastAPI · PostgreSQL · Redis · Docker
-
----
+**Stack:** Next.js 16 · React 19 · TypeScript · Tailwind v4 · FastAPI · PostgreSQL · Redis · Docker
 
 ## Release Status
 
-- `v2.0.0` is integrated and running on OnDeck infrastructure.
-- `v2.1.1` checkpoint: smoke+persistence testing completed, CI workflow added, and `/docs` branding verified.
-- `v2.1.2` cleanup complete: legacy dashboard/resume/template UI removed, duplicate root `src/` tree removed, reset-password flow implemented.
-- `v2.1.3` integration complete: final smoke regression, restart persistence, backend import/compile, and frontend production build gates passed.
-- `v2.1.4` readiness complete: CI automation includes backend smoke regression + restart persistence checks and is passing.
-- `v2.1.5` implementation is active and near-final: backend prompt-category hardening and prompt-card/model-icon polish are now in place.
-- Latest implemented changes (April 7, 2026):
-  - Auth/settings state synchronization hardening
-  - Local-to-cloud sync stabilization on login
-  - Global UI interaction sound effects with user toggle
-  - OAuth button polish + cloud-sync auth state fixes
-  - Prompt category backend hardening (`status` normalization + constraint/index migration, `on-deck` demotion handling)
-  - Queue transition hardening (`on-deck -> needs-edit` now promotes next queued/forked prompt)
-  - Migration execution hardening (`alembic upgrade head` for tracked DBs)
-  - Prompt card/UI polish (`complete` section collapsed by default, success-accent complete card text, model logos in tabs/header/empty states)
-  - New layout settings for model-tab/category ordering, enable/disable, and custom model tab title
-- Latest validation passes:
-  - GitHub CI: frontend build + backend import/compile + backend smoke+persistence jobs passing
-  - Local (2026-04-07): 18-step smoke regression pass + restart persistence pass + reset-password verification pass + migration idempotence pass
-- Prompt category/list backend audit (2026-04-07):
-  - Frontend category UX (`queued`, `on-deck`, `needs-edit`, `forked`, `complete`) is implemented and persisted through `prompts.status`.
-  - Migration flow is migration-first (`alembic upgrade head`) for fresh and tracked DBs, with a legacy stamp fallback only for pre-existing untracked schemas.
-  - Status normalization is aligned (`complete` canonical) and DB-level status constraint/index hardening was added in Alembic `0004_prompt_status_indexes`.
-  - Backend now supports atomic prompt status transitions (`/api/v1/prompts/{id}/transition`) including complete→next-on-deck promotion.
-- Build hardening:
-  - removed build-time Google font fetch dependency from App Router layout
-  - set `turbopack.root` to frontend directory for workspace-root stability
-  - standardized npm lockfile strategy: `frontend/package-lock.json` only
-- Current cleanup, integration status, and prompt category backend overview are summarized in `docs/KNOWLEDGE_BASE.md`.
+`v2.1.5` is release-ready (April 7, 2026).
 
-### v2.1.5 Progress Tracker (2026-04-07)
-
-Completed:
-- backend: prompt status contract normalized to `complete` and constrained in DB
-- backend: prompt query indexes added for user/model list paths
-- backend: create/update path demotes competing `on-deck` prompts
-- ops: migration startup flow hardened for Alembic-tracked DBs
-- frontend: complete section defaults to collapsed
-- frontend: complete-card prompt text accent switched to success green
-- frontend: model logos added to tabs, model headers, and empty states
-
-Next steps:
-1. Add explicit linked-prompt FK/ownership constraints if cross-user linking should be blocked at DB level.
-2. Add transactional endpoints for reorder/bulk transitions to further reduce client-side ordering race windows.
-3. Add deployment-time schema assertion execution (`scripts/verify_prompt_schema.py`) to production runbooks.
-
----
+This release finalizes:
+- Prompt workflow hardening (`queued`, `on-deck`, `needs-edit`, `forked`, `complete`)
+- Atomic status transitions (`POST /api/v1/prompts/{id}/transition`)
+- Queue correctness rules (demote conflicting `on-deck`, promote next queued/forked)
+- Settings UX overhaul (collapsible sections, drag ordering, model tab add/remove/toggle/rename)
+- Dynamic model tab behavior (family logo inheritance + custom titles)
+- Migration robustness for legacy/partial schemas
+- Cloud sync status UI alignment (`offline|syncing|synced|error`)
 
 ## Quick Start
 
 ```bash
-git clone <your-repo> && cd OnDeck
+git clone <repo-url> && cd OnDeck
 cp .env.example .env.development
-make doctor       # preflight check
-make dev-build    # first-time build (installs all deps)
+make doctor
+make dev-build
 ```
 
-- **Frontend:** http://localhost:3000
-- **API:** http://localhost:8000
-- **API docs:** http://localhost:8000/docs
-
----
+Services:
+- Frontend: http://localhost:3000
+- API: http://localhost:8000
+- API docs: http://localhost:8000/docs
 
 ## Core Commands
 
 ```bash
-make dev             # Start (uses cached images)
-make dev-build       # Rebuild images + start (run after any dep changes)
-make down            # Stop all containers
-make clean-all       # Stop + delete volumes (fresh start)
-make logs            # Tail all logs
-make logs-frontend   # Frontend logs only
-make logs-api        # API logs only
+make dev
+make dev-build
+make down
+make clean-all
+make logs
+make logs-frontend
+make logs-api
 ```
 
 ```bash
-make migrate                       # Run Alembic migrations
-make migrate-create name=add_x     # Auto-generate migration
-make shell-api                     # Shell into API container
-make shell-db                      # psql into database
-make doctor                        # Environment preflight check
+make migrate
+make migrate-create name=add_x
+make shell-api
+make shell-db
+make doctor
 ```
 
-```bash
-make prod            # Start production stack
-```
+## Validation Snapshot (v2.1.5)
 
----
+- CI coverage includes frontend build, backend import/compile, backend smoke, persistence restart checks.
+- Local release checks include:
+  - `npx tsc --noEmit`
+  - `python3 -m compileall backend/app`
+  - `make migrate`
 
-## Stack
+## Docs
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 16.1.6, React 19.2.4, TypeScript, Tailwind CSS v4 |
-| UI Library | Shadcn/ui with Radix UI primitives, OKLCH design tokens |
-| Backend | FastAPI, SQLAlchemy, Alembic, Uvicorn |
-| Database | PostgreSQL 15 |
-| Cache/Sessions | Redis 7 |
-| Auth | JWT access + refresh rotation, login throttling, session revocation |
-| Docker | Single `docker-compose.dev.yml`, two-stage `Dockerfile.dev`, three-stage `Dockerfile.prod` |
-
----
-
-## Project Structure
-
-```
-frontend/          Next.js 16 app (OnDeck UI)
-  src/
-    app/           App Router pages + layout
-    components/    OnDeck runtime components + used UI primitives
-    hooks/         usePrompts, useSettings
-    lib/           Types, API/auth clients, sound-effects, settings types
-    styles/        globals.css (OKLCH tokens)
-backend/           FastAPI app
-  app/
-    api/v1/        prompts, settings, auth endpoints
-    models/        SQLAlchemy models
-    schemas/       Pydantic schemas
-docker/
-  Dockerfile                 API image
-  docker-compose.dev.yml     Development stack
-  docker-compose.prod.yml    Production stack
-  frontend/
-    Dockerfile.dev           Dev (2-stage, layer-cached deps)
-    Dockerfile.prod          Prod (3-stage, minimal runner)
-  nginx/                     nginx config for prod
-scripts/                     Setup and maintenance helpers
-docs/                        Guides and architecture docs
-```
-
----
+- Setup: [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)
+- Technical reference: [docs/KNOWLEDGE_BASE.md](docs/KNOWLEDGE_BASE.md)
+- Future planning: [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
 
 ## Security
 
+Implemented:
 - JWT access + refresh token rotation
-- Login throttling (rate-limited per IP)
-- Session revocation (`logout` and `logout-all`)
+- Login throttling
+- Session revocation (`logout`, `logout-all`)
 - Auth event logging
-- Production fail-fast on weak secrets, CORS validation
-- HTTPS-aware cookie handling
+- Production fail-fast env checks for weak secrets
 
-## OAuth
-
-Populate in `.env.development`:
-```
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-```
-
-Provider endpoints:
-- `http://localhost:8000/api/v1/oauth/google`
-- `http://localhost:8000/api/v1/oauth/github`
-
-## Push Notifications
-
-- Push notifications can be toggled in `Preferences > Notifications`.
-- On enable, the app requests browser `Notification` permission.
-- If permission is denied or unsupported, the toggle is reverted and a status message is shown.
-- Current scope is permission-aware UI/state handling; no service-worker or background push pipeline is configured yet.
-
----
-
-## Troubleshooting
-
-```bash
-# Packages not found after dep changes
-make clean-all && make dev-build
-
-# Port conflicts
-lsof -i :3000 && lsof -i :8000
-
-# Full fresh reset
-make clean-all && make dev-build
-```
-
----
-
-## Documentation
-
-- [Setup Guide](./docs/SETUP_GUIDE.md)
-- [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
-- Repo handoff tutorial (new canonical OnDeck repo): see `Setup Guide -> Repo Handoff (Brother OnDeck Repo)`
-
----
+Outstanding security hardening ideas are tracked in [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md).
 
 ## License
 

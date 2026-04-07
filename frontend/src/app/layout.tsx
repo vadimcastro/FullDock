@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import '../styles/globals.css'
 import { Providers } from './providers'
 import { ThemeProvider } from '@/components/theme-provider'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'On Deck — AI Prompt Manager',
@@ -30,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${inter.className} ${inter.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

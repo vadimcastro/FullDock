@@ -6,7 +6,6 @@ Create Date: 2026-04-07 16:45:00.000000
 """
 
 from alembic import op
-import sqlalchemy as sa
 
 revision = "0006_model_tab_titles"
 down_revision = "0005_settings_ordering"
@@ -15,16 +14,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "user_settings",
-        sa.Column(
-            "model_tab_titles",
-            sa.Text(),
-            server_default='{"claude":"Claude","gemini":"Gemini","gpt":"GPT","grok":"Grok","custom":"Custom"}',
-            nullable=False,
-        ),
+    op.execute(
+        """
+        ALTER TABLE user_settings
+        ADD COLUMN IF NOT EXISTS model_tab_titles TEXT NOT NULL
+        DEFAULT '{"claude":"Claude","gemini":"Gemini","gpt":"GPT","grok":"Grok"}'
+        """
     )
 
 
 def downgrade() -> None:
-    op.drop_column("user_settings", "model_tab_titles")
+    op.execute("ALTER TABLE user_settings DROP COLUMN IF EXISTS model_tab_titles")

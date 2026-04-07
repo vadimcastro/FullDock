@@ -90,7 +90,7 @@ export function ModelView({
     gpt: 'border-gpt',
     grok: 'border-grok',
     gemini: 'border-gemini',
-  } as Record<string, string>)[model.id] ?? 'border-primary'
+  } as Record<string, string>)[model.family ?? model.id] ?? 'border-primary'
 
   const toggleSection = (key: keyof typeof collapsedSections) => {
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -108,8 +108,14 @@ export function ModelView({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ring-1 ring-border bg-white'
+              'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ring-1 ring-border',
+              model.logoSrc ? 'bg-white' : ''
             )}
+            style={
+              model.logoSrc
+                ? undefined
+                : { backgroundColor: `oklch(0.78 0.14 ${model.iconHue ?? 220})` }
+            }
           >
             {model.logoSrc ? (
               <Image
@@ -123,20 +129,20 @@ export function ModelView({
                 )}
               />
             ) : (
-              <span className="font-bold text-xl text-foreground">
-                {model.icon}
+              <span className="font-semibold text-xl text-black/90">
+                {model.icon.slice(0, 1).toUpperCase()}
               </span>
             )}
           </div>
           <div>
             <h2 className="font-semibold text-lg">{model.name}</h2>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {onDeck && <span className="text-primary font-medium">1 active</span>}
+              {onDeck && <span className="text-blue-500 font-medium">1 active</span>}
               {needsEdit.length > 0 && (
                 <span className="text-warning font-medium">{needsEdit.length} needs edit</span>
               )}
-              {queued.length > 0 && <span className="text-grok font-medium">{queued.length} queued</span>}
-              {forked.length > 0 && <span className="text-claude font-medium">{forked.length} forked</span>}
+              {queued.length > 0 && <span className="text-zinc-500 font-medium">{queued.length} queued</span>}
+              {forked.length > 0 && <span className="text-orange-500 font-medium">{forked.length} forked</span>}
               {complete.length > 0 && <span className="text-success">{complete.length} done</span>}
               {prompts.length === 0 && <span>No prompts</span>}
             </div>
@@ -145,7 +151,10 @@ export function ModelView({
         <Button
           size="sm"
           variant={isAdding ? 'secondary' : 'default'}
-          className="gap-1.5 font-medium"
+          className={cn(
+            'gap-1.5 font-medium',
+            !isAdding && 'bg-blue-500 text-black hover:bg-blue-600 hover:!text-white active:bg-blue-700 active:!text-white'
+          )}
           onClick={() => setIsAdding(!isAdding)}
         >
           {isAdding ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -216,14 +225,14 @@ export function ModelView({
                 onClick={() => toggleSection('onDeck')}
                 className="flex items-center gap-2 mb-3 w-full text-left"
               >
-                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex-1">
+                <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                <h3 className="text-xs font-semibold text-blue-500 uppercase tracking-wider flex-1">
                   On Deck
                 </h3>
                 {collapsedSections.onDeck ? (
-                  <ChevronDown className="h-4 w-4 text-primary" />
+                  <ChevronDown className="h-4 w-4 text-blue-500" />
                 ) : (
-                  <ChevronUp className="h-4 w-4 text-primary" />
+                  <ChevronUp className="h-4 w-4 text-blue-500" />
                 )}
               </button>
               {!collapsedSections.onDeck && (
@@ -291,14 +300,14 @@ export function ModelView({
                 onClick={() => toggleSection('queued')}
                 className="flex items-center gap-2 mb-3 w-full text-left"
               >
-                <div className="h-2 w-2 rounded-full bg-grok/80" />
-                <h3 className="text-xs font-semibold text-grok uppercase tracking-wider flex-1">
+                <div className="h-2 w-2 rounded-full bg-zinc-500" />
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex-1">
                   Queued ({queued.length})
                 </h3>
                 {collapsedSections.queued ? (
-                  <ChevronDown className="h-4 w-4 text-grok" />
+                  <ChevronDown className="h-4 w-4 text-zinc-500" />
                 ) : (
-                  <ChevronUp className="h-4 w-4 text-grok" />
+                  <ChevronUp className="h-4 w-4 text-zinc-500" />
                 )}
               </button>
               {!collapsedSections.queued && (
@@ -331,14 +340,14 @@ export function ModelView({
                 onClick={() => toggleSection('forked')}
                 className="flex items-center gap-2 mb-3 w-full text-left"
               >
-                <div className="h-2 w-2 rounded-full bg-claude" />
-                <h3 className="text-xs font-semibold text-claude uppercase tracking-wider flex-1">
+                <div className="h-2 w-2 rounded-full bg-orange-500" />
+                <h3 className="text-xs font-semibold text-orange-500 uppercase tracking-wider flex-1">
                   Forked ({forked.length})
                 </h3>
                 {collapsedSections.forked ? (
-                  <ChevronDown className="h-4 w-4 text-claude" />
+                  <ChevronDown className="h-4 w-4 text-orange-500" />
                 ) : (
-                  <ChevronUp className="h-4 w-4 text-claude" />
+                  <ChevronUp className="h-4 w-4 text-orange-500" />
                 )}
               </button>
               {!collapsedSections.forked && (

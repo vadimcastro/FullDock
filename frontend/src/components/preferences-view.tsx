@@ -104,6 +104,7 @@ function OrderingList({
                       placeholder={item.label}
                       aria-label={`${item.label} tab title`}
                       className="h-8 text-xs"
+                      onPointerDown={(e) => e.stopPropagation()}
                     />
                   ) : (
                     <p className="text-sm">{item.label}</p>
@@ -118,6 +119,7 @@ function OrderingList({
                       : 'border-muted-foreground/40 text-muted-foreground hover:bg-secondary/70 hover:text-foreground'
                   )}
                   onClick={() => item.toggle(!item.enabled)}
+                  onPointerDown={(e) => e.stopPropagation()}
                 >
                   {item.enabled ? 'On' : 'Off'}
                 </button>
@@ -126,6 +128,7 @@ function OrderingList({
                     type="button"
                     className="h-8 px-3 rounded-md border border-destructive/50 text-destructive text-xs font-medium whitespace-nowrap transition-colors hover:bg-destructive hover:text-white"
                     onClick={item.onRemove}
+                    onPointerDown={(e) => e.stopPropagation()}
                   >
                     Remove
                   </button>
@@ -235,31 +238,48 @@ export function PreferencesView() {
     { value: 'system', label: 'System', icon: Monitor },
   ] as const
 
-  const persistedModelIds = normalizeOrder(
-    [
-      ...(settings.modelTabOrder ?? []),
-      ...(settings.enabledModelTabs ?? []),
-      ...Object.keys(settings.modelTabTitles ?? {}),
-    ],
-    [
-      ...(settings.modelTabOrder ?? []),
-      ...(settings.enabledModelTabs ?? []),
-      ...Object.keys(settings.modelTabTitles ?? {}),
-    ]
+  const orderedIds = normalizeOrder(settings.modelTabOrder, settings.modelTabOrder ?? [])
+  const discoveredIds = normalizeOrder(
+    [...(settings.enabledModelTabs ?? []), ...Object.keys(settings.modelTabTitles ?? {})],
+    [...(settings.enabledModelTabs ?? []), ...Object.keys(settings.modelTabTitles ?? {})]
   )
-  const modelIds = persistedModelIds.length > 0 ? persistedModelIds : DEFAULT_MODEL_ORDER
-  const orderedModelTabs = normalizeOrder(settings.modelTabOrder, modelIds)
+  const extraIds = discoveredIds.filter((id) => !orderedIds.includes(id)).sort((a, b) => a.localeCompare(b))
+  const modelIds = [...orderedIds, ...extraIds]
+  const normalizedModelIds = modelIds.length > 0 ? modelIds : DEFAULT_MODEL_ORDER
+  const orderedModelTabs = normalizeOrder(settings.modelTabOrder, normalizedModelIds)
   const enabledModelTabs = new Set<string>(
-    (settings.enabledModelTabs ?? DEFAULT_ENABLED_MODELS).filter((id) => modelIds.includes(id))
+    (settings.enabledModelTabs ?? DEFAULT_ENABLED_MODELS).filter((id) => normalizedModelIds.includes(id))
   )
   const orderedCategories = normalizeOrder(settings.promptCategoryOrder, DEFAULT_CATEGORY_ORDER)
   const enabledCategories = new Set<PromptStatus>(settings.enabledPromptCategories ?? DEFAULT_CATEGORY_ORDER)
+  const cloudStatusLabel =
+    !cloudSync.isConnected
+      ? 'Offline'
+      : cloudSync.status === 'error'
+        ? 'Error'
+        : cloudSync.status === 'syncing'
+          ? 'Syncing'
+          : 'Connected'
+  const cloudStatusClass = !cloudSync.isConnected
+    ? 'bg-muted text-muted-foreground'
+    : cloudSync.status === 'error'
+      ? 'bg-destructive/20 text-destructive'
+      : cloudSync.status === 'syncing'
+        ? 'bg-warning/20 text-warning'
+        : 'bg-success/20 text-success'
+  const cloudStatusDetail = !cloudSync.isConnected
+    ? 'Not connected'
+    : cloudSync.status === 'error'
+      ? `Connected as ${cloudSync.user?.email} (sync error)`
+      : cloudSync.status === 'syncing'
+        ? `Connected as ${cloudSync.user?.email} (syncing...)`
+        : `Connected as ${cloudSync.user?.email}`
 
   const addModelTab = async () => {
     const title = newModelTabName.trim()
     if (!title) return
 
-    const existingIds = new Set<string>(modelIds)
+    const existingIds = new Set<string>(normalizedModelIds)
     const slugBase =
       title
         .toLowerCase()
@@ -427,12 +447,12 @@ export function PreferencesView() {
 
             <Separator />
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="prompt-titles" className="text-sm font-medium">
+            <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <div className="space-y-1">
+                <Label htmlFor="prompt-titles" className="text-base font-semibold">
                   Prompt Names/Titles
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Show and use prompt titles across cards and completed rows
                 </p>
               </div>
@@ -492,7 +512,7 @@ export function PreferencesView() {
               })}
               onReorder={(nextKeys) => {
                 maybePlaySound()
-                const nextOrder = normalizeOrder(nextKeys, modelIds)
+                const nextOrder = normalizeOrder(nextKeys, normalizedModelIds)
                 void updateSettings({ modelTabOrder: nextOrder })
               }}
             />
@@ -565,16 +585,13 @@ export function PreferencesView() {
               <div className="space-y-0.5">
                 <Label className="text-sm font-medium">Status</Label>
                 <p className="text-xs text-muted-foreground">
-                  {cloudSync.isConnected ? `Connected as ${cloudSync.user?.email}` : 'Not connected'}
+                  {cloudStatusDetail}
                 </p>
               </div>
               <div
-                className={cn(
-                  'px-2 py-1 rounded-full text-xs font-medium',
-                  cloudSync.isConnected ? 'bg-success/20 text-success' : 'bg-muted text-muted-foreground'
-                )}
+                className={cn('px-2 py-1 rounded-full text-xs font-medium', cloudStatusClass)}
               >
-                {cloudSync.isConnected ? 'Connected' : 'Offline'}
+                {cloudStatusLabel}
               </div>
             </div>
 

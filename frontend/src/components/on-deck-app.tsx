@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { usePrompts } from '@/hooks/use-prompts'
 import { AI_MODELS, type ModelConfig } from '@/lib/types'
 import { ModelTabs } from '@/components/model-tabs'
@@ -11,10 +11,41 @@ import { CloudSyncButton } from '@/components/cloud-sync'
 import { Layers } from 'lucide-react'
 import { useSettings } from '@/hooks/use-settings'
 import { playUiTabSwitchSound } from '@/lib/sound-effects'
+import { ACCENT_COLORS } from '@/lib/settings-types'
+
+const FAMILY_ALIASES: Array<{ family: 'claude' | 'gemini' | 'gpt' | 'grok'; patterns: RegExp[] }> = [
+  { family: 'claude', patterns: [/^claude/i, /^sonnet/i, /^haiku/i] },
+  { family: 'gemini', patterns: [/^gemini/i] },
+  { family: 'gpt', patterns: [/^gpt/i] },
+  { family: 'grok', patterns: [/^grok/i] },
+]
+
+function detectFamily(id: string, title: string): 'claude' | 'gemini' | 'gpt' | 'grok' | undefined {
+  const idLower = id.toLowerCase()
+  const titleLower = title.toLowerCase()
+  const idTail = idLower.startsWith('custom-') ? idLower.slice(7) : idLower
+  for (const entry of FAMILY_ALIASES) {
+    if (
+      entry.patterns.some(
+        (p) => p.test(idLower) || p.test(idTail) || p.test(titleLower)
+      )
+    ) {
+      return entry.family
+    }
+  }
+  return undefined
+}
+
+function hueForModelId(id: string): number {
+  let hash = 0
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  return ACCENT_COLORS[hash % ACCENT_COLORS.length].hue
+}
 
 export function OnDeckApp() {
-  const [currentModelIndex, setCurrentModelIndex] = useState(0)
-  const prevVisibleCountRef = useRef<number>(0)
+  const [currentTabId, setCurrentTabId] = useState<string>('claude')
   const { settings } = useSettings()
   const {
     prompts,
@@ -47,6 +78,8 @@ export function OnDeckApp() {
         continue
       }
       const title = titles[id]?.trim() || id
+      const family = detectFamily(id, title)
+      const matchedDefault = family ? AI_MODELS.find((m) => m.family === family) : undefined
       const icon = title
         .split(/\s+/)
         .filter(Boolean)
@@ -57,7 +90,10 @@ export function OnDeckApp() {
         id,
         name: title,
         color: 'bg-muted',
-        icon,
+        icon: icon.slice(0, 1),
+        logoSrc: matchedDefault?.logoSrc,
+        family,
+        iconHue: hueForModelId(id),
       })
     }
 
@@ -84,49 +120,45 @@ export function OnDeckApp() {
     settings.modelTabTitles,
   ])
 
-  const totalTabs = visibleModels.length + 1
+  const tabIds = useMemo(() => [...visibleModels.map((m) => m.id), 'settings'], [visibleModels])
+  const currentModelIndex = Math.max(0, tabIds.indexOf(currentTabId))
+  const totalTabs = tabIds.length
 
   useEffect(() => {
-    const prevVisibleCount = prevVisibleCountRef.current
-    const newPrefsIndex = visibleModels.length
-    const wasOnSettings = currentModelIndex === prevVisibleCount
-
-    if (wasOnSettings && currentModelIndex !== newPrefsIndex) {
-      setCurrentModelIndex(newPrefsIndex)
-    } else if (currentModelIndex > newPrefsIndex) {
-      setCurrentModelIndex(newPrefsIndex)
-    }
-
-    prevVisibleCountRef.current = visibleModels.length
-  }, [currentModelIndex, visibleModels.length])
+    if (currentTabId === 'settings') return
+    if (visibleModels.some((m) => m.id === currentTabId)) return
+    setCurrentTabId(visibleModels[0]?.id ?? 'settings')
+  }, [currentTabId, visibleModels])
 
   const handleTabSelect = useCallback(
     (index: number) => {
       if (settings.soundEnabled && index !== currentModelIndex) {
         playUiTabSwitchSound()
       }
-      setCurrentModelIndex(index)
+      setCurrentTabId(tabIds[index] ?? 'settings')
     },
-    [currentModelIndex, settings.soundEnabled]
+    [currentModelIndex, settings.soundEnabled, tabIds]
   )
 
   const handleSwipe = useCallback(
     (direction: 'left' | 'right') => {
-      setCurrentModelIndex((prev) => {
-        let next = prev
-        if (direction === 'left') {
-          next = Math.min(prev + 1, totalTabs - 1)
-        } else {
-          next = Math.max(prev - 1, 0)
-        }
-        if (settings.soundEnabled && next !== prev) {
-          playUiTabSwitchSound()
-        }
-        return next
-      })
+      const prev = currentModelIndex
+      let next = prev
+      if (direction === 'left') {
+        next = Math.min(prev + 1, totalTabs - 1)
+      } else {
+        next = Math.max(prev - 1, 0)
+      }
+      if (settings.soundEnabled && next !== prev) {
+        playUiTabSwitchSound()
+      }
+      setCurrentTabId(tabIds[next] ?? 'settings')
     },
-    [settings.soundEnabled, totalTabs]
+    [currentModelIndex, settings.soundEnabled, tabIds, totalTabs]
   )
+
+  const isSettingsTab = currentTabId === 'settings'
+  const activeModelIndex = Math.max(0, visibleModels.findIndex((m) => m.id === currentTabId))
 
   if (!isLoaded) {
     return (
@@ -169,14 +201,18 @@ export function OnDeckApp() {
         />
       </div>
 
-      {/* Swipeable Content - Takes remaining height with proper overflow */}
-      <SwipeContainer
-        currentIndex={currentModelIndex}
-        onSwipe={handleSwipe}
-        className="flex-1 min-h-0"
-      >
-        {[
-          ...visibleModels.map((model) => (
+      {/* Content */}
+      {isSettingsTab ? (
+        <div className="flex-1 min-h-0">
+          <PreferencesView />
+        </div>
+      ) : (
+        <SwipeContainer
+          currentIndex={activeModelIndex}
+          onSwipe={handleSwipe}
+          className="flex-1 min-h-0"
+        >
+          {visibleModels.map((model) => (
             <ModelView
               key={model.id}
               model={model}
@@ -188,10 +224,9 @@ export function OnDeckApp() {
               onDelete={deletePrompt}
               getPromptById={getPromptById}
             />
-          )),
-          <PreferencesView key="preferences" />
-        ]}
-      </SwipeContainer>
+          ))}
+        </SwipeContainer>
+      )}
 
       {/* Swipe Hint / Navigation Dots */}
       <div className="flex justify-center gap-2 py-2 bg-card border-t border-border shrink-0">

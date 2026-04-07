@@ -91,7 +91,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
+  --font-sans: var(--font-inter), 'Inter', 'SF Pro Text', 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-claude: var(--claude-accent);
   --color-gpt: var(--gpt-accent);
