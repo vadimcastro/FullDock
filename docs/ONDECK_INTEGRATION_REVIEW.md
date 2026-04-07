@@ -152,7 +152,7 @@ Notes:
 
 - Added workflow: `.github/workflows/ci.yml`
 - Jobs:
-  - `Frontend Lint and Build` (`npm ci`, `npm run lint`, `npm run build`)
+  - `Frontend Install and Build` (`npm ci`, `npm run build`)
   - `Backend Install and Import Check` (`pip install -r requirements-minimal.txt`, import check, compileall)
 
 ## v2.1.0 Release Notes Draft
