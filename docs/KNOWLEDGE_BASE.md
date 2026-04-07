@@ -1,24 +1,46 @@
-# OnDeck 2.1.2 — Knowledge Base
+# OnDeck 2.1.3 — Knowledge Base
 
 **Stack:** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 (OKLCH) · FastAPI · PostgreSQL · Redis · Docker
 
 ---
 
-## Current Status Snapshot (2026-04-06)
+## Current Status Snapshot (2026-04-07)
 
 - `v2.0.0` integration baseline is complete on OnDeck infrastructure.
 - `v2.1.1` checkpoint completed: smoke+persistence testing evidence captured and CI gate added.
 - `v2.1.2` cleanup is implemented: legacy dashboard/resume surfaces removed, duplicate root `src/` removed, reset-password flow implemented.
+- `v2.1.3` integration gate is complete: final smoke regression + restart persistence + build/import checks passed.
 - Latest implemented deltas:
   - Auth/settings state sync correctness updates
   - Local storage to cloud sync flow stabilization on login
   - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
   - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
-- Current work planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
-- Frontend cleanup summary is maintained in the `Frontend Reduction Synopsis` section of `docs/ONDECK_INTEGRATION_REVIEW.md`.
 - Latest validation:
   - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile)
-  - Local reset-password request/confirm pass with session invalidation behavior verified
+  - Local 18-step smoke regression pass, persistence pass, and reset-password session invalidation verified
+  - Local frontend production build pass after removing build-time Google font fetch dependency
+
+---
+
+## Integration Overview (Brief)
+
+- Integration status: complete and release-ready (`v2.1.3`).
+- Frontend reduction status: complete (OnDeck-only routes/components; duplicate root `src/` removed).
+- Backend alignment status: complete (`auth`, `oauth`, `prompts`, `settings` APIs are the active frontend surface).
+- Final validation gates completed (2026-04-07):
+  - 18-step smoke regression pass (`auth`, `prompts`, `settings`, `oauth`, `reset-password`)
+  - restart persistence pass (`down`/`up` without volume deletion)
+  - backend compile + containerized import check pass
+  - frontend `npm ci` + `npm run build` pass
+- Build hardening applied:
+  - removed `next/font/google` build-time dependency from root layout
+  - set `turbopack.root` to frontend directory for workspace-root stability
+
+## Post-v2.1.3 Focus
+
+1. Add smoke regression execution into CI.
+2. Finalize OAuth provider credentials/callback checks in target deployment environment.
+3. Start new frontend feature work from this clean baseline with green build/smoke gates required.
 
 ---
 
@@ -28,7 +50,7 @@
 
 | Path | Purpose |
 |---|---|
-| `app/layout.tsx` | Root layout — Geist font, ThemeProvider, Providers |
+| `app/layout.tsx` | Root layout — ThemeProvider, Providers |
 | `app/page.tsx` | Entry → renders `<OnDeckApp />` |
 | `app/reset-password/page.tsx` | Reset request + token-confirm password flow |
 | `components/on-deck-app.tsx` | Main app shell |

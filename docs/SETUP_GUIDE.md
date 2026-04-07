@@ -1,8 +1,8 @@
-# Setup Guide — OnDeck 2.1.2
+# Setup Guide — OnDeck 2.1.3
 
-`v2.0.0` remains the integration baseline. `v2.1.1` and `v2.1.2` checkpoints are complete and tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
+`v2.0.0` remains the integration baseline. `v2.1.1` through `v2.1.3` checkpoints are complete and summarized in `docs/KNOWLEDGE_BASE.md`.
 
-## Validation Snapshot (v2.1.2)
+## Validation Snapshot (v2.1.3)
 
 - Smoke+persistence testing completed for auth, settings, and prompts API flows (`v2.1.1`).
 - Restart persistence validated with create -> `down`/`up` -> relogin/list verification.
@@ -14,6 +14,10 @@
   - Legacy dashboard/resume/template surfaces removed
   - Duplicate root `src/` tree removed
   - Reset-password request/confirm flow implemented and locally validated
+- `v2.1.3` integration gate completed (2026-04-07):
+  - 18-step auth/prompts/settings/oauth/reset-password smoke pass
+  - restart persistence pass (`down`/`up` without volume deletion)
+  - frontend build hardening for restricted environments (no Google font fetch requirement)
 
 ## Prerequisites
 
