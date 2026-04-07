@@ -21,6 +21,7 @@
 - `v2.1.4` readiness automation:
   - CI now includes backend smoke + restart persistence validation
   - OAuth env readiness helper available: `scripts/check-oauth-env.sh`
+  - CI now passes with all quality gates (`frontend`, `backend`, `backend_smoke`)
 
 ## Prerequisites
 

@@ -12,14 +12,14 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 - `v2.1.1` checkpoint: smoke+persistence testing completed, CI workflow added, and `/docs` branding verified.
 - `v2.1.2` cleanup complete: legacy dashboard/resume/template UI removed, duplicate root `src/` tree removed, reset-password flow implemented.
 - `v2.1.3` integration complete: final smoke regression, restart persistence, backend import/compile, and frontend production build gates passed.
-- `v2.1.4` readiness in progress: CI automation now includes backend smoke regression + restart persistence checks.
+- `v2.1.4` readiness complete: CI automation includes backend smoke regression + restart persistence checks and is passing.
 - Latest implemented changes (April 6, 2026):
   - Auth/settings state synchronization hardening
   - Local-to-cloud sync stabilization on login
   - Global UI interaction sound effects with user toggle
   - OAuth button polish + cloud-sync auth state fixes
 - Latest validation passes:
-  - GitHub CI: backend import/compile job pass + frontend `npm ci`/`npm run build` pass
+  - GitHub CI: frontend build + backend import/compile + backend smoke+persistence jobs passing
   - Local (2026-04-07): 18-step smoke regression pass + restart persistence pass + reset-password verification pass
 - Build hardening:
   - removed build-time Google font fetch dependency from App Router layout

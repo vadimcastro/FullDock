@@ -16,7 +16,7 @@
   - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
   - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
 - Latest validation:
-  - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile)
+  - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile, backend smoke+persistence)
   - Local 18-step smoke regression pass, persistence pass, and reset-password session invalidation verified
   - Local frontend production build pass after removing build-time Google font fetch dependency
 
@@ -41,12 +41,13 @@
   - automated smoke regression execution via `scripts/ci_backend_smoke.py`
   - automated restart persistence verification via `scripts/ci_backend_persistence.py`
   - added OAuth env validation helper: `scripts/check-oauth-env.sh`
+  - CI pipeline currently passing with all three tracks (`frontend`, `backend`, `backend_smoke`)
 
 ## Post-v2.1.3 Focus
 
-1. Smoke regression in CI: completed.
+1. Smoke regression in CI: completed and passing.
 2. OAuth provider credentials/callback checks in deployment environment: pending environment-side execution (`scripts/check-oauth-env.sh`).
-3. New frontend feature work: ready to start from clean baseline with green build/smoke gates required.
+3. New frontend feature work: active next phase from clean baseline with green build/smoke gates required.
 
 ---
 
