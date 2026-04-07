@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -49,7 +50,7 @@ export function ModelView({
     needsEdit: false,
     queued: false,
     forked: false,
-    complete: false,
+    complete: true,
   })
 
   const handleAdd = () => {
@@ -92,12 +93,25 @@ export function ModelView({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              'w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg',
-              model.color,
-              'text-background'
+              'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ring-1 ring-border bg-white'
             )}
           >
-            {model.icon}
+            {model.logoSrc ? (
+              <Image
+                src={model.logoSrc}
+                alt={`${model.name} logo`}
+                width={model.id === 'gpt' ? 40 : 30}
+                height={model.id === 'gpt' ? 40 : 30}
+                className={cn(
+                  'object-contain',
+                  model.id === 'gpt' ? 'h-10 w-10' : 'h-7.5 w-7.5'
+                )}
+              />
+            ) : (
+              <span className="font-bold text-xl text-foreground">
+                {model.icon}
+              </span>
+            )}
           </div>
           <div>
             <h2 className="font-semibold text-lg">{model.name}</h2>
@@ -411,8 +425,8 @@ export function ModelView({
 
                       {expandedCompleteIds.has(prompt.id) && (
                         <div className="px-2.5 pt-2.5 pb-2.5 border-t border-success/30 bg-success/10 space-y-3">
-                          <div className="w-full text-left p-3 pt-3.5 bg-secondary/50 rounded-md border-l-2 border-primary">
-                            <p className="text-xs font-medium text-primary mb-1 uppercase tracking-wide">PROMPT TEXT</p>
+                          <div className="w-full text-left p-3 pt-3.5 bg-secondary/50 rounded-md border-l-2 border-success">
+                            <p className="text-xs font-medium text-success mb-1 uppercase tracking-wide">PROMPT TEXT</p>
                             <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
                               {prompt.content}
                             </p>
@@ -460,12 +474,23 @@ export function ModelView({
             <div className="text-center py-16">
               <div 
                 className={cn(
-                  'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl mx-auto mb-4 opacity-50',
-                  model.color,
-                  'text-background'
+                  'w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-white ring-1 ring-border/70'
                 )}
               >
-                {model.icon}
+                {model.logoSrc ? (
+                  <Image
+                    src={model.logoSrc}
+                    alt={`${model.name} logo`}
+                    width={model.id === 'gpt' ? 48 : 30}
+                    height={model.id === 'gpt' ? 48 : 30}
+                    className={cn(
+                      'object-contain',
+                      model.id === 'gpt' ? 'h-12 w-12' : 'h-7.5 w-7.5'
+                    )}
+                  />
+                ) : (
+                  <span className="font-bold text-2xl text-foreground/80">{model.icon}</span>
+                )}
               </div>
               <p className="text-muted-foreground mb-4 text-sm">
                 No prompts for {model.name} yet

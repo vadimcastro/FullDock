@@ -192,10 +192,10 @@ def main() -> int:
         "PATCH",
         f"/api/v1/prompts/{prompt_id}",
         token=access,
-        json_body={"status": "completed"},
+        json_body={"status": "complete"},
     )
     require(prompts_patch.status == 200, f"prompts_patch_status={prompts_patch.status}")
-    require(prompts_patch.body.get("status") == "completed", "prompts_patch_status_mismatch")
+    require(prompts_patch.body.get("status") == "complete", "prompts_patch_status_mismatch")
     pass_line("prompts_patch")
 
     prompts_delete = client.request("DELETE", f"/api/v1/prompts/{prompt_id}", token=access)

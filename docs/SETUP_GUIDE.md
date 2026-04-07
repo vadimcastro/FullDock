@@ -1,6 +1,7 @@
 # Setup Guide — OnDeck 2.1.3
 
 `v2.0.0` remains the integration baseline. `v2.1.1` through `v2.1.3` checkpoints are complete and summarized in `docs/KNOWLEDGE_BASE.md`.
+Prompt category/list backend gap analysis and remediation plan: `docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md`.
 
 ## Validation Snapshot (v2.1.3)
 
@@ -103,7 +104,37 @@ make migrate-create name=add_column  # Generate new migration from models
 make shell-db                        # Direct psql session
 ```
 
-Migrations run automatically on container startup via `scripts/migrate.sh`.
+### Prompt Category/List Schema Note (2026-04-07)
+
+- Prompt list/category fields currently persisted in backend:
+  - `prompts.status` (`queued`, `on-deck`, `needs-edit`, `forked`, `complete`)
+  - `prompts.order`
+  - `prompts.linked_prompt_id`
+  - `prompts.title`
+- Current startup migration script (`backend/scripts/migrate.sh`) needs hardening:
+  - Alembic-tracked DBs now run `alembic upgrade head` on startup.
+  - Untracked/bootstrap DBs still use `create_all` + `alembic stamp head` for initial baseline.
+
+### Recommended Migration Verification
+
+After startup or deployment, run:
+
+```bash
+make migrate
+make shell-db
+```
+
+Then verify prompt/settings columns exist (inside `psql`):
+
+```sql
+\d prompts
+\d user_settings
+```
+
+Expected recent columns include:
+- `prompts.title`
+- `user_settings.font_scale`
+- `user_settings.show_prompt_titles`
 
 ---
 

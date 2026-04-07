@@ -43,42 +43,50 @@ except Exception as e:
     sys.exit(1)
 "
 
-# Force create tables using SQLAlchemy (more reliable for templates)
-echo "Creating database tables..."
-python3 -c "
+# Migration strategy:
+# - Existing DBs tracked by Alembic: apply upgrades.
+# - Untracked DBs (bootstrap/template): create tables from models, then stamp head.
+echo "Determining migration strategy..."
+HAS_ALEMBIC_VERSION=$(python3 -c "
 import sys
-import os
 sys.path.append('/app')
+from app.db.base import engine
+from sqlalchemy import inspect
 
-# Import all models via the base module to ensure registration
+inspector = inspect(engine)
+print('1' if inspector.has_table('alembic_version') else '0')
+")
+
+if [ -d "alembic" ] && [ -f "alembic/env.py" ]; then
+  if [ \"$HAS_ALEMBIC_VERSION\" = \"1\" ]; then
+    echo "Alembic version table found. Applying migrations..."
+    alembic upgrade head
+  else
+    echo "Alembic version table not found. Bootstrapping schema from models..."
+    python3 -c "
+import sys
+sys.path.append('/app')
 from app.db.base import Base, engine
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from sqlalchemy import inspect
 
 print('Creating all tables...')
-try:
-    # Force table creation
-    Base.metadata.create_all(bind=engine)
-    print('✅ Tables created successfully!')
-    
-    # Verify tables exist
-    from sqlalchemy import inspect
-    inspector = inspect(engine)
-    tables = inspector.get_table_names()
-    print(f'📋 Tables in database: {tables}')
-    
-except Exception as e:
-    print(f'❌ Error creating tables: {e}')
-    raise
+Base.metadata.create_all(bind=engine)
+inspector = inspect(engine)
+print(f'📋 Tables in database: {inspector.get_table_names()}')
 "
+    echo "Stamping current schema as Alembic head for bootstrap database..."
+    alembic stamp head
+  fi
+else
+  echo "Alembic not configured; creating tables from models only..."
+  python3 -c "
+import sys
+sys.path.append('/app')
+from app.db.base import Base, engine
 
-# Also try alembic for future migrations
-echo "Setting up alembic for future migrations..."
-if [ -d "alembic" ] && [ -f "alembic/env.py" ]; then
-    echo "Marking current state in alembic..."
-    alembic stamp head 2>/dev/null || echo "Alembic stamp failed, but tables should be created"
+Base.metadata.create_all(bind=engine)
+print('✅ Tables created successfully (no Alembic).')
+"
 fi
 
 # Initialize database with admin user

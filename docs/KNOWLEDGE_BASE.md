@@ -20,6 +20,7 @@
   - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile, backend smoke+persistence)
   - Local 18-step smoke regression pass, persistence pass, and reset-password session invalidation verified
   - Local frontend production build pass after removing build-time Google font fetch dependency
+- Prompt category/list backend audit details: `docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md`
 
 ---
 
@@ -49,6 +50,31 @@
 1. Smoke regression in CI: completed and passing.
 2. OAuth provider credentials/callback checks in deployment environment: pending environment-side execution (`scripts/check-oauth-env.sh`).
 3. New frontend feature work: active next phase from clean baseline with green build/smoke gates required.
+
+---
+
+## Prompt Category Backend Audit (2026-04-07)
+
+Implementation update (same day):
+- Added migration `0004_prompt_status_indexes` for status normalization/constraint and prompt query indexes.
+- Added server-side `on-deck` demotion logic in prompt create/update flow.
+- Updated startup migration script to run `alembic upgrade head` when DB is Alembic-tracked.
+- Fixed smoke regression status payload to canonical `complete`.
+
+### Implemented Hardening
+
+- Prompt status is now constrained to canonical values in DB migration `0004`.
+- Prompt query indexes for user/model list paths were added in `0004`.
+- API/CRUD now demote competing `on-deck` prompts when a prompt is created/updated to `on-deck`.
+- Smoke regression script now uses canonical status `complete`.
+- Startup migration logic now upgrades Alembic-tracked databases with `alembic upgrade head`.
+
+### Remaining Work
+
+1. Replace bootstrap `create_all + stamp` flow with a fully migration-first bootstrap path once base schema revisions cover full cold-start.
+2. Add transactional server endpoint(s) for multi-step list transitions (reorder/promote/complete chains) to reduce client-side race windows.
+3. Expand CI tests for `forked` lifecycle, `title` persistence, and invalid-status rejection scenarios.
+4. Add deployment-time schema assertions after migration (for example via `information_schema` checks).
 
 ---
 

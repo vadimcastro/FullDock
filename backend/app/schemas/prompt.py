@@ -1,5 +1,7 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict
+
+PromptStatus = Literal["queued", "on-deck", "needs-edit", "forked", "complete"]
 
 class PromptBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, protected_namespaces=())
@@ -7,7 +9,7 @@ class PromptBase(BaseModel):
     title: Optional[str] = ""
     content: str
     notes: Optional[str] = ""
-    status: str
+    status: PromptStatus
     order: int
     linked_prompt_id: Optional[str] = None
 
@@ -18,7 +20,7 @@ class PromptUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     notes: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[PromptStatus] = None
     order: Optional[int] = None
     linked_prompt_id: Optional[str] = None
 

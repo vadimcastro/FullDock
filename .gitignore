@@ -63,7 +63,4 @@ coverage/
 .pytest_cache/
 .coverage
 
-# Alembic
-backend/alembic/versions/*.py
-!backend/alembic/versions/.gitkeep
 docker/docker-compose.dev.template.yml

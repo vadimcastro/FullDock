@@ -1,6 +1,6 @@
 """Add prompt titles and display settings
 
-Revision ID: 0003_add_prompt_titles_and_display_settings
+Revision ID: 0003_prompt_titles_settings
 Revises: 0002_add_prompts_and_settings
 Create Date: 2026-04-07 09:40:00.000000
 """
@@ -8,7 +8,7 @@ Create Date: 2026-04-07 09:40:00.000000
 from alembic import op
 import sqlalchemy as sa
 
-revision = "0003_add_prompt_titles_and_display_settings"
+revision = "0003_prompt_titles_settings"
 down_revision = "0002_add_prompts_and_settings"
 branch_labels = None
 depends_on = None

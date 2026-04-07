@@ -22,11 +22,16 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 - Latest validation passes:
   - GitHub CI: frontend build + backend import/compile + backend smoke+persistence jobs passing
   - Local (2026-04-07): 18-step smoke regression pass + restart persistence pass + reset-password verification pass
+- Prompt category/list backend audit (2026-04-07):
+  - Frontend category UX (`queued`, `on-deck`, `needs-edit`, `forked`, `complete`) is implemented and persisted through `prompts.status`.
+  - Migration flow is now hardened for tracked DBs (`alembic upgrade head`), with bootstrap fallback for untracked DBs.
+  - Status normalization is aligned (`complete` canonical) and DB-level status constraint/index hardening was added in Alembic `0004`.
+  - Backend now demotes competing `on-deck` prompts on create/update when a prompt is set to `on-deck`.
 - Build hardening:
   - removed build-time Google font fetch dependency from App Router layout
   - set `turbopack.root` to frontend directory for workspace-root stability
   - standardized npm lockfile strategy: `frontend/package-lock.json` only
-- Current cleanup and integration status are summarized in `docs/KNOWLEDGE_BASE.md` (Integration Overview section).
+- Current cleanup, integration status, and prompt category backend remediation plan are summarized in `docs/KNOWLEDGE_BASE.md`.
 
 ---
 
@@ -165,6 +170,7 @@ make clean-all && make dev-build
 
 - [Setup Guide](./docs/SETUP_GUIDE.md)
 - [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
+- [Prompt Categories Backend Audit](./docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md)
 - Repo handoff tutorial (new canonical OnDeck repo): see `Setup Guide -> Repo Handoff (Brother OnDeck Repo)`
 
 ---

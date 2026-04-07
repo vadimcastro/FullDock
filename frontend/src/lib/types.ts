@@ -20,13 +20,14 @@ export interface ModelConfig {
   name: string
   color: string
   icon: string
+  logoSrc?: string
 }
 
 export const AI_MODELS: ModelConfig[] = [
-  { id: 'claude', name: 'Claude', color: 'bg-claude', icon: 'C' },
-  { id: 'gemini', name: 'Gemini', color: 'bg-gemini', icon: 'Ge' },
-  { id: 'gpt', name: 'GPT', color: 'bg-gpt', icon: 'G' },
-  { id: 'grok', name: 'Grok', color: 'bg-grok', icon: 'X' },
+  { id: 'claude', name: 'Claude', color: 'bg-claude', icon: 'C', logoSrc: '/icons/models/claude.svg' },
+  { id: 'gemini', name: 'Gemini', color: 'bg-gemini', icon: 'Ge', logoSrc: '/icons/models/gemini.svg' },
+  { id: 'gpt', name: 'GPT', color: 'bg-gpt', icon: 'G', logoSrc: '/icons/models/gpt.svg' },
+  { id: 'grok', name: 'Grok', color: 'bg-grok', icon: 'X', logoSrc: '/icons/models/grok.svg' },
 ]
 
 export interface AppState {

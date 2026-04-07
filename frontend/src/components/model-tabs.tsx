@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { AI_MODELS } from '@/lib/types'
 import type { AIModel, Prompt } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -35,13 +36,6 @@ export function ModelTabs({ currentIndex, onSelect, prompts, totalTabs }: ModelT
           gemini: 'border-gemini',
         }[model.id]
 
-        const bgColorClass = {
-          claude: 'bg-claude',
-          gpt: 'bg-gpt',
-          grok: 'bg-grok',
-          gemini: 'bg-gemini',
-        }[model.id]
-
         return (
           <button
             key={model.id}
@@ -50,17 +44,28 @@ export function ModelTabs({ currentIndex, onSelect, prompts, totalTabs }: ModelT
               'flex-1 flex flex-col items-center py-2 px-1 transition-all relative min-w-[56px]',
               'border-b-2 -mb-[2px]',
               isActive ? colorClass : 'border-transparent',
-              isActive ? 'opacity-100' : 'opacity-60 hover:opacity-80'
+              isActive ? 'bg-secondary/35' : 'hover:bg-secondary/20'
             )}
           >
             <div
               className={cn(
-                'w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium mb-1',
-                bgColorClass,
-                'text-background'
+                'w-7 h-7 rounded-md flex items-center justify-center mb-1 bg-white ring-1 ring-border'
               )}
             >
-              {model.icon}
+              {model.logoSrc ? (
+                <Image
+                  src={model.logoSrc}
+                  alt={`${model.name} logo`}
+                  width={model.id === 'gpt' ? 24 : 18}
+                  height={model.id === 'gpt' ? 24 : 18}
+                  className={cn(
+                    'object-contain',
+                    model.id === 'gpt' ? 'h-6 w-6' : 'h-[18px] w-[18px]'
+                  )}
+                />
+              ) : (
+                <span className="text-xs font-medium text-foreground">{model.icon}</span>
+              )}
             </div>
             <span className="text-[10px] text-muted-foreground">
               {model.name}

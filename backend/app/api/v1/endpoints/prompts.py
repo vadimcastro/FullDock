@@ -11,6 +11,7 @@ from app.schemas.prompt import Prompt, PromptCreate, PromptUpdate
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
+
 @router.get("/", response_model=List[Prompt])
 def read_prompts(
     db: Session = Depends(get_db),
@@ -42,6 +43,7 @@ def create_prompt(
     prompt = crud_prompt.create_with_user(db, obj_in=prompt_in, user_id=user.id)
     return prompt
 
+
 @router.patch("/{id}", response_model=Prompt)
 def update_prompt(
     *,
@@ -59,8 +61,13 @@ def update_prompt(
         raise HTTPException(status_code=404, detail="Prompt not found")
     if prompt.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
+    if prompt_in.status == "on-deck":
+        crud_prompt.demote_other_on_deck(
+            db, user_id=user.id, model_id=prompt.model_id, exclude_id=prompt.id
+        )
     prompt = crud_prompt.update(db, db_obj=prompt, obj_in=prompt_in)
     return prompt
+
 
 @router.delete("/{id}", response_model=Prompt)
 def delete_prompt(
