@@ -24,6 +24,9 @@ backend/dist/
 .DS_Store
 Thumbs.db
 .directory
+.codex
+.gemini
+.claude
 
 # Logs
 *.log

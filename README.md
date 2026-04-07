@@ -19,7 +19,7 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 - Latest validation passes:
   - GitHub CI: backend import/compile job pass + frontend `npm ci`/`npm run build` pass
   - Local: reset-password request/confirm flow pass; old password rejected/new password accepted
-- Current cleanup details are tracked in `docs/ONDECK_INTEGRATION_REVIEW.md` and `docs/FRONTEND_REDUCTION_REPORT_V2.1.2.md`.
+- Current cleanup details are tracked in `docs/ONDECK_INTEGRATION_REVIEW.md` (Frontend Reduction Synopsis section).
 
 ---
 
@@ -159,7 +159,6 @@ make clean-all && make dev-build
 - [Setup Guide](./docs/SETUP_GUIDE.md)
 - [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
 - [Integration Review](./docs/ONDECK_INTEGRATION_REVIEW.md)
-- [Frontend Reduction Report (v2.1.2)](./docs/FRONTEND_REDUCTION_REPORT_V2.1.2.md)
 
 ---
 

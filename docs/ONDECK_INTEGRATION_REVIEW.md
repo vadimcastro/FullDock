@@ -52,6 +52,28 @@ This review reconciles:
 
 ---
 
+## Frontend Reduction Synopsis (Finalized)
+
+- Runtime frontend surface is now OnDeck-only.
+- Active app routes: `/`, `/reset-password`, `/_not-found`.
+- `frontend/src` JS/TS files: `34`; unreachable files from entrypoint graph: `0`.
+- Removed:
+  - legacy dashboard/resume/protected-template route surfaces
+  - duplicate root `src/` frontend tree
+  - unused layout/action utility remnants tied to removed surfaces
+- Backend alignment finalized to frontend-used API groups only:
+  - `/api/v1/auth/*`
+  - `/api/v1/oauth/*`
+  - `/api/v1/prompts/*`
+  - `/api/v1/settings/*`
+- Validation status:
+  - local backend compile pass
+  - local frontend `npm ci`/`npm run build` pass (network permitting for font fetch)
+  - reset-password request/confirm flow pass
+  - GitHub CI pass on `preDeck`
+
+---
+
 ## Residual Risks / Watchlist
 
 1. Root and `frontend/` lockfiles both exist; warning is non-blocking but should be rationalized.
@@ -86,6 +108,34 @@ This review reconciles:
 6. **Release prep checkpoint**
    - Publish `v2.1.3` notes with cleanup deltas and validation evidence.
    - Tag only after CI + smoke+persistence+reset-password checks are all green.
+
+---
+
+## OnDeck Integration Process (Release Prep Order)
+
+1. **Repository consistency pass**
+   - Complete stale-reference scan (OnDeck naming, route text, env/docs/script labels).
+   - Keep only intentional environment-specific placeholders.
+
+2. **Functional regression pass**
+   - Execute auth, prompt lifecycle, settings sync, and reset-password checks.
+   - Verify OAuth redirect/callback readiness in configured environments.
+
+3. **Persistence and restart verification**
+   - Validate prompt/settings durability through container restart cycle.
+   - Confirm session and sync state consistency after relogin/refresh.
+
+4. **Build and CI gate confirmation**
+   - Confirm local frontend production build and backend import/compile checks.
+   - Confirm GitHub Actions pass on branch head.
+
+5. **Release documentation finalization**
+   - Update README, setup, knowledge base, and this review with final evidence.
+   - Freeze changelog/release notes for `v2.1.3`.
+
+6. **Release cut**
+   - Create release commit/tag after all gates pass.
+   - Push tag and branch, then run final post-release smoke check.
 
 ---
 

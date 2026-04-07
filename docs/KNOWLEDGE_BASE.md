@@ -15,7 +15,7 @@
   - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
   - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
 - Current work planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
-- Frontend cleanup inventory and reduction mapping is documented in `docs/FRONTEND_REDUCTION_REPORT_V2.1.2.md`.
+- Frontend cleanup summary is maintained in the `Frontend Reduction Synopsis` section of `docs/ONDECK_INTEGRATION_REVIEW.md`.
 - Latest validation:
   - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile)
   - Local reset-password request/confirm pass with session invalidation behavior verified
