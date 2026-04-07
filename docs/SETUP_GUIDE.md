@@ -1,13 +1,19 @@
-# Setup Guide — OnDeck 2.0.0
+# Setup Guide — OnDeck 2.1.2
 
-`v2.0.0` is the current integrated baseline. `v2.1.0` execution planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
+`v2.0.0` remains the integration baseline. `v2.1.1` and `v2.1.2` checkpoints are complete and tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
 
-## Validation Snapshot (v2.1.1 Checkpoint)
+## Validation Snapshot (v2.1.2)
 
-- Smoke+persistence testing completed for auth, settings, and prompts API flows.
+- Smoke+persistence testing completed for auth, settings, and prompts API flows (`v2.1.1`).
 - Restart persistence validated with create -> `down`/`up` -> relogin/list verification.
 - `/docs` branding validated (`OnDeck API - Swagger UI`).
-- Legacy `/dashboard` route and related template components were identified as non-OnDeck surface and are removed in `v2.1.2` cleanup.
+- GitHub CI passes after lockfile/action-runtime fixes:
+  - Frontend: `npm ci`, `npm run build`
+  - Backend: `pip install`, import check, compileall
+- `v2.1.2` cleanup completed:
+  - Legacy dashboard/resume/template surfaces removed
+  - Duplicate root `src/` tree removed
+  - Reset-password request/confirm flow implemented and locally validated
 
 ## Prerequisites
 
@@ -134,6 +140,18 @@ Auth features:
   - If permission is denied, setting reverts to `off`.
   - If permission is granted, setting persists via `/api/v1/settings`.
 - This release includes permission/state handling only; background push delivery is out of scope for `v2.0.0`.
+
+---
+
+## Password Reset (Implemented)
+
+- Request endpoint: `POST /api/v1/auth/reset-password-request`
+- Confirm endpoint: `POST /api/v1/auth/reset-password-confirm`
+- Frontend page: `/reset-password`
+- In non-production, reset request responses include `reset_token` and `reset_url` for local verification without email infrastructure.
+- Confirmed behavior:
+  - request endpoint returns generic success (no user enumeration)
+  - successful confirm invalidates prior sessions via `logout-all` style revocation
 
 ---
 

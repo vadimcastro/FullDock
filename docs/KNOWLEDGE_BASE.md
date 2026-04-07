@@ -1,4 +1,4 @@
-# OnDeck 2.0.0 — Knowledge Base
+# OnDeck 2.1.2 — Knowledge Base
 
 **Stack:** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 (OKLCH) · FastAPI · PostgreSQL · Redis · Docker
 
@@ -8,13 +8,17 @@
 
 - `v2.0.0` integration baseline is complete on OnDeck infrastructure.
 - `v2.1.1` checkpoint completed: smoke+persistence testing evidence captured and CI gate added.
-- `v2.1.2` cleanup phase active: legacy dashboard route/components are being removed from frontend build surface.
+- `v2.1.2` cleanup is implemented: legacy dashboard/resume surfaces removed, duplicate root `src/` removed, reset-password flow implemented.
 - Latest implemented deltas:
   - Auth/settings state sync correctness updates
   - Local storage to cloud sync flow stabilization on login
   - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
   - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
 - Current work planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
+- Frontend cleanup inventory and reduction mapping is documented in `docs/FRONTEND_REDUCTION_REPORT_V2.1.2.md`.
+- Latest validation:
+  - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile)
+  - Local reset-password request/confirm pass with session invalidation behavior verified
 
 ---
 
@@ -26,31 +30,34 @@
 |---|---|
 | `app/layout.tsx` | Root layout — Geist font, ThemeProvider, Providers |
 | `app/page.tsx` | Entry → renders `<OnDeckApp />` |
+| `app/reset-password/page.tsx` | Reset request + token-confirm password flow |
 | `components/on-deck-app.tsx` | Main app shell |
 | `components/model-tabs.tsx` | AI model tab navigation |
 | `components/model-view.tsx` | Per-model prompt queue view |
 | `components/prompt-card.tsx` | Individual prompt card (CRUD) |
 | `components/preferences-view.tsx` | Theme + accent color settings panel |
-| `components/settings-modal.tsx` | Settings dialog |
 | `components/cloud-sync.tsx` | Backend sync status surface |
+| `components/swipe-container.tsx` | Gesture-aware prompt card interaction wrapper |
 | `components/theme-provider.tsx` | next-themes wrapper |
-| `components/ui/` | 13 Shadcn/Radix UI primitives |
+| `components/ui/` | Used Shadcn/Radix primitives + toast helpers |
 | `hooks/use-prompts.ts` | Prompt CRUD → syncs to `/api/v1/prompts` |
 | `hooks/use-settings.tsx` | Theme/accent → syncs to `/api/v1/settings` |
-| `hooks/use-mobile.ts` | Responsive breakpoint hook |
 | `lib/types.ts` | `Prompt`, `AIModel`, `PromptStatus` types |
 | `lib/settings-types.ts` | `Settings`, `AccentColor`, `ACCENT_COLORS` |
 | `lib/api/protected.ts` | Authenticated API client |
+| `lib/auth/AuthContext.tsx` | Session/auth source of truth for UI sync state |
+| `lib/sound-effects.ts` | WebAudio interaction sound helpers |
 | `styles/globals.css` | Full OKLCH design system |
 
 ### Backend (`backend/app/`)
 
 | Path | Purpose |
 |---|---|
-| `api/v1/endpoints/prompts.py` | Prompt CRUD endpoints |
-| `api/v1/endpoints/settings.py` | User settings endpoints |
 | `api/v1/auth.py` | JWT + OAuth auth flow |
 | `api/v1/oauth.py` | OAuth provider redirects/callbacks |
+| `api/v1/endpoints/prompts.py` | Prompt CRUD endpoints |
+| `api/v1/endpoints/settings.py` | User settings endpoints |
+| `api/v1/router.py` | Active API surface (`auth`, `oauth`, `prompts`, `settings`) |
 | `models/prompt.py` | SQLAlchemy `Prompt` model |
 | `models/user_setting.py` | SQLAlchemy `UserSetting` model |
 | `schemas/prompt.py` | Pydantic prompt schemas |

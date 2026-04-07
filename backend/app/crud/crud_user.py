@@ -51,4 +51,11 @@ class CRUDUser:
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
 
+    def update_password(self, db: Session, *, user: User, new_password: str) -> User:
+        user.hashed_password = get_password_hash(new_password)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+
 crud_user = CRUDUser()

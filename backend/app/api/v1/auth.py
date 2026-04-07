@@ -10,6 +10,7 @@ from app.core.auth_protection import auth_event, auth_protection
 from app.core.config import settings
 from app.core.security import (
     create_access_token,
+    create_password_reset_token,
     create_refresh_token,
     decode_token,
     get_user_from_token,
@@ -30,6 +31,15 @@ class UserCreate(BaseModel):
     password: str
     username: str | None = None
     name: str | None = None
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordConfirm(BaseModel):
+    token: str
+    new_password: str
 
 @router.post("/login")
 async def login(
@@ -281,3 +291,55 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials"
         )
+
+
+@router.post("/reset-password-request")
+async def reset_password_request(
+    payload: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    email = payload.email.strip().lower()
+    user = crud_user.get_by_email(db, email=email)
+
+    # Always return a generic success shape to avoid user enumeration.
+    response: dict[str, str] = {
+        "status": "ok",
+        "detail": "If an account exists with this email, reset instructions have been generated.",
+    }
+    if not user:
+        return response
+
+    token = create_password_reset_token(email)
+    logger.info("Generated password reset token for user: %s", email)
+
+    # Dev convenience: expose reset link/token only outside production.
+    if not settings.is_production:
+        response["reset_token"] = token
+        response["reset_url"] = f"{settings.OAUTH_POST_LOGIN_URL.rstrip('/')}/reset-password?token={token}"
+
+    return response
+
+
+@router.post("/reset-password-confirm")
+async def reset_password_confirm(
+    payload: ResetPasswordConfirm,
+    db: Session = Depends(get_db),
+):
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters.")
+
+    token_payload = decode_token(payload.token)
+    if not token_payload or token_payload.get("type") != "password_reset":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token.")
+
+    email = (token_payload.get("sub") or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token.")
+
+    user = crud_user.get_by_email(db, email=email)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token.")
+
+    crud_user.update_password(db, user=user, new_password=payload.new_password)
+    auth_protection.revoke_all_for_identity(user.email)
+    return {"status": "ok", "detail": "Password has been reset successfully."}

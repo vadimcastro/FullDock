@@ -54,6 +54,18 @@ def create_refresh_token(data: dict, session_id: str, expires_days: int | None =
     )
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
+
+def create_password_reset_token(email: str, expires_minutes: int = 30) -> str:
+    now = _utcnow()
+    expire = now + timedelta(minutes=expires_minutes)
+    payload = {
+        "sub": email,
+        "exp": expire,
+        "iat": int(now.timestamp()),
+        "type": "password_reset",
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
 def decode_token(token: str) -> dict:
     try:
         logger.debug(f"Decoding token: {token[:10]}...")

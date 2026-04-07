@@ -1,4 +1,4 @@
-# OnDeck 2.0.0
+# OnDeck 2.1.2
 
 High-fidelity AI prompt queue management system — built on a hardened full-stack infrastructure.
 
@@ -10,13 +10,16 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 
 - `v2.0.0` is integrated and running on OnDeck infrastructure.
 - `v2.1.1` checkpoint: smoke+persistence testing completed, CI workflow added, and `/docs` branding verified.
-- `v2.1.2` in progress: legacy dashboard/template UI surfaces are being removed to make the repo OnDeck-only.
+- `v2.1.2` cleanup complete: legacy dashboard/resume/template UI removed, duplicate root `src/` tree removed, reset-password flow implemented.
 - Latest implemented changes (April 6, 2026):
   - Auth/settings state synchronization hardening
   - Local-to-cloud sync stabilization on login
   - Global UI interaction sound effects with user toggle
   - OAuth button polish + cloud-sync auth state fixes
-- Current planning/implementation target: `v2.1.2` cleanup phase (tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`)
+- Latest validation passes:
+  - GitHub CI: backend import/compile job pass + frontend `npm ci`/`npm run build` pass
+  - Local: reset-password request/confirm flow pass; old password rejected/new password accepted
+- Current cleanup details are tracked in `docs/ONDECK_INTEGRATION_REVIEW.md` and `docs/FRONTEND_REDUCTION_REPORT_V2.1.2.md`.
 
 ---
 
@@ -81,9 +84,9 @@ make prod            # Start production stack
 frontend/          Next.js 16 app (OnDeck UI)
   src/
     app/           App Router pages + layout
-    components/    OnDeck components + Shadcn UI
-    hooks/         usePrompts, useSettings, useMobile
-    lib/           Types, API client, settings types
+    components/    OnDeck runtime components + used UI primitives
+    hooks/         usePrompts, useSettings
+    lib/           Types, API/auth clients, sound-effects, settings types
     styles/        globals.css (OKLCH tokens)
 backend/           FastAPI app
   app/
@@ -156,6 +159,7 @@ make clean-all && make dev-build
 - [Setup Guide](./docs/SETUP_GUIDE.md)
 - [Knowledge Base](./docs/KNOWLEDGE_BASE.md)
 - [Integration Review](./docs/ONDECK_INTEGRATION_REVIEW.md)
+- [Frontend Reduction Report (v2.1.2)](./docs/FRONTEND_REDUCTION_REPORT_V2.1.2.md)
 
 ---
 
