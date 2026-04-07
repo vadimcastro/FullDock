@@ -7,6 +7,7 @@
 ## Current Status Snapshot (2026-04-06)
 
 - `v2.0.0` integration baseline is complete on OnDeck infrastructure.
+- `v2.1.1` checkpoint completed: smoke+persistence testing evidence captured and CI gate added.
 - Latest implemented deltas:
   - Auth/settings state sync correctness updates
   - Local storage to cloud sync flow stabilization on login

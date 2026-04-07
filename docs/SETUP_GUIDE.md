@@ -2,6 +2,12 @@
 
 `v2.0.0` is the current integrated baseline. `v2.1.0` execution planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
 
+## Validation Snapshot (v2.1.1 Checkpoint)
+
+- Smoke+persistence testing completed for auth, settings, and prompts API flows.
+- Restart persistence validated with create -> `down`/`up` -> relogin/list verification.
+- `/docs` branding validated (`OnDeck API - Swagger UI`).
+
 ## Prerequisites
 
 - Docker Engine + Compose plugin

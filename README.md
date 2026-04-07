@@ -9,6 +9,7 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 ## Release Status
 
 - `v2.0.0` is integrated and running on OnDeck infrastructure.
+- `v2.1.1` checkpoint: smoke+persistence testing completed, CI workflow added, and `/docs` branding verified.
 - Latest implemented changes (April 6, 2026):
   - Auth/settings state synchronization hardening
   - Local-to-cloud sync stabilization on login

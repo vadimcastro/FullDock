@@ -2,7 +2,8 @@
 
 **Last updated:** 2026-04-06  
 **Current release baseline:** `v2.0.0` (integrated)  
-**Today target release:** `v2.1.0` (in planning/implementation)
+**Today target release:** `v2.1.0` (in planning/implementation)  
+**Checkpoint status:** `v2.1.1` (smoke+persistence testing complete)
 
 ---
 
@@ -122,3 +123,47 @@ This review reconciles:
 - Completed across docs, backend config, frontend fallbacks, env examples, and operational scripts.
 - `/docs` branding now resolves to `OnDeck API`.
 - Remaining placeholders are intentionally environment-specific in production domain/nginx files.
+
+## Smoke + Persistence Testing Evidence (2026-04-06)
+
+Runtime target: `http://localhost:8000`
+
+- PASS `register` (`POST /api/v1/auth/register`)
+- PASS `login` (`POST /api/v1/auth/login`)
+- PASS `auth_me` (`GET /api/v1/auth/me`)
+- PASS `refresh` (`POST /api/v1/auth/refresh`)
+- PASS `settings_get` (`GET /api/v1/settings/`)
+- PASS `settings_post` (`POST /api/v1/settings/`)
+- PASS `prompts_create` (`POST /api/v1/prompts/`)
+- PASS `prompts_list` (`GET /api/v1/prompts/`)
+- PASS `prompts_patch` (`PATCH /api/v1/prompts/{id}`)
+- PASS `prompts_delete` (`DELETE /api/v1/prompts/{id}`)
+- PASS `logout` (`POST /api/v1/auth/logout`)
+- PASS `logout_all` (`POST /api/v1/auth/logout-all`)
+- PASS `oauth_google_get` (`GET /api/v1/oauth/google`) returned redirect `307`
+- PASS `oauth_github_get` (`GET /api/v1/oauth/github`) returned `400` (provider credentials not configured)
+
+Notes:
+- API docs branding check: `<title>OnDeck API - Swagger UI</title>` confirmed.
+- Container restart persistence check: PASS using isolated compose project (`ondeckpersist`) on alternate host port `18000`.
+- Persistence evidence: created prompt `persist-3426418835c8`, executed `down`/`up` restart (without volume deletion during verification), relogin/list confirmed `PERSISTENCE_FOUND=True`.
+
+## CI Gate Status (2026-04-06)
+
+- Added workflow: `.github/workflows/ci.yml`
+- Jobs:
+  - `Frontend Lint and Build` (`npm ci`, `npm run lint`, `npm run build`)
+  - `Backend Install and Import Check` (`pip install -r requirements-minimal.txt`, import check, compileall)
+
+## v2.1.0 Release Notes Draft
+
+### Added
+- Push notification permission-aware settings behavior documented and validated.
+- Global CI quality gate via GitHub Actions (`frontend lint/build`, backend install/import checks).
+
+### Changed
+- Standardized OnDeck branding/defaults across API metadata, frontend fallback labels, scripts, and env examples.
+- Updated OAuth route references to `/api/v1/oauth/{provider}` across docs.
+
+### Fixed
+- Removed stale template/generic references that leaked into runtime/docs surfaces (including `/docs` metadata).
