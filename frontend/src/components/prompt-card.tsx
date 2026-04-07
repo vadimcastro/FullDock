@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef, type MouseEvent } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +16,6 @@ import {
   X,
   Copy,
   CheckCheck,
-  ClipboardCopy,
 } from 'lucide-react'
 import type { Prompt, PromptStatus, AIModel } from '@/lib/types'
 import { AI_MODELS } from '@/lib/types'
@@ -34,17 +33,10 @@ import {
 interface PromptCardProps {
   prompt: Prompt
   onUpdateStatus: (id: string, status: PromptStatus) => void
-  onUpdatePrompt: (id: string, updates: Partial<Pick<Prompt, 'content' | 'notes' | 'linkedPromptId'>>) => void
+  onUpdatePrompt: (id: string, updates: Partial<Pick<Prompt, 'title' | 'content' | 'notes' | 'linkedPromptId'>>) => void
   onDelete: (id: string) => void
   linkedPrompt?: Prompt
   allPrompts: Prompt[]
-}
-
-const statusConfig: Record<PromptStatus, { label: string; className: string }> = {
-  'queued': { label: 'Queued', className: 'bg-muted text-muted-foreground' },
-  'on-deck': { label: 'On Deck', className: 'bg-primary text-primary-foreground' },
-  'needs-edit': { label: 'Needs Edit', className: 'bg-warning text-background' },
-  'complete': { label: 'Complete', className: 'bg-success text-background' },
 }
 
 export function PromptCard({
@@ -57,29 +49,27 @@ export function PromptCard({
 }: PromptCardProps) {
   const { settings } = useSettings()
   const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(prompt.title ?? '')
   const [editContent, setEditContent] = useState(prompt.content)
   const [editNotes, setEditNotes] = useState(prompt.notes)
   const [isExpanded, setIsExpanded] = useState(prompt.status === 'on-deck')
   const [showLinkPicker, setShowLinkPicker] = useState(false)
-  const [copiedLeft, setCopiedLeft] = useState(false)
-  const [copiedRight, setCopiedRight] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [focusField, setFocusField] = useState<'content' | 'notes' | null>(null)
+  const contentTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const notesTextareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const playIfEnabled = (play: () => void) => {
     if (!settings.soundEnabled) return
     play()
   }
 
-  const handleCopy = useCallback(async (side: 'left' | 'right') => {
+  const handleCopy = useCallback(async () => {
     if (!prompt.content) return
     try {
       await navigator.clipboard.writeText(prompt.content)
-      if (side === 'left') {
-        setCopiedLeft(true)
-        setTimeout(() => setCopiedLeft(false), 2000)
-      } else {
-        setCopiedRight(true)
-        setTimeout(() => setCopiedRight(false), 2000)
-      }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
       playIfEnabled(playUiCopySound)
     } catch (err) {
       // Fallback for older browsers
@@ -91,27 +81,49 @@ export function PromptCard({
       textarea.select()
       document.execCommand('copy')
       document.body.removeChild(textarea)
-      if (side === 'left') {
-        setCopiedLeft(true)
-        setTimeout(() => setCopiedLeft(false), 2000)
-      } else {
-        setCopiedRight(true)
-        setTimeout(() => setCopiedRight(false), 2000)
-      }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
       playIfEnabled(playUiCopySound)
     }
   }, [prompt.content, settings.soundEnabled])
 
   const handleSave = () => {
-    onUpdatePrompt(prompt.id, { content: editContent, notes: editNotes })
+    onUpdatePrompt(prompt.id, { title: editTitle, content: editContent, notes: editNotes })
     setIsEditing(false)
+    setFocusField(null)
   }
 
   const handleCancel = () => {
+    setEditTitle(prompt.title ?? '')
     setEditContent(prompt.content)
     setEditNotes(prompt.notes)
     setIsEditing(false)
+    setFocusField(null)
   }
+
+  const startEditing = (field: 'content' | 'notes') => {
+    setEditTitle(prompt.title ?? '')
+    setEditContent(prompt.content)
+    setEditNotes(prompt.notes)
+    setIsExpanded(true)
+    setIsEditing(true)
+    setFocusField(field)
+  }
+
+  useEffect(() => {
+    if (!isEditing || !focusField) return
+    const target = focusField === 'content'
+      ? contentTextareaRef.current
+      : notesTextareaRef.current
+
+    if (!target) return
+    const frame = requestAnimationFrame(() => {
+      target.focus()
+      const end = target.value.length
+      target.setSelectionRange(end, end)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [isEditing, focusField])
 
   const linkedModel = linkedPrompt
     ? AI_MODELS.find((m) => m.id === linkedPrompt.modelId)
@@ -121,8 +133,18 @@ export function PromptCard({
     (p) => p.modelId !== prompt.modelId && p.status !== 'complete'
   )
 
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (isEditing) return
+    const target = event.target as HTMLElement
+    if (target.closest('button, textarea, input, select, a, [role="button"], [data-no-card-expand="true"]')) {
+      return
+    }
+    setIsExpanded((prev) => !prev)
+  }
+
   return (
     <Card
+      onClick={handleCardClick}
       className={cn(
         'transition-all duration-200',
         prompt.status === 'on-deck' && 'ring-2 ring-primary',
@@ -130,67 +152,56 @@ export function PromptCard({
         prompt.status === 'complete' && 'opacity-60'
       )}
     >
-      <CardHeader className="flex flex-row items-center justify-between gap-2 p-3 pb-0">
-        {/* Left Copy Button */}
+      <CardHeader className="flex items-center justify-between gap-1 px-2 pt-0 pb-0">
         <Button
-          variant={copiedLeft ? 'default' : 'ghost'}
+          variant={copied ? 'default' : 'secondary'}
           size="sm"
-          className={cn(
-            'h-8 w-8 p-0 shrink-0 transition-all duration-200',
-            copiedLeft && 'bg-success hover:bg-success text-background'
+            className={cn(
+            'h-6 w-6 p-0 shrink-0 transition-all duration-200',
+            copied && 'bg-success hover:bg-success text-background'
           )}
-          onClick={() => handleCopy('left')}
+          onClick={handleCopy}
           disabled={!prompt.content}
-          title="Copy prompt"
+          aria-label={copied ? 'Copied' : 'Copy prompt'}
+          title={copied ? 'Copied' : 'Copy prompt'}
         >
-          {copiedLeft ? (
+          {copied ? (
             <CheckCheck className="h-3.5 w-3.5" />
           ) : (
-            <ClipboardCopy className="h-3.5 w-3.5" />
+            <Copy className="h-3.5 w-3.5" />
           )}
         </Button>
 
-        {/* Center Content - Status Badge and Links */}
-        <div className="flex items-center gap-2 flex-1 min-w-0 justify-center">
-          <Badge className={cn('shrink-0', statusConfig[prompt.status].className)}>
-            {statusConfig[prompt.status].label}
+        {linkedPrompt && linkedModel && (
+          <Badge variant="outline" className="shrink-0 gap-1 text-[10px] py-0">
+            <Link2 className="h-3 w-3" />
+            {linkedModel.name}
           </Badge>
-          {linkedPrompt && linkedModel && (
-            <Badge variant="outline" className="shrink-0 gap-1 text-xs">
-              <Link2 className="h-3 w-3" />
-              {linkedModel.name}
-            </Badge>
-          )}
-        </div>
+        )}
 
-        {/* Right Controls - Copy Button and Expand */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 shrink-0">
           <Button
-            variant={copiedRight ? 'default' : 'secondary'}
+            variant={copied ? 'default' : 'secondary'}
             size="sm"
             className={cn(
-              'h-8 gap-1.5 px-3 shrink-0 transition-all duration-200',
-              copiedRight && 'bg-success hover:bg-success text-background'
+              'h-6 w-6 p-0 shrink-0 transition-all duration-200',
+              copied && 'bg-success hover:bg-success text-background'
             )}
-            onClick={() => handleCopy('right')}
+            onClick={handleCopy}
             disabled={!prompt.content}
+            aria-label={copied ? 'Copied' : 'Copy prompt'}
+            title={copied ? 'Copied' : 'Copy prompt'}
           >
-            {copiedRight ? (
-              <>
-                <CheckCheck className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Copied</span>
-              </>
+            {copied ? (
+              <CheckCheck className="h-3.5 w-3.5" />
             ) : (
-              <>
-                <Copy className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Copy</span>
-              </>
+              <Copy className="h-3.5 w-3.5" />
             )}
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 shrink-0"
+            className="h-6 w-6 p-0 shrink-0"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             {isExpanded ? (
@@ -202,14 +213,28 @@ export function PromptCard({
         </div>
       </CardHeader>
 
-      <CardContent className="p-3 pt-2">
+      <CardContent className="px-2.5 pt-0 pb-0.5">
         {isEditing ? (
           <div className="space-y-3">
+            {settings.showPromptTitles && (
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block uppercase tracking-wide">
+                  TITLE <span className="text-[10px]">(OPTIONAL)</span>
+                </label>
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring"
+                  placeholder="Add a short prompt title..."
+                />
+              </div>
+            )}
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">
-                Prompt
+              <label className="text-xs text-muted-foreground mb-1.5 block uppercase tracking-wide">
+                PROMPT TEXT
               </label>
               <Textarea
+                ref={contentTextareaRef}
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 className="min-h-[80px] text-sm"
@@ -217,10 +242,11 @@ export function PromptCard({
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">
-                Notes
+              <label className="text-xs text-muted-foreground mb-1.5 block uppercase tracking-wide">
+                NOTES <span className="text-[10px]">(OPTIONAL)</span>
               </label>
               <Textarea
+                ref={notesTextareaRef}
                 value={editNotes}
                 onChange={(e) => setEditNotes(e.target.value)}
                 className="min-h-[60px] text-sm"
@@ -238,25 +264,48 @@ export function PromptCard({
           </div>
         ) : (
           <>
-            <div 
+            {settings.showPromptTitles && prompt.title?.trim() && (
+              <p className="px-1 mt-0 mb-4 text-[19px] font-semibold text-foreground leading-snug">
+                {prompt.title.trim()}
+              </p>
+            )}
+
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => startEditing('content')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  startEditing('content')
+                }
+              }}
               className={cn(
-                'text-sm leading-relaxed rounded-md p-2 bg-muted/30 border border-border/50 overflow-x-auto',
-                !isExpanded && 'line-clamp-2'
+                'w-full text-left p-3 bg-secondary/50 rounded-md border-l-2 border-primary hover:bg-secondary/70 transition-colors cursor-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
               )}
+              aria-label="Edit prompt text"
             >
-              <pre className="whitespace-pre-wrap break-words font-sans text-sm overflow-x-auto max-w-full">
+              <p className="text-xs font-medium text-primary mb-1 uppercase tracking-wide">PROMPT TEXT</p>
+              <pre className={cn(
+                'whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-foreground/90',
+                !isExpanded && 'line-clamp-2'
+              )}>
                 {prompt.content || 'No prompt content'}
               </pre>
             </div>
 
             {isExpanded && (
               <>
-                {prompt.notes && (
-                  <div className="mt-3 p-3 bg-secondary/50 rounded-md border-l-2 border-primary">
-                    <p className="text-xs font-medium text-primary mb-1.5 uppercase tracking-wide">Notes</p>
-                    <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">{prompt.notes}</p>
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => startEditing('notes')}
+                  className="mt-3 w-full text-left p-3 bg-secondary/50 rounded-md border-l-2 border-primary hover:bg-secondary/70 transition-colors"
+                >
+                  <p className="text-xs font-medium text-primary mb-1 uppercase tracking-wide">NOTES</p>
+                  <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                    {prompt.notes || 'Click to add notes or context...'}
+                  </p>
+                </button>
 
                 {linkedPrompt && (
                   <div className="mt-3 p-3 bg-muted/50 rounded-md border border-border">
@@ -316,102 +365,125 @@ export function PromptCard({
                     </div>
                   </div>
                 )}
+              </>
+            )}
 
-                <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border/50">
-                  {prompt.status === 'on-deck' && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="gap-1.5 bg-success hover:bg-success/90 text-background font-medium"
-                        onClick={() => {
-                          playIfEnabled(playUiCompleteSound)
-                          onUpdateStatus(prompt.id, 'complete')
-                        }}
-                      >
-                        <Check className="h-3.5 w-3.5" />
-                        Complete
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1.5 border-warning/50 text-warning hover:bg-warning/10"
-                        onClick={() => {
-                          playIfEnabled(playUiNeedsEditSound)
-                          onUpdateStatus(prompt.id, 'needs-edit')
-                        }}
-                      >
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        Needs Edit
-                      </Button>
-                    </>
-                  )}
-
-                  {prompt.status === 'needs-edit' && (
+            <div className="flex items-center justify-between gap-3 mt-2 pt-2 border-t border-border/50">
+              <div className="flex flex-wrap items-center gap-2">
+                {prompt.status === 'on-deck' && (
+                  <>
                     <Button
                       size="sm"
                       variant="default"
-                      className="gap-1.5"
+                      className="gap-1.5 px-3.5 bg-success hover:bg-success/90 text-background font-medium"
                       onClick={() => {
-                        playIfEnabled(playUiRetrySound)
-                        onUpdateStatus(prompt.id, 'on-deck')
+                        playIfEnabled(playUiCompleteSound)
+                        onUpdateStatus(prompt.id, 'complete')
                       }}
                     >
                       <Check className="h-3.5 w-3.5" />
-                      Ready to Retry
+                      Complete
                     </Button>
-                  )}
-
-                  {prompt.status === 'queued' && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="gap-1.5"
+                      className="gap-1.5 px-3.5 border-warning/50 text-warning hover:bg-warning/10"
                       onClick={() => {
-                        playIfEnabled(playUiClickSound)
-                        onUpdateStatus(prompt.id, 'on-deck')
+                        playIfEnabled(playUiNeedsEditSound)
+                        onUpdateStatus(prompt.id, 'needs-edit')
                       }}
                     >
-                      Move to On Deck
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Needs Edit
                     </Button>
-                  )}
+                  </>
+                )}
 
-                  <div className="flex-1" />
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                    Edit
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowLinkPicker(!showLinkPicker)}
-                  >
-                    <Link2 className="h-3.5 w-3.5" />
-                    Link
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                {prompt.status === 'needs-edit' && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="gap-1.5 px-3.5"
                     onClick={() => {
-                      playIfEnabled(playUiDeleteSound)
-                      onDelete(prompt.id)
+                      playIfEnabled(playUiRetrySound)
+                      onUpdateStatus(prompt.id, 'on-deck')
                     }}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Check className="h-3.5 w-3.5" />
+                    Ready to Retry
                   </Button>
-                </div>
-              </>
-            )}
+                )}
+
+                {prompt.status === 'queued' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 px-3.5"
+                    onClick={() => {
+                      playIfEnabled(playUiClickSound)
+                      onUpdateStatus(prompt.id, 'on-deck')
+                    }}
+                  >
+                  Move to On Deck
+                </Button>
+                )}
+
+                {prompt.status === 'forked' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 px-3.5"
+                    onClick={() => {
+                      playIfEnabled(playUiClickSound)
+                      onUpdateStatus(prompt.id, 'on-deck')
+                    }}
+                  >
+                    Move to On Deck
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => startEditing('content')}
+                  title="Edit"
+                  aria-label="Edit prompt"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setIsExpanded(true)
+                    setShowLinkPicker(!showLinkPicker)
+                  }}
+                  title="Link prompt"
+                  aria-label="Link prompt"
+                >
+                  <Link2 className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    playIfEnabled(playUiDeleteSound)
+                    onDelete(prompt.id)
+                  }}
+                  title="Delete prompt"
+                  aria-label="Delete prompt"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
           </>
         )}
       </CardContent>

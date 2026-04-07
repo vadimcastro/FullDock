@@ -34,6 +34,12 @@ function applyAccentColor(accentColor: string): void {
   root.style.setProperty('--sidebar-ring', `oklch(0.7 0.15 ${accent.hue})`)
 }
 
+function applyFontScale(fontScale: number): void {
+  if (typeof window === 'undefined') return
+  const clamped = Math.max(85, Math.min(120, Math.round(fontScale)))
+  document.documentElement.style.fontSize = `${clamped}%`
+}
+
 const mapToBackend = (s: Partial<UserSettings>) => {
   const mapped: any = {}
   if (s.theme !== undefined) mapped.theme = s.theme
@@ -41,6 +47,8 @@ const mapToBackend = (s: Partial<UserSettings>) => {
   if (s.notifications !== undefined) mapped.notifications = s.notifications
   if (s.soundEnabled !== undefined) mapped.sound_enabled = s.soundEnabled
   if (s.autoSave !== undefined) mapped.auto_save = s.autoSave
+  if (s.fontScale !== undefined) mapped.font_scale = s.fontScale
+  if (s.showPromptTitles !== undefined) mapped.show_prompt_titles = s.showPromptTitles
   return mapped
 }
 
@@ -50,6 +58,8 @@ const mapFromBackend = (data: any): UserSettings => ({
   notifications: data.notifications ?? false,
   soundEnabled: data.sound_enabled ?? false,
   autoSave: data.auto_save ?? true,
+  fontScale: data.font_scale ?? 100,
+  showPromptTitles: data.show_prompt_titles ?? true,
 })
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -77,7 +87,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setTheme(settings.theme)
     applyAccentColor(settings.accentColor)
-  }, [settings.theme, settings.accentColor, setTheme])
+    applyFontScale(settings.fontScale ?? 100)
+  }, [settings.theme, settings.accentColor, settings.fontScale, setTheme])
 
   const fetchSettings = useCallback(async () => {
     if (!isAuthenticated) return

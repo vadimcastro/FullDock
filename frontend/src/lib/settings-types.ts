@@ -8,6 +8,8 @@ export interface UserSettings {
   notifications?: boolean
   soundEnabled?: boolean
   autoSave?: boolean
+  fontScale?: number
+  showPromptTitles?: boolean
 }
 
 export interface CloudSyncState {
@@ -49,6 +51,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   notifications: false,
   soundEnabled: false,
   autoSave: true,
+  fontScale: 100,
+  showPromptTitles: true,
 }
 
 export const DEFAULT_SYNC_STATE: CloudSyncState = {

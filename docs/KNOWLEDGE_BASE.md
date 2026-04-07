@@ -1,4 +1,4 @@
-# OnDeck 2.1.3 — Knowledge Base
+# OnDeck 2.1.5 — Knowledge Base
 
 **Stack:** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 (OKLCH) · FastAPI · PostgreSQL · Redis · Docker
 
@@ -10,6 +10,7 @@
 - `v2.1.1` checkpoint completed: smoke+persistence testing evidence captured and CI gate added.
 - `v2.1.2` cleanup is implemented: legacy dashboard/resume surfaces removed, duplicate root `src/` removed, reset-password flow implemented.
 - `v2.1.3` integration gate is complete: final smoke regression + restart persistence + build/import checks passed.
+- `v2.1.5` UI/UX pass is active: prompt-card interaction and action-path usability improvements are current release work.
 - Latest implemented deltas:
   - Auth/settings state sync correctness updates
   - Local storage to cloud sync flow stabilization on login

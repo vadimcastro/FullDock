@@ -10,3 +10,5 @@ class UserSetting(Base):
     notifications = Column(Boolean, default=False, nullable=False)
     sound_enabled = Column(Boolean, default=False, nullable=False)
     auto_save = Column(Boolean, default=True, nullable=False)
+    font_scale = Column(Integer, default=100, nullable=False)
+    show_prompt_titles = Column(Boolean, default=True, nullable=False)

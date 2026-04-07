@@ -8,6 +8,7 @@ class Prompt(Base):
     id = Column(String, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     model_id = Column(String, nullable=False, index=True)
+    title = Column(String, default="", nullable=False)
     content = Column(Text, nullable=False)
     notes = Column(Text, default="", nullable=False)
     status = Column(String, nullable=False, index=True) # queued, on-deck, needs-edit, complete

@@ -1,10 +1,11 @@
 export type AIModel = 'claude' | 'gpt' | 'grok' | 'gemini'
 
-export type PromptStatus = 'queued' | 'on-deck' | 'needs-edit' | 'complete'
+export type PromptStatus = 'queued' | 'on-deck' | 'needs-edit' | 'forked' | 'complete'
 
 export interface Prompt {
   id: string
   modelId: AIModel
+  title?: string
   content: string
   notes: string
   status: PromptStatus

@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth/AuthContext'
 const mapToBackend = (p: any) => ({
   id: p.id,
   model_id: p.modelId,
+  title: p.title || "",
   content: p.content,
   notes: p.notes || "",
   status: p.status,
@@ -19,6 +20,7 @@ const mapToBackend = (p: any) => ({
 const mapFromBackend = (p: any): Prompt => ({
   id: p.id,
   modelId: p.model_id,
+  title: p.title || "",
   content: p.content,
   notes: p.notes || "",
   status: p.status as PromptStatus,
@@ -139,7 +141,13 @@ export function usePrompts() {
   )
 
   const addPrompt = useCallback(
-    async (modelId: AIModel, content: string, notes: string = ''): Promise<Prompt | undefined> => {
+    async (
+      modelId: AIModel,
+      content: string,
+      notes: string = '',
+      title: string = '',
+      initialStatus?: PromptStatus
+    ): Promise<Prompt | undefined> => {
       const modelPrompts = prompts.filter((p) => p.modelId === modelId)
       const maxOrder = Math.max(0, ...modelPrompts.map((p) => p.order))
       const hasOnDeck = modelPrompts.some((p) => p.status === 'on-deck')
@@ -147,9 +155,10 @@ export function usePrompts() {
       const newPrompt: Prompt = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         modelId,
+        title,
         content,
         notes,
-        status: (hasOnDeck ? 'queued' : 'on-deck') as PromptStatus,
+        status: initialStatus ?? ((hasOnDeck ? 'queued' : 'on-deck') as PromptStatus),
         order: maxOrder + 1,
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -173,7 +182,7 @@ export function usePrompts() {
   )
 
   const updatePrompt = useCallback(
-    async (id: string, updates: Partial<Pick<Prompt, 'content' | 'notes' | 'linkedPromptId'>>): Promise<void> => {
+    async (id: string, updates: Partial<Pick<Prompt, 'title' | 'content' | 'notes' | 'linkedPromptId'>>): Promise<void> => {
       // Optimistic update
       setPrompts((prev: Prompt[]) =>
         prev.map((p) =>
@@ -185,6 +194,7 @@ export function usePrompts() {
         try {
           // Map updates to snake_case
           const backendUpdates: any = {}
+          if (updates.title !== undefined) backendUpdates.title = updates.title
           if (updates.content !== undefined) backendUpdates.content = updates.content
           if (updates.notes !== undefined) backendUpdates.notes = updates.notes
           if (updates.linkedPromptId !== undefined) backendUpdates.linked_prompt_id = updates.linkedPromptId
@@ -212,7 +222,7 @@ export function usePrompts() {
       // If marking complete, promote next queued to on-deck
       if (status === 'complete') {
         const nextQueued = updated
-          .filter((p: Prompt) => p.modelId === prompt.modelId && p.status === 'queued')
+          .filter((p: Prompt) => p.modelId === prompt.modelId && (p.status === 'queued' || p.status === 'forked'))
           .sort((a: Prompt, b: Prompt) => a.order - b.order)[0]
 
         if (nextQueued) {

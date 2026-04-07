@@ -175,6 +175,52 @@ export function PreferencesView() {
                   })}
                 </div>
               </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="font-scale" className="text-sm font-medium">
+                    Font Size
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    {settings.fontScale ?? 100}%
+                  </span>
+                </div>
+                <input
+                  id="font-scale"
+                  type="range"
+                  min={85}
+                  max={120}
+                  step={1}
+                  value={settings.fontScale ?? 100}
+                  onChange={(e) => {
+                    void updateSettings({ fontScale: Number(e.target.value) })
+                  }}
+                  className="w-full accent-primary"
+                />
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="prompt-titles" className="text-sm font-medium">
+                    Prompt Names/Titles
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show and use prompt titles across cards and completed rows
+                  </p>
+                </div>
+                <Switch
+                  id="prompt-titles"
+                  checked={settings.showPromptTitles ?? true}
+                  onCheckedChange={async (checked) => {
+                    maybePlaySound()
+                    await updateSettings({ showPromptTitles: checked })
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
 

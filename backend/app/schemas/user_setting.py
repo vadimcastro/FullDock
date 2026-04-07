@@ -7,6 +7,8 @@ class UserSettingBase(BaseModel):
     notifications: Optional[bool] = False
     sound_enabled: Optional[bool] = False
     auto_save: Optional[bool] = True
+    font_scale: Optional[int] = 100
+    show_prompt_titles: Optional[bool] = True
 
 class UserSettingCreate(UserSettingBase):
     pass

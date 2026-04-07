@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 class PromptBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, protected_namespaces=())
     model_id: str
+    title: Optional[str] = ""
     content: str
     notes: Optional[str] = ""
     status: str
@@ -14,6 +15,7 @@ class PromptCreate(PromptBase):
     id: str # Client generates UUID
 
 class PromptUpdate(BaseModel):
+    title: Optional[str] = None
     content: Optional[str] = None
     notes: Optional[str] = None
     status: Optional[str] = None

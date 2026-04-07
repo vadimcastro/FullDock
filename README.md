@@ -1,4 +1,4 @@
-# OnDeck 2.1.3
+# OnDeck 2.1.5
 
 High-fidelity AI prompt queue management system — built on a hardened full-stack infrastructure.
 
@@ -13,6 +13,7 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 - `v2.1.2` cleanup complete: legacy dashboard/resume/template UI removed, duplicate root `src/` tree removed, reset-password flow implemented.
 - `v2.1.3` integration complete: final smoke regression, restart persistence, backend import/compile, and frontend production build gates passed.
 - `v2.1.4` readiness complete: CI automation includes backend smoke regression + restart persistence checks and is passing.
+- `v2.1.5` UI/UX polish in progress: prompt card interaction cleanup, collapsed-card action availability improvements, and direct field editing ergonomics.
 - Latest implemented changes (April 6, 2026):
   - Auth/settings state synchronization hardening
   - Local-to-cloud sync stabilization on login
