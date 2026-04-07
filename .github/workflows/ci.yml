@@ -56,3 +56,112 @@ jobs:
 
       - name: Bytecode compile check
         run: python -m compileall app
+
+  backend_smoke:
+    name: Backend Smoke + Persistence
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ondeck
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      ENVIRONMENT: development
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ondeck
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_URL: redis://127.0.0.1:6379/0
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: changeme
+      ADMIN_USERNAME: admin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements-minimal.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-minimal.txt
+
+      - name: Initialize database
+        run: |
+          python -c "from app.db.base import Base, engine; Base.metadata.create_all(bind=engine)"
+          python scripts/init_db.py
+
+      - name: Start API
+        run: |
+          nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 >/tmp/ondeck_api.log 2>&1 &
+          echo $! >/tmp/ondeck_api.pid
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sS http://127.0.0.1:8000/health >/tmp/ondeck_health.json; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API health check failed"
+          exit 1
+
+      - name: Run smoke regression
+        run: python ../scripts/ci_backend_smoke.py http://127.0.0.1:8000
+
+      - name: Create persistence fixture
+        run: python ../scripts/ci_backend_persistence.py create http://127.0.0.1:8000 /tmp/ondeck_persist_state.json
+
+      - name: Restart API process
+        run: |
+          kill "$(cat /tmp/ondeck_api.pid)" || true
+          nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 >/tmp/ondeck_api.log 2>&1 &
+          echo $! >/tmp/ondeck_api.pid
+
+      - name: Wait for API health after restart
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sS http://127.0.0.1:8000/health >/tmp/ondeck_health_after_restart.json; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API health check after restart failed"
+          exit 1
+
+      - name: Verify persistence after restart
+        run: python ../scripts/ci_backend_persistence.py verify http://127.0.0.1:8000 /tmp/ondeck_persist_state.json
+
+      - name: Dump API log on failure
+        if: failure()
+        run: |
+          echo "==== /tmp/ondeck_api.log (tail) ===="
+          tail -n 200 /tmp/ondeck_api.log || true

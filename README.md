@@ -12,6 +12,7 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 - `v2.1.1` checkpoint: smoke+persistence testing completed, CI workflow added, and `/docs` branding verified.
 - `v2.1.2` cleanup complete: legacy dashboard/resume/template UI removed, duplicate root `src/` tree removed, reset-password flow implemented.
 - `v2.1.3` integration complete: final smoke regression, restart persistence, backend import/compile, and frontend production build gates passed.
+- `v2.1.4` readiness in progress: CI automation now includes backend smoke regression + restart persistence checks.
 - Latest implemented changes (April 6, 2026):
   - Auth/settings state synchronization hardening
   - Local-to-cloud sync stabilization on login

@@ -35,12 +35,17 @@
 - Build hardening applied:
   - removed `next/font/google` build-time dependency from root layout
   - set `turbopack.root` to frontend directory for workspace-root stability
+- CI hardening applied for `v2.1.4` readiness:
+  - added `Backend Smoke + Persistence` CI job with Postgres + Redis services
+  - automated smoke regression execution via `scripts/ci_backend_smoke.py`
+  - automated restart persistence verification via `scripts/ci_backend_persistence.py`
+  - added OAuth env validation helper: `scripts/check-oauth-env.sh`
 
 ## Post-v2.1.3 Focus
 
-1. Add smoke regression execution into CI.
-2. Finalize OAuth provider credentials/callback checks in target deployment environment.
-3. Start new frontend feature work from this clean baseline with green build/smoke gates required.
+1. Smoke regression in CI: completed.
+2. OAuth provider credentials/callback checks in deployment environment: pending environment-side execution (`scripts/check-oauth-env.sh`).
+3. New frontend feature work: ready to start from clean baseline with green build/smoke gates required.
 
 ---
 

@@ -18,6 +18,9 @@
   - 18-step auth/prompts/settings/oauth/reset-password smoke pass
   - restart persistence pass (`down`/`up` without volume deletion)
   - frontend build hardening for restricted environments (no Google font fetch requirement)
+- `v2.1.4` readiness automation:
+  - CI now includes backend smoke + restart persistence validation
+  - OAuth env readiness helper available: `scripts/check-oauth-env.sh`
 
 ## Prerequisites
 
