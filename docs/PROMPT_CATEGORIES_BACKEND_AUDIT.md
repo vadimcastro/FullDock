@@ -16,7 +16,7 @@ Validate that prompt category/list updates in TypeScript are fully backed by per
 
 | Concern | Frontend | Backend | DB/Migration | Status |
 |---|---|---|---|---|
-| Prompt category enum | `frontend/src/lib/types.ts` | `backend/app/schemas/prompt.py` (working tree) | `prompts.status` is `String` | Partial |
+| Prompt category enum | `frontend/src/lib/types.ts` | `backend/app/schemas/prompt.py` | DB check constraint in `0004_prompt_status_indexes` | Complete |
 | Category list rendering | `frontend/src/components/model-view.tsx` | N/A | N/A | Complete |
 | Category transitions | `frontend/src/hooks/use-prompts.ts` | `PATCH /api/v1/prompts/{id}` demotes competing `on-deck` | Not fully transactional across multi-step flows | Partial |
 | Title persistence | `use-prompts` mapTo/from backend | `models/schemas prompt.py` | `0003` adds `prompts.title` | Complete if migration applied |
@@ -33,15 +33,12 @@ Validate that prompt category/list updates in TypeScript are fully backed by per
 2. Status contract drift:
    - Fixed for current smoke regression path; keep contract checks in CI to prevent reintroduction.
 
-3. Missing invariants:
-   - Backend does not guarantee single `on-deck` per user/model; frontend enforces this optimistically but non-atomically.
+3. Missing invariants (partially addressed):
+   - Backend now demotes competing `on-deck` prompts on create/update.
+   - Multi-step lifecycle transitions are still client-orchestrated and non-transactional.
 
-4. Missing DB constraints:
-   - `prompts.status` accepts arbitrary strings.
+4. Remaining schema constraints:
    - `linked_prompt_id` is not constrained as FK.
-
-5. Query/index readiness:
-   - No dedicated `user_id` index despite user-scoped prompt list queries.
 
 ## Strategic Plan
 

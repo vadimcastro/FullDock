@@ -13,15 +13,18 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
 - `v2.1.2` cleanup complete: legacy dashboard/resume/template UI removed, duplicate root `src/` tree removed, reset-password flow implemented.
 - `v2.1.3` integration complete: final smoke regression, restart persistence, backend import/compile, and frontend production build gates passed.
 - `v2.1.4` readiness complete: CI automation includes backend smoke regression + restart persistence checks and is passing.
-- `v2.1.5` UI/UX polish in progress: prompt card interaction cleanup, collapsed-card action availability improvements, and direct field editing ergonomics.
-- Latest implemented changes (April 6, 2026):
+- `v2.1.5` implementation is active and near-final: backend prompt-category hardening and prompt-card/model-icon polish are now in place.
+- Latest implemented changes (April 7, 2026):
   - Auth/settings state synchronization hardening
   - Local-to-cloud sync stabilization on login
   - Global UI interaction sound effects with user toggle
   - OAuth button polish + cloud-sync auth state fixes
+  - Prompt category backend hardening (`status` normalization + constraint/index migration, `on-deck` demotion handling)
+  - Migration execution hardening (`alembic upgrade head` for tracked DBs)
+  - Prompt card/UI polish (`complete` section collapsed by default, success-accent complete card text, model logos in tabs/header/empty states)
 - Latest validation passes:
   - GitHub CI: frontend build + backend import/compile + backend smoke+persistence jobs passing
-  - Local (2026-04-07): 18-step smoke regression pass + restart persistence pass + reset-password verification pass
+  - Local (2026-04-07): 18-step smoke regression pass + restart persistence pass + reset-password verification pass + migration idempotence pass
 - Prompt category/list backend audit (2026-04-07):
   - Frontend category UX (`queued`, `on-deck`, `needs-edit`, `forked`, `complete`) is implemented and persisted through `prompts.status`.
   - Migration flow is now hardened for tracked DBs (`alembic upgrade head`), with bootstrap fallback for untracked DBs.
@@ -32,6 +35,22 @@ High-fidelity AI prompt queue management system — built on a hardened full-sta
   - set `turbopack.root` to frontend directory for workspace-root stability
   - standardized npm lockfile strategy: `frontend/package-lock.json` only
 - Current cleanup, integration status, and prompt category backend remediation plan are summarized in `docs/KNOWLEDGE_BASE.md`.
+
+### v2.1.5 Progress Tracker (2026-04-07)
+
+Completed:
+- backend: prompt status contract normalized to `complete` and constrained in DB
+- backend: prompt query indexes added for user/model list paths
+- backend: create/update path demotes competing `on-deck` prompts
+- ops: migration startup flow hardened for Alembic-tracked DBs
+- frontend: complete section defaults to collapsed
+- frontend: complete-card prompt text accent switched to success green
+- frontend: model logos added to tabs, model headers, and empty states
+
+Next steps:
+1. Add transactional backend endpoint(s) for multi-step list transitions (`complete`/promotion chains) to remove client race windows.
+2. Expand smoke tests for `forked` lifecycle, `title` persistence, and invalid-status rejection.
+3. Replace bootstrap `create_all + stamp` fallback with fully migration-first bootstrap once legacy baseline is retired.
 
 ---
 

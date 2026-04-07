@@ -10,15 +10,18 @@
 - `v2.1.1` checkpoint completed: smoke+persistence testing evidence captured and CI gate added.
 - `v2.1.2` cleanup is implemented: legacy dashboard/resume surfaces removed, duplicate root `src/` removed, reset-password flow implemented.
 - `v2.1.3` integration gate is complete: final smoke regression + restart persistence + build/import checks passed.
-- `v2.1.5` UI/UX pass is active: prompt-card interaction and action-path usability improvements are current release work.
+- `v2.1.5` implementation is near-final: backend prompt-category hardening and frontend prompt-card/model-icon polish are implemented and validated.
 - Latest implemented deltas:
   - Auth/settings state sync correctness updates
   - Local storage to cloud sync flow stabilization on login
   - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
   - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
+  - Prompt status hardening migration applied (`0003_prompt_titles_settings`, `0004_prompt_status_indexes`)
+  - Prompt CRUD/server path now demotes competing `on-deck` prompts on create/update
+  - Model logos rendered in tabs/header/empty states; completed section defaulted to collapsed
 - Latest validation:
   - GitHub CI pass (`frontend npm ci/build`, backend install/import/compile, backend smoke+persistence)
-  - Local 18-step smoke regression pass, persistence pass, and reset-password session invalidation verified
+  - Local 18-step smoke regression pass, persistence pass, reset-password session invalidation, and migration idempotence verified
   - Local frontend production build pass after removing build-time Google font fetch dependency
 - Prompt category/list backend audit details: `docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md`
 
@@ -50,6 +53,19 @@
 1. Smoke regression in CI: completed and passing.
 2. OAuth provider credentials/callback checks in deployment environment: pending environment-side execution (`scripts/check-oauth-env.sh`).
 3. New frontend feature work: active next phase from clean baseline with green build/smoke gates required.
+
+## v2.1.5 Progress And Next Steps
+
+Completed in this cycle:
+1. Prompt category backend storage/validation hardening is implemented.
+2. Migration execution reliability is improved for Alembic-tracked environments.
+3. Prompt-card/category UX requests are implemented (`complete` collapsed default + success-accent complete content).
+4. Model logos replaced initials in key model UI surfaces.
+
+Remaining next steps:
+1. Add transactional list-transition endpoint(s) to reduce multi-call race windows.
+2. Extend CI smoke coverage for `forked`, `title`, and invalid-status rejection.
+3. Retire `create_all + stamp` bootstrap fallback once migration-first cold-start baseline is available.
 
 ---
 

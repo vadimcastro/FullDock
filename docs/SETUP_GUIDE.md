@@ -1,9 +1,9 @@
-# Setup Guide — OnDeck 2.1.3
+# Setup Guide — OnDeck 2.1.5
 
-`v2.0.0` remains the integration baseline. `v2.1.1` through `v2.1.3` checkpoints are complete and summarized in `docs/KNOWLEDGE_BASE.md`.
+`v2.0.0` remains the integration baseline. `v2.1.1` through `v2.1.5` progress is summarized in `docs/KNOWLEDGE_BASE.md`.
 Prompt category/list backend gap analysis and remediation plan: `docs/PROMPT_CATEGORIES_BACKEND_AUDIT.md`.
 
-## Validation Snapshot (v2.1.3)
+## Validation Snapshot (v2.1.5)
 
 - Smoke+persistence testing completed for auth, settings, and prompts API flows (`v2.1.1`).
 - Restart persistence validated with create -> `down`/`up` -> relogin/list verification.
@@ -23,6 +23,11 @@ Prompt category/list backend gap analysis and remediation plan: `docs/PROMPT_CAT
   - CI now includes backend smoke + restart persistence validation
   - OAuth env readiness helper available: `scripts/check-oauth-env.sh`
   - CI now passes with all quality gates (`frontend`, `backend`, `backend_smoke`)
+- `v2.1.5` implementation validation (2026-04-07):
+  - migration chain validated through `0004_prompt_status_indexes`
+  - local smoke pass (`scripts/ci_backend_smoke.py`) with canonical `complete` status contract
+  - local persistence restart pass (`scripts/ci_backend_persistence.py`)
+  - frontend production build pass after model-logo and completed-card UI updates
 
 ## Prerequisites
 
@@ -114,6 +119,9 @@ make shell-db                        # Direct psql session
 - Current startup migration script (`backend/scripts/migrate.sh`) needs hardening:
   - Alembic-tracked DBs now run `alembic upgrade head` on startup.
   - Untracked/bootstrap DBs still use `create_all` + `alembic stamp head` for initial baseline.
+  - Alembic revision IDs were normalized to fit the default `alembic_version.version_num` size:
+    - `0003_prompt_titles_settings`
+    - `0004_prompt_status_indexes`
 
 ### Recommended Migration Verification
 
