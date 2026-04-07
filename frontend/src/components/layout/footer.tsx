@@ -24,12 +24,6 @@ export default function Footer() {
             >
               API Docs
             </a>
-            <a
-              href="/dashboard"
-              className="text-gray-600 hover:text-gray-900 text-sm"
-            >
-              Dashboard
-            </a>
           </div>
         </div>
       </div>

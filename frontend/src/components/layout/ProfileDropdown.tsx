@@ -2,8 +2,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Mail, Github, Linkedin, Globe, ArrowLeft, Loader2, LayoutDashboard } from 'lucide-react';
-import Link from 'next/link';
+import { Mail, Github, Linkedin, Globe, ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '../../lib/auth/AuthContext';
 
 interface ProfileDropdownProps {
@@ -91,17 +90,6 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ isOpen, onClose, prof
             </div>
           </div>
           
-          <div className="border-t border-gray-100 my-2" />
-          
-          <Link
-            href="/dashboard"
-            onClick={handleClose}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 transition-colors duration-200"
-          >
-            <LayoutDashboard className="w-4 h-4 text-blue-500" />
-            Dashboard
-          </Link>
-
           <div className="border-t border-gray-100 mt-3 pt-2">
             <button
               onClick={() => {

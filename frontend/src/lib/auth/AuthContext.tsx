@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
 export interface User {
@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refresh_token, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   const isAuthenticated = !!access_token && !!user;
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -312,14 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (storedToken) {
           setAccessToken(storedToken);
-          const userFetched = await fetchUser(storedToken);
-          
-          if (!userFetched && pathname.startsWith('/dashboard')) {
-            const refreshedAccessToken = await refreshAccessToken();
-            if (refreshedAccessToken) {
-              await fetchUser(refreshedAccessToken);
-            }
-          }
+          await fetchUser(storedToken);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -329,7 +321,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, [pathname, fetchUser, refreshAccessToken, useSecureCookies]);
+  }, [fetchUser, refreshAccessToken, useSecureCookies]);
 
   const contextValue = useMemo(() => ({
     user,

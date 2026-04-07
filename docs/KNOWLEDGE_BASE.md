@@ -8,12 +8,13 @@
 
 - `v2.0.0` integration baseline is complete on OnDeck infrastructure.
 - `v2.1.1` checkpoint completed: smoke+persistence testing evidence captured and CI gate added.
+- `v2.1.2` cleanup phase active: legacy dashboard route/components are being removed from frontend build surface.
 - Latest implemented deltas:
   - Auth/settings state sync correctness updates
   - Local storage to cloud sync flow stabilization on login
   - Global UI sound effects (`frontend/src/lib/sound-effects.ts`) wired into tabs/cards/preferences
   - Cloud-sync auth rendering now keyed to `AuthContext` (`cloudSync.isConnected`)
-- `v2.1.0` work planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
+- Current work planning is tracked in `docs/ONDECK_INTEGRATION_REVIEW.md`.
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-04-06  
 **Current release baseline:** `v2.0.0` (integrated)  
-**Today target release:** `v2.1.0` (in planning/implementation)  
+**Today target release:** `v2.1.2` (OnDeck-only cleanup)  
 **Checkpoint status:** `v2.1.1` (smoke+persistence testing complete)
 
 ---
@@ -62,7 +62,7 @@ This review reconciles:
 
 ---
 
-## Known Gaps / Risks Entering v2.1.0
+## Known Gaps / Risks Entering v2.1.2
 
 1. No automated release pipeline yet (lint/test/build gates on push/PR).
 2. Limited explicit end-to-end regression coverage for auth + cloud sync + prompt lifecycle.
@@ -71,7 +71,51 @@ This review reconciles:
 
 ---
 
-## Next Steps — v2.1.0 (Execution Plan For Today)
+## Latest Development Update (v2.1.2)
+
+- Removed legacy dashboard route/components from active frontend build surface to resolve Next prerender failure on `/dashboard`.
+- Removed dashboard entry points from layout navigation/dropdowns.
+- Removed dashboard-specific auth-path fallback logic that was no longer needed in OnDeck.
+- Local `frontend` build now passes after this cleanup (`npm ci && npm run build`).
+
+---
+
+## v2.1.2 OnDeck-Only Cleanup Approach
+
+1. **Route Surface Cleanup**
+   - Keep only OnDeck product routes in `frontend/src/app`.
+   - Remove legacy template pages that are not part of prompt queue workflows.
+
+2. **Component Surface Cleanup**
+   - Remove orphaned UI/components not imported by current routes.
+   - Keep shared primitives used by OnDeck pages/hooks only.
+
+3. **Auth and Navigation Cleanup**
+   - Remove route-conditional auth logic tied to removed surfaces.
+   - Ensure navbar/footer/profile links only point to active OnDeck paths.
+
+4. **Config and Script Cleanup**
+   - Remove template-era env vars/scripts that no longer affect runtime.
+   - Keep intentional production placeholders only for domain/deployment wiring.
+
+5. **Verification and Guardrails**
+   - Run `frontend` build and backend import checks.
+   - Keep CI green on `preDeck` before tagging next checkpoint.
+
+6. **Documentation Sync**
+   - Reflect each removed surface in README/Setup/Knowledge/Integration docs.
+   - Update release notes draft for `v2.1.2` cleanup deltas.
+
+### v2.1.2 Acceptance Criteria
+
+- No non-OnDeck feature routes are present in production build output.
+- No stale links in navigation/footer/profile components.
+- CI passes (`frontend install/build` + backend checks).
+- Integration review includes final removed-surface inventory.
+
+---
+
+## Next Steps — v2.1.x (Execution History)
 
 ### Must-Ship Scope (Locked for Today)
 

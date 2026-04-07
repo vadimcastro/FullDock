@@ -7,6 +7,7 @@
 - Smoke+persistence testing completed for auth, settings, and prompts API flows.
 - Restart persistence validated with create -> `down`/`up` -> relogin/list verification.
 - `/docs` branding validated (`OnDeck API - Swagger UI`).
+- Legacy `/dashboard` route and related template components were identified as non-OnDeck surface and are removed in `v2.1.2` cleanup.
 
 ## Prerequisites
 
