@@ -43,35 +43,6 @@ Expected local URLs:
 
 Run it before the first `make dev` on a new machine.
 
-## Create a New Project From FullDock
-
-From the template root:
-
-```bash
-make newpro
-```
-
-The initializer asks for:
-- project name
-- display name
-- description
-- admin email, username, and display name
-- development password
-- optional production IP, domain, and SSH alias
-- target directory
-
-By default the generated project is created as a sibling directory of the template repo.
-
-Example:
-
-```bash
-cd /path/to/FullDock
-make newpro
-cd ../ondeck
-make dev
-make auth
-```
-
 ## Daily Development Workflow
 
 ```bash

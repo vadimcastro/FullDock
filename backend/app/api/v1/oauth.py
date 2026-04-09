@@ -7,6 +7,7 @@ from secrets import compare_digest
 import logging
 
 from app.core.config import settings
+from app.core.api_errors import bad_request
 from app.core.security import create_access_token, create_refresh_token
 from app.core.auth_protection import auth_protection, auth_event
 from app.db.utils import get_db
@@ -101,6 +102,7 @@ async def oauth_callback(
     request: Request,
     db: Session = Depends(get_db),
 ):
+    request_id = getattr(request.state, "request_id", None)
     if provider not in PROVIDER_CONFIG:
         raise HTTPException(status_code=404, detail="Unknown provider")
 
@@ -108,9 +110,17 @@ async def oauth_callback(
     state = request.query_params.get("state")
     expected_state = request.cookies.get(_oauth_state_cookie_name(provider))
     if not state or not expected_state or not compare_digest(state, expected_state):
-        raise HTTPException(status_code=400, detail="Invalid OAuth state")
+        raise bad_request(
+            code="INVALID_OAUTH_STATE",
+            message="Invalid OAuth state",
+            request_id=request_id,
+        )
     if not code:
-        raise HTTPException(status_code=400, detail="Missing authorization code")
+        raise bad_request(
+            code="MISSING_AUTHORIZATION_CODE",
+            message="Missing authorization code",
+            request_id=request_id,
+        )
 
     config = PROVIDER_CONFIG[provider]
     client_id, client_secret = _get_provider_credentials(provider)
@@ -138,7 +148,11 @@ async def oauth_callback(
         expires_in = tokens.get("expires_in")
 
         if not access_token:
-            raise HTTPException(status_code=400, detail="Missing access token")
+            raise bad_request(
+                code="MISSING_PROVIDER_ACCESS_TOKEN",
+                message="Missing access token",
+                request_id=request_id,
+            )
 
         user_headers = {"Authorization": f"Bearer {access_token}"}
         user_resp = await client.get(
@@ -165,7 +179,11 @@ async def oauth_callback(
 
         provider_user_id = str(user_info.get("sub") or user_info.get("id") or "")
         if not provider_user_id:
-            raise HTTPException(status_code=400, detail="Provider user id missing")
+            raise bad_request(
+                code="MISSING_PROVIDER_USER_ID",
+                message="Provider user id missing",
+                request_id=request_id,
+            )
 
         provider_email = user_info.get("email")
         user_name = user_info.get("name") or provider_email or provider_user_id

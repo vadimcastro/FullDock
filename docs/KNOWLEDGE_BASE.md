@@ -5,8 +5,8 @@
 
 ## 🏗️ Architectural Patterns
 
-### 1. Dual-Purpose Template
-FullDock is designed to be both a fast-start repo for new apps and a stable baseline for complex downstream projects (like `ondeck`).
+### 1. Stable Infrastructure Baseline
+FullDock is maintained as a reusable baseline for downstream services (like `ondeck`) with a Docker-first local workflow.
 
 ### 2. Standalone & Decoupled
 Each project generated from FullDock is completely self-contained. There are no runtime dependencies on sibling repositories or shared parent directories.
@@ -39,7 +39,6 @@ Each project generated from FullDock is completely self-contained. There are no 
 | `make migrate` | Run database migrations inside Docker |
 | `make migrate-create name=X` | Generate a new Alembic migration |
 | `make doctor` | Run environment preflight checks |
-| `make newpro` | Interactive initializer for new projects |
 | `make setup-prod-env` | Scaffold a production `.env` file |
 
 ---

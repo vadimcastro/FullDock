@@ -7,7 +7,7 @@ COMPOSE = COMPOSE_PROJECT_NAME=$(PROJECT_NAME_SAFE) docker compose
 REBUILD ?= 0
 
 .PHONY: dev dev-build dev-fast dev-debug prod down logs clean clean-all \
-	migrate migrate-create db auth setup-prod-env newpro help doctor disk-usage prune-safe
+	migrate migrate-create db auth setup-prod-env help doctor disk-usage prune-safe
 
 dev:
 	@echo "Starting development environment..."
@@ -83,10 +83,6 @@ setup-prod-env:
 	@echo "Setting up production environment..."
 	./scripts/setup-production-env.sh
 
-newpro:
-	@echo "Launching interactive fast project creation..."
-	./init-project-fast.sh
-
 help:
 	@echo "Available commands (grouped)"
 	@echo "Core:"
@@ -107,4 +103,3 @@ help:
 	@echo "Project setup:"
 	@echo "  make auth                    - Validate local auth using .env credentials"
 	@echo "  make setup-prod-env          - Configure production env file"
-	@echo "  make newpro                  - Create a new project from this template"

@@ -2,9 +2,7 @@
 
 Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.
 
-It is designed for two jobs:
-- start a new app quickly with sane defaults
-- act as the stable infrastructure baseline for downstream projects such as `ondeck`
+It is designed as a stable infrastructure baseline for downstream projects such as `ondeck`.
 
 ## Stack
 
@@ -34,16 +32,10 @@ It is designed for two jobs:
     ```bash
     make auth
     ```
-5.  **Create Your First Project:**
+5.  **Run Database Bootstrap:**
     ```bash
-    make newpro
+    make migrate
     ```
-
-    The initializer:
-    - asks for project metadata and admin defaults
-    - copies the template into a sibling directory
-    - replaces template placeholders
-    - removes template git history and initializer scripts from the generated project
 
 - API docs: `http://localhost:8000/docs`
 - Frontend: `http://localhost:3000`
@@ -65,7 +57,6 @@ make doctor
 make disk-usage
 make prune-safe
 make setup-prod-env
-make newpro
 ```
 
 ## Security Defaults
