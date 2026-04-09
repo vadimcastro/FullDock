@@ -73,8 +73,6 @@ migrate-create:
 
 db: migrate
 
-db: migrate
-
 auth:
 	@echo "Setting up local development authentication..."
 	./scripts/setup-local-auth.sh
