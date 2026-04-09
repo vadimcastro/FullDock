@@ -10,6 +10,8 @@ frontend/out/
 backend/dist/
 
 # Environment files
+.env
+.env.development
 .env.local
 .env.production.local
 .env*.local
