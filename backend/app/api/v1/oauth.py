@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 import httpx
 import secrets
+from secrets import compare_digest
 import logging
 
 from app.core.config import settings
@@ -56,29 +57,45 @@ def _get_provider_credentials(provider: str) -> tuple[str, str]:
     return client_id, client_secret
 
 
-@router.get("/oauth/{provider}")
+def _oauth_state_cookie_name(provider: str) -> str:
+    return f"oauth_state_{provider}"
+
+
+@router.get("/{provider}")
+@router.get("/oauth/{provider}", include_in_schema=False)
 async def oauth_redirect(provider: str):
     if provider not in PROVIDER_CONFIG:
         raise HTTPException(status_code=404, detail="Unknown provider")
 
     config = PROVIDER_CONFIG[provider]
     client_id, _ = _get_provider_credentials(provider)
+    state = secrets.token_urlsafe(24)
     params = {
         "response_type": config["response_type"],
         "client_id": client_id,
         "scope": config["scope"],
         "redirect_uri": _build_redirect_uri(provider),
-        "state": secrets.token_urlsafe(16),
+        "state": state,
     }
     if provider == "google":
         params["access_type"] = "offline"
         params["prompt"] = "consent"
 
     auth_url = httpx.URL(config["auth_url"]).copy_with(params=params)
-    return RedirectResponse(url=str(auth_url))
+    response = RedirectResponse(url=str(auth_url))
+    response.set_cookie(
+        key=_oauth_state_cookie_name(provider),
+        value=state,
+        max_age=600,
+        httponly=True,
+        secure=settings.is_production,
+        samesite="lax",
+    )
+    return response
 
 
-@router.get("/oauth/{provider}/callback")
+@router.get("/{provider}/callback")
+@router.get("/oauth/{provider}/callback", include_in_schema=False)
 async def oauth_callback(
     provider: str,
     request: Request,
@@ -88,6 +105,10 @@ async def oauth_callback(
         raise HTTPException(status_code=404, detail="Unknown provider")
 
     code = request.query_params.get("code")
+    state = request.query_params.get("state")
+    expected_state = request.cookies.get(_oauth_state_cookie_name(provider))
+    if not state or not expected_state or not compare_digest(state, expected_state):
+        raise HTTPException(status_code=400, detail="Invalid OAuth state")
     if not code:
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
@@ -205,4 +226,11 @@ async def oauth_callback(
           </body>
         </html>
         """
-        return HTMLResponse(content=html)
+        response = HTMLResponse(content=html)
+        response.delete_cookie(
+            key=_oauth_state_cookie_name(provider),
+            httponly=True,
+            secure=settings.is_production,
+            samesite="lax",
+        )
+        return response

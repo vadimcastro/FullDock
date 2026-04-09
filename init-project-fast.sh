@@ -20,7 +20,6 @@ DEFAULT_PRODUCTION_IP="127.0.0.1"
 DEFAULT_LOCAL_HOST="localhost"
 DEFAULT_SSH_ALIAS="droplet"
 DEFAULT_TARGET_PATH="../"
-DEFAULT_PROJECT_SLUG="fulldock-core"
 DEFAULT_OAUTH_ID="changeme"
 DEFAULT_OAUTH_SECRET="changeme"
 
@@ -203,10 +202,6 @@ make auth
 - Frontend: http://localhost:3000
 - API: http://localhost:8000
 
-## Shared Docker Base Images
-- PROJECT_SLUG: $DEFAULT_PROJECT_SLUG
-- First run builds shared base images; later projects with the same slug reuse them.
-
 ## Defaults
 - Admin email: $ADMIN_EMAIL
 - Admin password: $DEV_PASSWORD
@@ -215,11 +210,6 @@ make auth
 - GitHub: $GITHUB_URL
 - Website: $WEBSITE_URL
 EOF
-
-if [ -f "$PROJECT_PATH/.env.development" ]; then
-  sed -i.bak -e "s|^PROJECT_SLUG=.*|PROJECT_SLUG=$DEFAULT_PROJECT_SLUG|" "$PROJECT_PATH/.env.development"
-  rm -f "$PROJECT_PATH/.env.development.bak"
-fi
 
 echo ""
 echo "Project created."

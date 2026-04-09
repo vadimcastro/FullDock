@@ -50,10 +50,9 @@ import sys
 import os
 sys.path.append('/app')
 
-# Import models to register them with Base
-from app.models.user import User
-from app.models.user_session import UserSession
-from app.db.base_class import Base
+# Import app.db.base so all models are registered with Base metadata.
+# This avoids silently missing tables when new models are added.
+from app.db.base import Base
 from app.db.session import engine
 import logging
 

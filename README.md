@@ -53,8 +53,9 @@ It is designed for two jobs:
 
 ```bash
 make dev
+make dev REBUILD=1
+# backward-compatible alias:
 make dev-build
-make dev-ultra
 make down
 make logs
 make auth
@@ -63,23 +64,9 @@ make migrate-create name=example_change
 make doctor
 make disk-usage
 make prune-safe
-make cleanup-legacy-images
 make setup-prod-env
 make newpro
 ```
-
-## Shared Base Images
-
-FullDock can reuse shared Docker base images across multiple generated projects.
-
-- `PROJECT_SLUG` defaults to `FullDock-core`
-- `make dev` and `make dev-ultra` look for:
-  - `${PROJECT_SLUG}-frontend-base:latest`
-  - `${PROJECT_SLUG}-backend-base:latest`
-- first use on a machine builds them automatically
-- later projects with the same `PROJECT_SLUG` reuse them
-
-Use a different `PROJECT_SLUG` only if you intentionally want isolated base images.
 
 ## Security Defaults
 
@@ -101,8 +88,8 @@ Implemented in the current template:
     make migrate
     ```
 3.  **Use Provider URLs:** The backend handles social login via:
-    - `http://localhost:8000/api/v1/auth/oauth/google`
-    - `http://localhost:8000/api/v1/auth/oauth/github`
+    - `http://localhost:8000/api/v1/oauth/google`
+    - `http://localhost:8000/api/v1/oauth/github`
 4.  **Behavior:** Upon successful login, the backend writes secure cookies, and the frontend automatically synchronizes.
 5.  **Unified Experience:** The UI features a single `ProfileDropdown` trigger (premium "Blue") for all authenticated users. Administrative tools like the "Dashboard" are dynamically integrated into the dropdown based on the `is_superuser` role.
 
@@ -120,7 +107,6 @@ docker compose -f docker/docker-compose.https.yml up -d --build
 ## Roadmap
 
 - [ ] "First 5 minutes" comprehensive tutorial link.
-- [ ] Pre-built base images (`fulldock-core-base-py`, `fulldock-core-base-node`) for CD environments.
 - [ ] Integrated auth tests (login throttling, refresh rotation).
 - [ ] GitHub Actions CI/CD examples.
 - [ ] Standardized MTU settings for Linux networking.
@@ -153,4 +139,4 @@ docs/       roadmap and integration docs
 
 ## License
 
-MIT
+GNU GPL v3.0

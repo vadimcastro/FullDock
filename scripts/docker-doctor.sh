@@ -30,12 +30,6 @@ if [ ! -f "${ENV_DEV}" ]; then
 fi
 echo "✅ .env.development found"
 
-if ! grep -q '^PROJECT_SLUG=' "${ENV_DEV}"; then
-  echo "[WARN] PROJECT_SLUG not set in .env.development (defaulting to fulldock-core)"
-else
-  echo "✅ PROJECT_SLUG configured"
-fi
-
 echo
 echo "Port availability snapshot (host)"
 for p in 3000 8000 5432 6379; do

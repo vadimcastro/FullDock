@@ -13,7 +13,7 @@ Each project generated from FullDock is completely self-contained. There are no 
 
 ### 3. Docker-First Workflow
 - **Development:** `make dev` starts the stack with hot-reloading.
-- **Base Images:** Shared base images (`PROJECT_SLUG`) are reused across projects to save build time and disk space.
+- **Rebuild Control:** `make dev REBUILD=1` forces image rebuilds when dependencies or Dockerfiles change.
 - **Hygiene:** Tooling is provided for safe cleanup and disk monitoring (`make prune-safe`, `make disk-usage`).
 
 ### 4. Hardened Security
@@ -33,8 +33,8 @@ Each project generated from FullDock is completely self-contained. There are no 
 | Command | Description |
 |---------|-------------|
 | `make dev` | Start development stack (standard) |
-| `make dev-ultra` | Start with shared base-image overrides |
-| `make dev-build` | Force rebuild of app images |
+| `make dev REBUILD=1` | Force rebuild of app images |
+| `make dev-build` | Backward-compatible alias for `make dev REBUILD=1` |
 | `make auth` | Configure/verify local authentication |
 | `make migrate` | Run database migrations inside Docker |
 | `make migrate-create name=X` | Generate a new Alembic migration |
@@ -60,4 +60,4 @@ FullDock supports Google and GitHub OAuth out of the box.
 1.  **Secrets:** Define client IDs/secrets in `.env.development`.
 2.  **Migration:** Run `make migrate` to create the `oauth_accounts` table.
 3.  **Flow:** Backend handles the handshake and writes secure cookies; Frontend `AuthContext` picks them up automatically.
-4.  **Local Testing:** Use `http://localhost:8000/api/v1/auth/oauth/{provider}/callback` as the redirect URI in your provider console.
+4.  **Local Testing:** Use `http://localhost:8000/api/v1/oauth/{provider}/callback` as the redirect URI in your provider console.

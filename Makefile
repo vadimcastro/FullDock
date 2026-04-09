@@ -2,51 +2,28 @@
 # Standalone project commands
 
 PROJECT_NAME ?= $(notdir $(CURDIR))
-PROJECT_SLUG ?= fulldock-core
-COMPOSE = COMPOSE_PROJECT_NAME=$(PROJECT_NAME) docker compose
-FRONTEND_IMAGE = $(PROJECT_NAME)-frontend:latest
-API_IMAGE = $(PROJECT_NAME)-api:latest
-ULTRA_FRONTEND_IMAGE = $(PROJECT_SLUG)-frontend-base:latest
-ULTRA_API_IMAGE = $(PROJECT_SLUG)-backend-base:latest
+PROJECT_NAME_SAFE ?= $(shell printf '%s' "$(PROJECT_NAME)" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9_-]+/-/g')
+COMPOSE = COMPOSE_PROJECT_NAME=$(PROJECT_NAME_SAFE) docker compose
+REBUILD ?= 0
 
-.PHONY: dev dev-build dev-fast dev-ultra dev-debug build-base prod down logs clean clean-all \
-	migrate migrate-create db auth setup-prod-env newpro help doctor disk-usage prune-safe cleanup-legacy-images
+.PHONY: dev dev-build dev-fast dev-debug prod down logs clean clean-all \
+	migrate migrate-create db auth setup-prod-env newpro help doctor disk-usage prune-safe
 
 dev:
 	@echo "Starting development environment..."
-	@if docker image inspect $(ULTRA_FRONTEND_IMAGE) >/dev/null 2>&1 && docker image inspect $(ULTRA_API_IMAGE) >/dev/null 2>&1; then \
-		echo "Using shared base images: $(PROJECT_SLUG)-*"; \
-	else \
-		echo "Base images missing. Building once for PROJECT_SLUG=$(PROJECT_SLUG)..."; \
-		PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/build-base-images.sh; \
-	fi
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml -f docker-compose.dev.ultra.yml up
+	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml up $(if $(filter 1 true yes,$(REBUILD)),--build,)
 
 dev-fast:
 	@echo "Starting fast development environment..."
 	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml up
 
 dev-build:
-	@echo "Rebuilding and starting development environment..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml up --build
-
-dev-ultra:
-	@echo "Starting ultra development environment..."
-	@if docker image inspect $(ULTRA_FRONTEND_IMAGE) >/dev/null 2>&1 && docker image inspect $(ULTRA_API_IMAGE) >/dev/null 2>&1; then \
-		echo "Using shared ultra base images: $(PROJECT_SLUG)-*"; \
-	else \
-		echo "Ultra base images missing. Building base images for PROJECT_SLUG=$(PROJECT_SLUG)..."; \
-		PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/build-base-images.sh; \
-	fi
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml -f docker-compose.dev.ultra.yml up
+	@echo "dev-build is deprecated. Use 'make dev REBUILD=1'."
+	@$(MAKE) dev REBUILD=1
 
 dev-debug:
 	@echo "Starting development environment with debug logs..."
 	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml up 2>&1 | tee debug.log
-
-build-base:
-	@echo "Building base images..."
-	PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/build-base-images.sh
 
 prod:
 	@echo "Starting production environment..."
@@ -55,8 +32,7 @@ prod:
 down:
 	@echo "Stopping containers..."
 	-cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml down --remove-orphans
-	-cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml -f docker-compose.dev.ultra.yml down --remove-orphans
-	-COMPOSE_PROJECT_NAME=$(PROJECT_NAME) docker compose -f docker/docker-compose.prod.yml down
+	-COMPOSE_PROJECT_NAME=$(PROJECT_NAME_SAFE) docker compose -f docker/docker-compose.prod.yml down
 
 logs:
 	@echo "Showing logs..."
@@ -69,27 +45,23 @@ clean:
 clean-all:
 	@echo "Removing local volumes for a fresh start..."
 	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml down -v --remove-orphans
-	COMPOSE_PROJECT_NAME=$(PROJECT_NAME) docker compose -f docker/docker-compose.prod.yml down -v
+	COMPOSE_PROJECT_NAME=$(PROJECT_NAME_SAFE) docker compose -f docker/docker-compose.prod.yml down -v
 
 doctor:
 	@echo "Running environment preflight checks..."
-	PROJECT_NAME=$(PROJECT_NAME) PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/docker-doctor.sh
+	PROJECT_NAME=$(PROJECT_NAME) ./scripts/docker-doctor.sh
 
 disk-usage:
 	@echo "Inspecting Docker disk usage..."
-	PROJECT_NAME=$(PROJECT_NAME) PROJECT_SLUG=$(PROJECT_SLUG) ./scripts/docker-disk-usage.sh
+	PROJECT_NAME=$(PROJECT_NAME) ./scripts/docker-disk-usage.sh
 
 prune-safe:
 	@echo "Pruning unused Docker artifacts (safe mode)..."
 	./scripts/docker-prune-safe.sh
 
-cleanup-legacy-images:
-	@echo "Removing legacy base/app image tags..."
-	./scripts/cleanup-legacy-images.sh
-
 migrate:
 	@echo "Running migrations..."
-	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml exec api alembic upgrade head
+	cd docker && $(COMPOSE) -f docker-compose.dev.fast.yml exec api /app/scripts/migrate.sh
 
 migrate-create:
 	@if [ -z "$(name)" ]; then \
@@ -118,9 +90,9 @@ newpro:
 help:
 	@echo "Available commands (grouped)"
 	@echo "Core:"
-	@echo "  make dev                     - Start with shared base images (default)"
-	@echo "  make dev-build               - Rebuild app images, then start fast stack"
-	@echo "  make dev-ultra               - Start with ultra overrides"
+	@echo "  make dev                     - Start dev stack (reuse cached images)"
+	@echo "  make dev REBUILD=1           - Rebuild images, then start dev stack"
+	@echo "  make dev-build               - Backward-compatible alias for REBUILD=1"
 	@echo "  make down                    - Stop all stacks"
 	@echo "  make logs                    - Tail development logs"
 	@echo ""
@@ -128,7 +100,6 @@ help:
 	@echo "  make doctor                  - Preflight checks (docker/env/ports)"
 	@echo "  make disk-usage              - Show Docker image/volume/cache usage"
 	@echo "  make prune-safe              - Safe Docker cleanup (containers/images/cache)"
-	@echo "  make cleanup-legacy-images   - Remove legacy FullDock image tags"
 	@echo "  make migrate                 - Run Alembic migrations"
 	@echo "  make db                      - Alias for migrate (FastAPI/Alembic)"
 	@echo "  make migrate-create name=X   - Create Alembic migration"

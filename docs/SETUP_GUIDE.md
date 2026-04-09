@@ -39,7 +39,6 @@ Expected local URLs:
 - Docker daemon is reachable
 - Docker Compose plugin is available
 - `.env.development` exists
-- `PROJECT_SLUG` is configured or falls back safely
 - common local ports are free or clearly reported
 
 Run it before the first `make dev` on a new machine.
@@ -73,22 +72,6 @@ make dev
 make auth
 ```
 
-## Shared Base-Image Reuse
-
-Generated projects inherit:
-
-```bash
-PROJECT_SLUG=fulldock-core
-```
-
-That lets multiple projects reuse shared Docker base images:
-- `${PROJECT_SLUG}-frontend-base:latest`
-- `${PROJECT_SLUG}-backend-base:latest`
-
-Behavior:
-- first project on a machine builds the shared base images
-- later projects with the same `PROJECT_SLUG` reuse them automatically
-
 ## Daily Development Workflow
 
 ```bash
@@ -100,8 +83,9 @@ make down
 Use these when needed:
 
 ```bash
+make dev REBUILD=1
+# backward-compatible alias:
 make dev-build
-make dev-ultra
 make migrate
 make migrate-create name=add_feature_x
 ```
@@ -153,8 +137,8 @@ Production safeguards currently enforced:
     ```
     *Note: This executes `alembic upgrade head` inside the container.*
 3.  **Frontend Integration:** The backend exposes provider-specific redirect endpoints:
-    - `http://localhost:8000/api/v1/auth/oauth/google`
-    - `http://localhost:8000/api/v1/auth/oauth/github`
+    - `http://localhost:8000/api/v1/oauth/google`
+    - `http://localhost:8000/api/v1/oauth/github`
 4.  **Behavior:** Upon successful login, the backend writes `accessToken` and `refreshToken` cookies. The frontend `ProfileDropdown` then provides a unified command center for both standard users and administrators.
 5.  **Dashboard Access:** For Administrators (`is_superuser: true`), the Dashboard link is conveniently located inside the user profile dropdown to maintain a clean navigation bar.
 
@@ -170,12 +154,6 @@ Conservative cleanup:
 
 ```bash
 make prune-safe
-```
-
-Legacy image-tag cleanup after migrations:
-
-```bash
-make cleanup-legacy-images
 ```
 
 ## Troubleshooting

@@ -95,7 +95,7 @@ if echo "$response" | grep -q "access_token"; then
     echo "🌐 http://localhost:3000 | 🔧 http://localhost:8000/docs"
     echo ""
     echo "💡 Tip: Set your OAuth Redirect URI to:"
-    echo "   http://localhost:8000/api/v1/oauth/oauth/google/callback"
+    echo "   http://localhost:8000/api/v1/oauth/google/callback"
     echo "   (or /github/callback)"
 else
     echo "❌ Authentication failed: $response"
