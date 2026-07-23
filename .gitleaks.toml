@@ -1,0 +1,12 @@
+# .gitleaks.toml
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore development template example files"
+paths = [
+    '''\.env\.example$''',
+    '''\.env\.production\.local\.example$''',
+    '''frontend/\.env\.template$''',
+    '''backend/app/core/config\.py$'''
+]
