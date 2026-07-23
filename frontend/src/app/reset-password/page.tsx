@@ -1,7 +1,6 @@
 // src/app/reset-password/page.tsx
 "use client";
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useToast } from '../../components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -44,12 +43,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-neutral-100 p-8">
         <div className="card space-y-6 p-8">
           {!isSubmitted ? (
             <>
@@ -101,7 +95,7 @@ export default function ResetPasswordPage() {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
