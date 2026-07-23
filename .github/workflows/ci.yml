@@ -12,14 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Gitleaks Secret Scan
-        uses: zricethezav/gitleaks-action@v8
+        uses: gitleaks/gitleaks-action@v3
         with:
-          gitleaks-path: .
           config-path: .gitleaksignore
 
   backend-checks:
@@ -30,10 +29,10 @@ jobs:
         working-directory: ./backend
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -48,10 +47,10 @@ jobs:
         working-directory: ./frontend
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4.2.0
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
