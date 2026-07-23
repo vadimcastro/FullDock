@@ -23,7 +23,7 @@ jobs:
           sudo mv gitleaks /usr/local/bin/
 
       - name: Run Secret Scan
-        run: gitleaks detect --source . --no-git -v
+        run: gitleaks detect --source . --no-git --gitleaksignore-path=.gitleaksignore -v
 
   backend-checks:
     name: Backend Syntax Verification

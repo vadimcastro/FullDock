@@ -1,0 +1,6 @@
+# .gitleaksignore
+# Ignore development example files and fallback dev strings in boilerplate
+.env.example
+.env.production.local.example
+frontend/.env.template
+backend/app/core/config.py
