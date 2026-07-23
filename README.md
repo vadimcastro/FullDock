@@ -1,17 +1,17 @@
 # FullDock
 
-FullDock is a Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.
+FullDock is a Docker-first full-stack template for Next.js 16, React 19, FastAPI, PostgreSQL, and Redis.
 
-It is designed as a stable infrastructure baseline for new internal or public projects.
+It is designed as a stable, security-hardened infrastructure baseline for internal or public open-source projects.
 
 ## Stack
 
-- Frontend: Next.js 14, React 18, TypeScript, Tailwind CSS
-- Backend: FastAPI, SQLAlchemy, Alembic
-- Services: PostgreSQL, Redis
-- Local workflow: Docker Compose + Makefile commands
-- Auth: JWT access + refresh flow with login throttling and session revocation
-- UI: Unified, role-aware account management with a polished responsive shell
+- **Frontend**: Next.js 16, React 19, TypeScript 5, Tailwind CSS v4
+- **Backend**: FastAPI, SQLAlchemy 2, Alembic, Pydantic v2
+- **Services**: PostgreSQL, Redis
+- **Local Workflow**: Docker Compose + Makefile commands
+- **Auth**: JWT access + refresh flow with login throttling, session revocation, and social OAuth (Google/GitHub)
+- **CI & Security**: GitHub Actions pipeline for automated secret scanning (`gitleaks`), Python syntax verification, and TypeScript typechecking
 
 ## Quick Start (First 5 Minutes)
 
@@ -59,17 +59,15 @@ make prune-safe
 make setup-prod-env
 ```
 
-## Security Defaults
+## Security Defaults & CI
 
 Implemented in the current template:
-- production fail-fast checks for weak or missing secrets
-- production CORS validation
-- login throttling
-- refresh token rotation
-- refresh-session revocation
-- `logout` and `logout-all`
-- auth event logging
-- HTTPS-aware cookie handling in the frontend auth flow
+- Automated GitHub Actions CI pipeline (`.github/workflows/ci.yml`) featuring strict secret scanning via `gitleaks`
+- Production fail-fast checks for weak or missing secrets
+- Production CORS validation
+- Login throttling & refresh token rotation
+- Session revocation (`logout` and `logout-all`)
+- Auth event logging & HTTPS-aware cookie handling
 
 ## OAuth Configuration
 
@@ -82,7 +80,7 @@ Implemented in the current template:
     - `http://localhost:8000/api/v1/oauth/google`
     - `http://localhost:8000/api/v1/oauth/github`
 4.  **Behavior:** Upon successful login, the backend writes secure cookies, and the frontend automatically synchronizes.
-5.  **Unified Experience:** The UI features a single `ProfileDropdown` trigger (premium "Blue") for all authenticated users. Administrative tools like the "Dashboard" are dynamically integrated into the dropdown based on the `is_superuser` role.
+5.  **Unified Experience:** The UI features a single `ProfileDropdown` trigger for all authenticated users. Administrative tools like the "Dashboard" are dynamically integrated into the dropdown based on the `is_superuser` role.
 
 Recommended production entrypoint:
 
@@ -99,17 +97,17 @@ docker compose -f docker/docker-compose.https.yml up -d --build
 
 - [ ] Add a longer guided tutorial for first-time setup.
 - [ ] Integrated auth tests (login throttling, refresh rotation).
-- [ ] Add GitHub Actions CI/CD examples.
+- [x] GitHub Actions CI/CD security pipeline (`gitleaks`, typecheck, syntax checks).
 - [ ] Standardized MTU settings for Linux networking.
 
 ## Project Structure
 
 ```text
-frontend/   Next.js app
+frontend/   Next.js 16 app
 backend/    FastAPI app
 docker/     Compose files and Dockerfiles
-scripts/    setup and maintenance helpers
-docs/       roadmap and integration docs
+scripts/    Setup and maintenance helpers
+docs/       Integration docs
 ```
 
 ## Troubleshooting
