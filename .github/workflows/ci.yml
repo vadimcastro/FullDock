@@ -18,8 +18,9 @@ jobs:
 
       - name: Gitleaks Secret Scan
         uses: gitleaks/gitleaks-action@v3
-        with:
-          config-path: .gitleaksignore
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaksignore
 
   backend-checks:
     name: Backend Syntax Verification
