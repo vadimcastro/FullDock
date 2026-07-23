@@ -18,8 +18,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_PROJECT_DISPLAY_NAME || '{{PROJECT_DISPLAY_NAME}}',
-  description: process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || '{{PROJECT_DESCRIPTION}}',
+  title: process.env.NEXT_PUBLIC_PROJECT_DISPLAY_NAME || 'FullDock',
+  description: process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || 'Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.',
 };
 
 export default function RootLayout({

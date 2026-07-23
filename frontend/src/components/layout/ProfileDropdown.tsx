@@ -119,14 +119,14 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ isOpen, onClose, prof
           {!isSigningIn ? (
             <div className="grid grid-cols-4 gap-2">
               <a
-                href={`mailto:${process.env.NEXT_PUBLIC_ADMIN_EMAIL || '{{ADMIN_EMAIL}}'}?subject=Hey%20there!`}
+                href={`mailto:${process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}?subject=Hey%20there!`}
                 className="flex items-center justify-center p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
                 title="Send Email"
               >
                 <Mail className="w-5 h-5 text-gray-600 hover:text-gray-900" />
               </a>
               <a
-                href={process.env.NEXT_PUBLIC_GITHUB_URL || '{{GITHUB_URL}}'}
+                href={process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/vadim/FullDock'}
                 className="flex items-center justify-center p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -135,7 +135,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ isOpen, onClose, prof
                 <Github className="w-5 h-5 text-gray-600 hover:text-gray-900" />
               </a>
               <a
-                href={process.env.NEXT_PUBLIC_LINKEDIN_URL || '{{LINKEDIN_URL}}'}
+                href={process.env.NEXT_PUBLIC_LINKEDIN_URL || 'https://www.linkedin.com'}
                 className="flex items-center justify-center p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -144,7 +144,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ isOpen, onClose, prof
                 <Linkedin className="w-5 h-5 text-gray-600 hover:text-gray-900" />
               </a>
               <a
-                href={process.env.NEXT_PUBLIC_WEBSITE_URL || '{{WEBSITE_URL}}'}
+                href={process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://github.com/vadim'}
                 className="flex items-center justify-center p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
                 target="_blank"
                 rel="noopener noreferrer"

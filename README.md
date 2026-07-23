@@ -1,8 +1,8 @@
 # FullDock
 
-Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.
+FullDock is a Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.
 
-It is designed as a stable infrastructure baseline for downstream projects such as `ondeck`.
+It is designed as a stable infrastructure baseline for new internal or public projects.
 
 ## Stack
 
@@ -11,7 +11,7 @@ It is designed as a stable infrastructure baseline for downstream projects such 
 - Services: PostgreSQL, Redis
 - Local workflow: Docker Compose + Makefile commands
 - Auth: JWT access + refresh flow with login throttling and session revocation
-- UI: Unified, role-aware account management with premium styling
+- UI: Unified, role-aware account management with a polished responsive shell
 
 ## Quick Start (First 5 Minutes)
 
@@ -97,9 +97,9 @@ docker compose -f docker/docker-compose.https.yml up -d --build
 
 ## Roadmap
 
-- [ ] "First 5 minutes" comprehensive tutorial link.
+- [ ] Add a longer guided tutorial for first-time setup.
 - [ ] Integrated auth tests (login throttling, refresh rotation).
-- [ ] GitHub Actions CI/CD examples.
+- [ ] Add GitHub Actions CI/CD examples.
 - [ ] Standardized MTU settings for Linux networking.
 
 ## Project Structure

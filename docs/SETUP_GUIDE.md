@@ -69,7 +69,7 @@ Local auth setup:
 make auth
 ```
 
-Current template auth behavior includes:
+Current auth behavior includes:
 - access + refresh tokens
 - refresh token rotation
 - session revoke support

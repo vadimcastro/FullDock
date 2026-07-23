@@ -1,4 +1,4 @@
-# {{PROJECT_NAME}} Makefile
+# FullDock Makefile
 # Standalone project commands
 
 PROJECT_NAME ?= $(notdir $(CURDIR))

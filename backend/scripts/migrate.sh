@@ -8,7 +8,7 @@ import psycopg2
 import os
 import sys
 
-db_name = os.getenv('POSTGRES_DB', 'template')
+db_name = os.getenv('POSTGRES_DB', 'fulldock')
 db_user = os.getenv('POSTGRES_USER', 'postgres')
 db_password = os.getenv('POSTGRES_PASSWORD', 'password')
 db_host = os.getenv('POSTGRES_HOST', 'db')
@@ -43,7 +43,7 @@ except Exception as e:
     sys.exit(1)
 "
 
-# Force create tables using SQLAlchemy (more reliable for templates)
+# Force create tables using SQLAlchemy.
 echo "Creating database tables..."
 python3 -c "
 import sys

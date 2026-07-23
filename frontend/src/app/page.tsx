@@ -5,11 +5,11 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-2xl mx-auto text-center">
         <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-          {process.env.NEXT_PUBLIC_PROJECT_NAME || 'Template Project'}
+          {process.env.NEXT_PUBLIC_PROJECT_NAME || 'FullDock'}
         </h1>
         
         <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-lg mx-auto">
-          {process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || 'Project Template - Ready for Development'}
+          {process.env.NEXT_PUBLIC_PROJECT_DESCRIPTION || 'Docker-first full-stack template for Next.js, FastAPI, PostgreSQL, and Redis.'}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -50,12 +50,12 @@ export default function HomePage() {
         <div className="mt-8 text-sm text-gray-500">
           Built with{' '}
           <a 
-            href={process.env.NEXT_PUBLIC_TEMPLATE_REPO_URL || "https://github.com/your-org/project-template"}
+            href={process.env.NEXT_PUBLIC_TEMPLATE_REPO_URL || "https://github.com/vadim/FullDock"}
             className="text-blue-600 hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            {process.env.NEXT_PUBLIC_TEMPLATE_REPO_NAME || "project-template"}
+            {process.env.NEXT_PUBLIC_TEMPLATE_REPO_NAME || "FullDock"}
           </a>
         </div>
       </div>

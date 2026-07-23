@@ -22,7 +22,7 @@ export default function Navbar() {
         <div className="flex justify-between h-14 sm:h-12 items-center">
           <div className="flex items-center">
             <Link href="/" className="font-bold text-lg sm:text-xl ml-2 md:ml-4">
-{process.env.NEXT_PUBLIC_PROJECT_NAME || 'Template Project'}
+{process.env.NEXT_PUBLIC_PROJECT_NAME || 'FullDock'}
             </Link>
           </div>
           <div className="flex items-center">

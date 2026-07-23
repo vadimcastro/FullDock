@@ -8,22 +8,22 @@ from .parameters import parameter_store
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "{{PROJECT_DISPLAY_NAME}} API"
+    PROJECT_NAME: str = "FullDock API"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development").strip().lower()
     DEBUG: bool = os.getenv("DEBUG", "true").strip().lower() == "true"
 
     # Database settings
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "password")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "{{PROJECT_NAME}}")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "fulldock")
     POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "db")
     POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
 
     # Admin user settings
-    ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "{{ADMIN_EMAIL}}")
-    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "{{DEV_PASSWORD}}")
-    ADMIN_USERNAME: str = os.getenv("ADMIN_USERNAME", "{{ADMIN_USERNAME}}")
-    ADMIN_NAME: str = os.getenv("ADMIN_NAME", "{{ADMIN_NAME}}")
+    ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@example.com")
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "change-me-locally")
+    ADMIN_USERNAME: str = os.getenv("ADMIN_USERNAME", "admin")
+    ADMIN_NAME: str = os.getenv("ADMIN_NAME", "Admin User")
 
     # JWT settings
     ALGORITHM: str = "HS256"
@@ -51,7 +51,7 @@ class Settings(BaseSettings):
         "X-Requested-With",
     ]
     CORS_MAX_AGE: int = 3600
-    CACHE_PREFIX: str = os.getenv("CACHE_PREFIX", "{{PROJECT_NAME}}-cache")
+    CACHE_PREFIX: str = os.getenv("CACHE_PREFIX", "fulldock-cache")
 
     # OAuth provider settings
     OAUTH_REDIRECT_BASE: str = os.getenv("OAUTH_REDIRECT_BASE", "http://localhost:8000/api/v1/oauth")

@@ -7,36 +7,45 @@
 # History configuration - Enhanced for development workflow
 HISTCONTROL=ignoredups:ignorespace
 HISTSIZE=5000
-HISTFILESIZE=10000
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# Don't put duplicate lines or lines starting with space in the history.
+HISTCONTROL=ignoreboth
 shopt -s histappend
+HISTSIZE=10000
+HISTFILESIZE=20000
 shopt -s checkwinsize
 
-# Enable color support
-if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# Git branch display function
-parse_git_branch() {
-    git branch 2> /dev/null | sed -n -e 's/^\* \(.*\)/[\1]/p'
-}
-
-# Colored prompt with git branch display
-if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-    # Green user@host, blue path, yellow git branch, white $
-    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\] \[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
-else
-    # Fallback without colors but with git branch
-    PS1='\u@\h:\w $(parse_git_branch)\$ '
-fi
-
-# Set terminal title
 case "$TERM" in
-xterm*|rxvt*|screen*)
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        color_prompt=yes
+    else
+        color_prompt=
+    fi
+fi
+
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]root@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}root@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+case "$TERM" in
+xterm*|rxvt*)
     PS1="\[\e]0;\u@\h: \w\a\]$PS1"
     ;;
 esac
@@ -45,8 +54,8 @@ esac
 export DEPLOY_BRANCH_ENV=main
 
 # Project navigation shortcuts
-function {{PROJECT_NAME_CLEAN}}() {
-    cd /root/{{PROJECT_NAME}}
+function fulldock() {
+    cd /root/FullDock
 }
 
 # Git shortcuts
@@ -58,6 +67,31 @@ alias gl='git pull'
 alias gb='git branch'
 alias gco='git checkout'
 alias glog='git log --oneline -1'
+
+# Docker Compose shortcuts
+alias dcu='docker compose up -d'
+alias dcd='docker compose down'
+alias dcl='docker compose logs -f'
+alias dcb='docker compose build'
+alias dcr='docker compose down && docker compose up -d'
+
+# Container shell access
+alias dsh='docker compose exec backend bash'
+alias dshf='docker compose exec frontend sh'
+alias dshdb='docker compose exec db psql -U postgres -d fulldock'
+alias dshr='docker compose exec redis redis-cli'
+
+# Monitoring shortcuts
+alias dps='docker compose ps'
+alias dtop='docker stats'
+
+# Custom status command on login
+echo ""
+echo "=== FullDock Server Environment ==="
+echo "Branch: $DEPLOY_BRANCH_ENV"
+echo ""
+echo "Quick Commands:"
+echo "  fulldock → cd /root/FullDock"
 
 # System shortcuts
 alias ll='ls -alF'
@@ -75,12 +109,6 @@ alias vb='vim ~/.bashrc'
 gsb() {
     cp scripts/droplet-bashrc ~/.bashrc && sb
 }
-
-# Docker shortcuts
-alias dps='docker ps'
-alias dclean='docker system prune -f'
-alias dlog='docker logs -f'
-alias dex='docker exec -it'
 
 # Development shortcuts
 alias dev='make dev'
