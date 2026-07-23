@@ -30,6 +30,6 @@
     "eslint-config-next": "14.0.0",
     "postcss": "^8.4.31",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "typescript": "^7.0.2"
   }
 }
