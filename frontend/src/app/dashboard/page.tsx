@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../lib/auth/AuthContext';
 import DashboardComponent from '../../components/dashboard/DashboardComponent';
 import LoginModal from '../../components/auth/LoginModal';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user, login } = useAuth();
   const searchParams = useSearchParams();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -72,5 +72,13 @@ export default function DashboardPage() {
         <DashboardComponent />
       </div>
     </div>
-  )
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
+  );
 }

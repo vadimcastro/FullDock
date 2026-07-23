@@ -10,7 +10,7 @@ import ProfileDropdown from './ProfileDropdown';
 export default function Navbar() {
   const { user } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const profileButtonRef = useRef(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);

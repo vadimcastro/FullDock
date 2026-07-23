@@ -9,7 +9,7 @@ import { useAuth } from '../../lib/auth/AuthContext';
 interface ProfileDropdownProps {
   isOpen: boolean;
   onClose: () => void;
-  profileRef: React.RefObject<HTMLButtonElement>;
+  profileRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ isOpen, onClose, profileRef }) => {
