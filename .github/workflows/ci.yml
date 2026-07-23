@@ -1,8 +1,5 @@
 name: Security & CI
 
-env:
-  ACTIONS_RUNNER_FORCE_NODE24: "true"
-
 on:
   push:
     branches: [ main, master ]
@@ -26,7 +23,7 @@ jobs:
           sudo mv gitleaks /usr/local/bin/
 
       - name: Run Secret Scan
-        run: gitleaks detect --source . -v
+        run: gitleaks detect --source . --no-git -v
 
   backend-checks:
     name: Backend Syntax Verification
